@@ -1,7 +1,7 @@
 [build]
 # Use the Dockerfile in the be directory
 builder = "DOCKERFILE"
-dockerfilePath = "be/Dockerfile"
+dockerfilePath = "Dockerfile"
 buildDirectory = "be"
 
 [deploy]
