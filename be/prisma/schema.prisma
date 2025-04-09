@@ -1,0 +1,675 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Business {
+  id           String       @id @default(uuid())
+  name         String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
+
+  // Relationships
+  users        User[]
+  tags         Tag[]
+  schedules    Schedule[]
+  featureFlags FeatureFlag[]
+  shiftTemplates ShiftTemplate[]
+  bot          Bot?         // Each business has an optional bot
+
+  @@index([name])
+}
+
+model User {
+  id               String         @id @default(uuid())
+  email            String         @unique
+  name             String
+  description      String?
+  phone            String
+  address          String
+  latitude         Float?         // Geolocation coordinates
+  longitude        Float?         // Geolocation coordinates
+  password         String?
+  role             Role
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  deletedAt        DateTime?
+  notificationPreferences NotificationPreference[]
+  availabilityPreferences AvailabilityPreference[]
+
+  // Business relation
+  businessId       String
+  business         Business       @relation(fields: [businessId], references: [id])
+  
+  // Shift interactions
+  shiftAssignments ShiftAssignment[]
+  shiftResponses   ShiftResponse[]
+  
+  // Notifications
+  notifications    Notification[]
+  
+  // Many-to-many with Tags (departments/roles)
+  tags             Tag[]          @relation("UserTags")
+  
+  // ShiftReplacement relations
+  requestedReplacements ShiftReplacement[] @relation("RequestedReplacements")
+  providedReplacements  ShiftReplacement[] @relation("ProvidedReplacements")
+  
+  // Bot conversations
+  botConversations BotConversation[] @relation("UserConversations")
+
+  // Form submissions
+  formSubmissions  FormSubmission[]
+  
+  // Schedule generation requests
+  scheduleGenerationRequests ScheduleGenerationRequest[]
+
+  @@index([businessId])
+  @@index([email])
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  EMPLOYEE
+}
+
+model Tag {
+  id                String           @id @default(uuid())
+  name              String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  deletedAt         DateTime?
+
+  // Business relation
+  businessId        String
+  business          Business         @relation(fields: [businessId], references: [id])
+  
+  // Many-to-many with Users
+  users             User[]           @relation("UserTags")
+  
+  // Linked to shift requirements
+  shiftRequirements ShiftRequirement[]
+  templateRequirements ShiftTemplateRequirement[]
+
+  // Connected to shifts via shift tags join table
+  shiftTags         ShiftTag[]
+
+  @@index([businessId])
+}
+
+model Schedule {
+  id            String          @id @default(uuid())
+  name          String
+  type          ScheduleType
+  startDate     DateTime
+  endDate       DateTime
+  status        ScheduleStatus
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  deletedAt     DateTime?
+  description   String?
+
+  // Business relation
+  businessId    String
+  business      Business        @relation(fields: [businessId], references: [id])
+  
+  // Shifts and external integration
+  shifts        Shift[]
+  googleSheetId String?         // For integration with Google Sheets
+  
+  // Bot conversation context
+  botContextId  String?
+  botContext    BotContext?     @relation(fields: [botContextId], references: [id])
+
+  // Schedule generation requests and versions
+  generationRequests ScheduleGenerationRequest[]
+  versions           ScheduleVersion[]
+  formSubmissions    FormSubmission[]
+  
+  // Bot metrics for this schedule
+  botMetrics    BotMetrics[]
+
+  @@index([businessId])
+  @@index([status])
+}
+
+enum ScheduleType {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  CUSTOM
+}
+
+enum ScheduleStatus {
+  DRAFT            // Initial state
+  SENT             // When notifications sent to workers
+  RESPONDED        // When workers have responded
+  CREATED          // When shifts are created by agent
+  APPROVED         // When business owner approves
+  PUBLISHED        // When schedule is published to workers
+  COMPLETED        // Schedule in the past
+  ARCHIVED         // Manually archived
+}
+
+// Reusable shift templates
+model ShiftTemplate {
+  id            String        @id @default(uuid())
+  name          String
+  description   String?
+  dayOfWeek     Int?          // 0-6 for Monday-Sunday
+  startTime     String        // Format: "HH:MM"
+  endTime       String        // Format: "HH:MM"
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+  
+  // Business relation
+  businessId    String
+  business      Business      @relation(fields: [businessId], references: [id])
+  
+  // Requirements
+  requirements  ShiftTemplateRequirement[]
+  
+  @@index([businessId])
+}
+
+model ShiftTemplateRequirement {
+  id            String        @id @default(uuid())
+  requiredCount Int
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  // Template relation
+  templateId    String
+  template      ShiftTemplate @relation(fields: [templateId], references: [id])
+  
+  // Tag requirement
+  tagId         String
+  tag           Tag           @relation(fields: [tagId], references: [id])
+  
+  @@index([templateId])
+  @@index([tagId])
+}
+
+model Shift {
+  id                String              @id @default(uuid())
+  startTime         DateTime
+  endTime           DateTime
+  location          String?
+  notes             String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  deletedAt         DateTime?
+
+  // Schedule relation
+  scheduleId        String
+  schedule          Schedule            @relation(fields: [scheduleId], references: [id])
+  
+  // Shift details
+  shiftRequirements ShiftRequirement[]
+  assignments       ShiftAssignment[]
+  responses         ShiftResponse[]
+  
+  // Relation to tags
+  shiftTags         ShiftTag[]
+  
+  // Replacements
+  replacements      ShiftReplacement[]
+
+  @@index([scheduleId])
+  @@index([startTime])
+}
+
+model ShiftRequirement {
+  id            String   @id @default(uuid())
+  requiredCount Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
+  fulfilled     Boolean  @default(false)
+  
+  // Shift relation
+  shiftId       String
+  shift         Shift    @relation(fields: [shiftId], references: [id])
+  
+  // Worker type/department requirement via Tag
+  tagId         String
+  tag           Tag      @relation(fields: [tagId], references: [id])
+  
+  @@index([shiftId])
+  @@index([tagId])
+}
+
+model ShiftAssignment {
+  id            String             @id @default(uuid())
+  status        AssignmentStatus
+  confirmedAt   DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  deletedAt     DateTime?
+
+  // Link between Shift and User
+  shiftId       String
+  shift         Shift              @relation(fields: [shiftId], references: [id])
+  
+  userId        String
+  user          User               @relation(fields: [userId], references: [id])
+  
+  @@index([shiftId])
+  @@index([userId])
+  @@index([status])
+}
+
+enum AssignmentStatus {
+  PENDING        // Initial assignment state
+  ASSIGNED       // Worker assigned to shift
+  CONFIRMED      // Worker confirmed attendance
+  REJECTED       // Worker rejected the shift
+  ENTERED        // Worker checked in
+  LEFT           // Worker checked out
+  APPROVED       // Hours approved by admin
+  NO_SHOW        // Worker didn't show up
+}
+
+model ShiftResponse {
+  id         String    @id @default(uuid())
+  available  Boolean
+  comment    String?
+  preference Int?      // Preference rating (1-5)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  
+  // Relation to Shift and User
+  shiftId    String
+  shift      Shift     @relation(fields: [shiftId], references: [id])
+  
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  
+  @@index([shiftId])
+  @@index([userId])
+  @@index([available])
+}
+
+model Notification {
+  id         String            @id @default(uuid())
+  title      String?
+  message    String
+  type       NotificationType
+  read       Boolean           @default(false)
+  channel    NotificationChannel @default(IN_APP)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  deletedAt  DateTime?
+
+  // The user who receives the notification
+  userId     String
+  user       User              @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([read])
+}
+
+enum NotificationType {
+  SHIFT_ASSIGNMENT    // Worker assigned to shift
+  SHIFT_RESPONSE      // Response needed for shift
+  SHIFT_REMINDER      // Reminder for upcoming shift
+  SHIFT_CHANGE        // Shift details changed
+  REPLACEMENT_REQUEST // Someone requested replacement
+  REPLACEMENT_OFFER   // Offered to take a shift
+  SCHEDULE_PUBLISHED  // New schedule published
+  SYSTEM              // System notification
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+  PUSH
+}
+
+model FeatureFlag {
+  id         String     @id @default(uuid())
+  name       String
+  enabled    Boolean    @default(true)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  deletedAt  DateTime?
+
+  // Optional: link to a specific business
+  businessId String?
+  business   Business?  @relation(fields: [businessId], references: [id])
+  
+  @@unique([name, businessId])
+}
+
+model ShiftReplacement {
+  id                String              @id @default(uuid())
+  reason            String?
+  status            ReplacementStatus
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  deletedAt         DateTime?
+
+  // Relation to the shift that needs a replacement
+  shiftId           String
+  shift             Shift               @relation(fields: [shiftId], references: [id])
+  
+  // User who requests the replacement
+  requestedById     String
+  requestedBy       User                @relation("RequestedReplacements", fields: [requestedById], references: [id])
+  
+  // Optionally, a user who accepts the replacement offer
+  replacementUserId String?
+  replacementUser   User?               @relation("ProvidedReplacements", fields: [replacementUserId], references: [id])
+  
+  @@index([shiftId])
+  @@index([requestedById])
+  @@index([status])
+}
+
+enum ReplacementStatus {
+  PENDING      // Initial request state
+  OFFERED      // When offered to other workers
+  ACCEPTED     // When another worker accepts
+  DECLINED     // When request is declined
+  CANCELED     // When original worker cancels the request
+}
+
+// Join table for many-to-many relation between Shift and Tag
+model ShiftTag {
+  shiftId String
+  tagId   String
+
+  shift   Shift @relation(fields: [shiftId], references: [id])
+  tag     Tag   @relation(fields: [tagId], references: [id])
+
+  @@id([shiftId, tagId])
+  @@index([shiftId])
+  @@index([tagId])
+}
+
+// Audit log for history
+model AuditLog {
+  id         String         @id @default(uuid())
+  tableName  String
+  recordId   String
+  operation  AuditOperation
+  data       Json
+  createdAt  DateTime       @default(now())
+  userId     String?
+}
+
+enum AuditOperation {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+// Bot models for managing schedule and shift creation
+model Bot {
+  id           String         @id @default(uuid())
+  name         String
+  status       BotStatus      @default(ACTIVE)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  
+  // Each bot belongs to a business
+  businessId   String         @unique
+  business     Business       @relation(fields: [businessId], references: [id])
+  
+  // Bot has many conversations
+  conversations BotConversation[]
+  
+  // Bot has many contexts for different schedules
+  contexts     BotContext[]
+  
+  // Bot metrics
+  metrics      BotMetrics[]
+  
+  @@index([businessId])
+}
+
+enum BotStatus {
+  ACTIVE
+  PAUSED
+  DISABLED
+}
+
+// Conversation history with the bot
+model BotConversation {
+  id           String       @id @default(uuid())
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  
+  // Bot that owns this conversation
+  botId        String
+  bot          Bot          @relation(fields: [botId], references: [id])
+  
+  // User involved in the conversation
+  userId       String
+  user         User         @relation("UserConversations", fields: [userId], references: [id])
+  
+  // Context for this conversation
+  contextId    String?
+  context      BotContext?  @relation(fields: [contextId], references: [id])
+  
+  // Messages in this conversation
+  messages     BotMessage[]
+  
+  @@index([botId])
+  @@index([userId])
+}
+
+// Individual message in a bot conversation
+model BotMessage {
+  id             String           @id @default(uuid())
+  content        String
+  role           BotMessageRole
+  createdAt      DateTime         @default(now())
+  
+  // Conversation this message belongs to
+  conversationId String
+  conversation   BotConversation  @relation(fields: [conversationId], references: [id])
+  
+  @@index([conversationId])
+}
+
+enum BotMessageRole {
+  USER
+  BOT
+  SYSTEM
+}
+
+// Bot context for maintaining state when interacting with schedules
+model BotContext {
+  id             String            @id @default(uuid())
+  name           String
+  data           Json              // Stores contextual data for the bot
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  
+  // Bot that owns this context
+  botId          String
+  bot            Bot               @relation(fields: [botId], references: [id])
+  
+  // Linked schedule (if applicable)
+  schedules      Schedule[]
+  
+  // Conversations using this context
+  conversations  BotConversation[]
+  
+  @@index([botId])
+}
+
+// ScheduleGenerationRequest Model
+model ScheduleGenerationRequest {
+  id             String                     @id @default(uuid())
+  status         ScheduleGenerationStatus   @default(PENDING)
+  instructions   String?                    // Any specific instructions from the business owner
+  parameters     Json?                      // Additional parameters for generation
+  createdAt      DateTime                   @default(now())
+  updatedAt      DateTime                   @updatedAt
+  completedAt    DateTime?                  // When the generation was completed
+
+  // Schedule relation
+  scheduleId     String
+  schedule       Schedule                   @relation(fields: [scheduleId], references: [id])
+  
+  // User who requested generation
+  requestedById  String
+  requestedBy    User                       @relation(fields: [requestedById], references: [id])
+  
+  // Generated schedule versions
+  versions       ScheduleVersion[]
+  
+  @@index([scheduleId])
+  @@index([requestedById])
+  @@index([status])
+}
+
+enum ScheduleGenerationStatus {
+  PENDING      // Initial state when requested
+  PROCESSING   // Bot is working on it
+  COMPLETED    // Bot has finished generating options
+  FAILED       // Bot failed to generate a valid schedule
+  CANCELED     // Request was canceled
+}
+
+// ScheduleVersion Model
+model ScheduleVersion {
+  id                String    @id @default(uuid())
+  versionNumber     Int       // Incremental version number
+  name              String?   // Optional name for this version
+  description       String?   // Description of this version
+  metadata          Json?     // Additional metadata about this version
+  isSelected        Boolean   @default(false) // Whether this is the selected version
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Schedule relation
+  scheduleId        String
+  schedule          Schedule  @relation(fields: [scheduleId], references: [id])
+  
+  // Generation request relation
+  generationRequestId String
+  generationRequest   ScheduleGenerationRequest @relation(fields: [generationRequestId], references: [id])
+  
+  // Assignments in this version - stored as JSON to keep a snapshot
+  assignments       Json      // Serialized ShiftAssignments
+  
+  // Metrics for this version
+  metrics           Json?     // Metrics about schedule quality
+  
+  @@unique([scheduleId, versionNumber])
+  @@index([scheduleId])
+  @@index([generationRequestId])
+}
+
+// FormSubmission Model
+model FormSubmission {
+  id             String           @id @default(uuid())
+  status         FormStatus       @default(PENDING)
+  submittedAt    DateTime?        // When the form was submitted
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  
+  // Schedule relation
+  scheduleId     String
+  schedule       Schedule         @relation(fields: [scheduleId], references: [id])
+  
+  // User relation
+  userId         String
+  user           User             @relation(fields: [userId], references: [id])
+  
+  @@unique([scheduleId, userId])
+  @@index([scheduleId])
+  @@index([userId])
+  @@index([status])
+}
+
+enum FormStatus {
+  PENDING     // Form not yet submitted
+  SUBMITTED   // Form has been submitted
+  INCOMPLETE  // Form partially submitted
+  EXPIRED     // Deadline passed without submission
+}
+
+// Bot Metrics Model
+model BotMetrics {
+  id               String         @id @default(uuid())
+  metricType       BotMetricType
+  value            Float
+  timestamp        DateTime       @default(now())
+  
+  // Bot relation
+  botId            String
+  bot              Bot            @relation(fields: [botId], references: [id])
+  
+  // Optional schedule relation
+  scheduleId       String?
+  schedule         Schedule?      @relation(fields: [scheduleId], references: [id])
+  
+  @@index([botId])
+  @@index([scheduleId])
+  @@index([metricType])
+}
+
+enum BotMetricType {
+  WORKER_SATISFACTION       // How satisfied workers are with assignments
+  REQUIREMENT_FULFILLMENT   // Percentage of requirements fulfilled
+  PREFERENCE_ALIGNMENT      // How well assignments match preferences  
+  GENERATION_TIME           // Time taken to generate schedule
+  OVERTIME_OPTIMIZATION     // How well overtime was minimized
+  WORKLOAD_DISTRIBUTION     // How evenly work is distributed
+}
+
+// NotificationPreference model
+model NotificationPreference {
+  id           String               @id @default(uuid())
+  channelType  NotificationChannel
+  enabled      Boolean              @default(true)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  
+  // User relation
+  userId       String
+  user         User                 @relation(fields: [userId], references: [id])
+  
+  // Specific notification type (optional)
+  notificationType NotificationType?
+  
+  @@unique([userId, channelType, notificationType])
+  @@index([userId])
+}
+
+// AvailabilityPreference model
+model AvailabilityPreference {
+  id           String     @id @default(uuid())
+  dayOfWeek    Int        // 0-6 for Monday-Sunday
+  startTime    String?    // Format: "HH:MM" - null means all day
+  endTime      String?    // Format: "HH:MM" - null means all day
+  available    Boolean    @default(true)
+  preference   Int?       // Preference rating (1-5)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  
+  // User relation
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([dayOfWeek])
+  @@index([available])
+} 
