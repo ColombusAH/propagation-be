@@ -1,7 +1,7 @@
 [build]
 # Use the Dockerfile in the current directory
 builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
+dockerfilePath = "be/Dockerfile"
 
 [deploy]
 # Health check path
