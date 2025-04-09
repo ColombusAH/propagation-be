@@ -1,0 +1,20 @@
+[build]
+# Use the Dockerfile in the current directory
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# Health check path
+healthcheckPath = "/health"
+# Health check timeout in seconds
+healthcheckTimeout = 30
+# Max deployment startup time in seconds
+startupTimeout = 300
+# Whether to auto-restart the service on crash
+restartPolicyType = "ON_FAILURE"
+# Number of restarts to attempt before giving up
+restartPolicyMaxRetries = 3
+
+[variables]
+PYTHONUNBUFFERED = "1"
+PYTHONDONTWRITEBYTECODE = "1" 

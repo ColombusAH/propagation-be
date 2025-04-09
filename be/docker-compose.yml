@@ -2,14 +2,21 @@ services:
   db:
     image: postgres:17
     restart: always
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: shifty
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - shifty-network
 
   pgadmin:
     image: dpage/pgadmin4
@@ -21,21 +28,33 @@ services:
       - "8080:80"
     depends_on:
       - db
+    networks:
+      - shifty-network  
 
   app:
     build: .
     volumes:
-      - .:/code
+      - .:/app
+      - /app/node_modules
     ports:
       - "8000:8000"
     env_file:
       - .env
     environment:
-      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@db:5432/shifty}
-      - PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=0
-    command: bash -c "prisma generate && uvicorn app.main:app --host 0.0.0.0 --reload"
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/shifty
+      - PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
+      - SECRET_KEY=${SECRET_KEY:-default_development_key_change_in_production}
+    entrypoint: /app/docker-entrypoint.sh
+    command: uvicorn app.main:app --host 0.0.0.0 --reload
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    networks:
+      - shifty-network
 
 volumes:
   postgres_data:
+
+networks:
+  shifty-network:
+    name: shifty-network
