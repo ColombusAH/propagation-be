@@ -27,6 +27,26 @@ extract_db_info() {
   echo "Database Name: $DB_NAME"
 }
 
+# Function to check if the database server is reachable using direct PostgreSQL connection
+check_db_connection() {
+  extract_db_info
+  
+  # Create a temporary .pgpass file for passwordless connection
+  echo "$DB_HOST:$DB_PORT:postgres:$DB_USER:$DB_PASS" > ~/.pgpass
+  chmod 600 ~/.pgpass
+  
+  # Try to connect to the PostgreSQL server using psql
+  if PGPASSFILE=~/.pgpass psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "postgres" -c "SELECT 1" >/dev/null 2>&1; then
+    echo "✅ Successfully connected to PostgreSQL server at $DB_HOST:$DB_PORT"
+    rm ~/.pgpass
+    return 0
+  else
+    echo "❌ Failed to connect to PostgreSQL server at $DB_HOST:$DB_PORT"
+    rm ~/.pgpass
+    return 1
+  fi
+}
+
 # Function to create database if it doesn't exist
 create_database_if_not_exists() {
   extract_db_info
@@ -65,35 +85,37 @@ if [ -n "$DATABASE_URL" ]; then
   retry_count=0
   retry_delay=3
   
-  # First, check if the database server is accessible
-  extract_db_info
-  until nc -z -w5 "$DB_HOST" "$DB_PORT" 2>/dev/null; do
-    retry_count=$((retry_count+1))
-    
-    if [ $retry_count -ge $max_retries ]; then
-      echo "Error: Database server connection timed out after $max_retries attempts"
-      echo "Please check if the database service is running."
-      exit 1
-    fi
-    
-    echo "Database server not ready yet, retrying in ${retry_delay}s (attempt $retry_count/$max_retries)"
-    sleep $retry_delay
-  done
-  
-  echo "Database server is accessible. Ensuring database exists..."
-  
   # Make sure PostgreSQL client is installed
   if ! command -v psql &> /dev/null; then
     echo "PostgreSQL client is not installed. Installing it now..."
     apt-get update && apt-get install -y --no-install-recommends postgresql-client
   fi
   
-  # Create the database if it doesn't exist
-  create_database_if_not_exists
+  # Try to connect to the database server directly
+  until check_db_connection; do
+    retry_count=$((retry_count+1))
+    
+    if [ $retry_count -ge $max_retries ]; then
+      echo "Error: Database server connection timed out after $max_retries attempts"
+      echo "Continuing anyway - Railway might still be setting up the connection..."
+      break
+    fi
+    
+    echo "Database server not ready yet, retrying in ${retry_delay}s (attempt $retry_count/$max_retries)"
+    sleep $retry_delay
+  done
+  
+  echo "Attempting to create database and run migrations..."
+  
+  # Try to create the database regardless of connection success
+  # This is necessary for Railway which might have delayed network setup
+  echo "Creating database if it doesn't exist..."
+  create_database_if_not_exists || true
   
   echo "Running migrations..."
-  npx prisma migrate deploy
-  echo "Migrations applied successfully!"
+  # Use --skip-generate to avoid regenerating the client
+  npx prisma migrate deploy --skip-generate || true
+  echo "Migration step completed"
 else
   echo "Warning: DATABASE_URL environment variable is not set"
   echo "Skipping database migration steps"

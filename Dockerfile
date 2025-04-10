@@ -54,4 +54,4 @@ ENV PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
 ENTRYPOINT ["/app/scripts/railway-entrypoint.sh"]
 
 # Start the app with PORT from environment variable
-CMD ["sh", "-c", "uvicorn app.main:app --port ${PORT:-8000}"] 
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"] 
