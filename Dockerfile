@@ -35,7 +35,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 # Install Prisma with specific version that works with Python
 RUN npm install --production && \
-    npm install prisma@5.17.0 @prisma/client@5.17.0
+    npm install prisma@6.6.0 @prisma/client@6.6.0
 
 # Make entrypoint script executable
 RUN chmod +x /app/scripts/railway-entrypoint.sh

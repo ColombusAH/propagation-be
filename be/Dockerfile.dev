@@ -16,7 +16,7 @@ COPY package.json package-lock.json* ./
 
 # Install specific Prisma version that works with Python client
 RUN npm install --production && \
-    npm install prisma@5.17.0 @prisma/client@5.17.0
+    npm install prisma@6.6.0 @prisma/client@6.6.0
 
 # Copy Prisma schema
 COPY prisma ./prisma/
