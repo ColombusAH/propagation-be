@@ -35,6 +35,8 @@ RUN chmod +x /app/scripts/railway-entrypoint-python.sh
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONHASHSEED=random
+ENV PYTHONWARNINGS="ignore::DeprecationWarning"
 ENV PORT=8000
 ENV PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
 

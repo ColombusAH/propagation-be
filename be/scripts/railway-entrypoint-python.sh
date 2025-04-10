@@ -69,10 +69,17 @@ create_database_if_not_exists() {
   rm ~/.pgpass
 }
 
-# Generate Prisma client using Python
+# Generate Prisma client using Python - suppressing deprecation warnings
 echo "Generating Prisma client using Python..."
+export PYTHONWARNINGS="ignore::DeprecationWarning"
 python -m prisma generate
+unset PYTHONWARNINGS
 echo "Prisma client generated successfully!"
+
+# Set security hardening environment variables
+export PYTHONHASHSEED=random  # Enhance DoS protection
+export PYTHONDONTWRITEBYTECODE=1  # Don't create .pyc files
+export PYTHONUNBUFFERED=1  # Disable output buffering
 
 # Wait for database and apply migrations
 if [ -n "$DATABASE_URL" ]; then
