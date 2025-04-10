@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Database migration utility script for Prisma.
+Database migration utility script for Python Prisma.
 """
 import os
 import sys
@@ -52,7 +52,7 @@ def setup_prisma_environment():
 def generate_client():
     """Generate Prisma client"""
     env = setup_prisma_environment()
-    run_command(["npx", "prisma", "generate"], env)
+    run_command(["python", "-m", "prisma", "generate"], env)
     print("Prisma client generated successfully!")
 
 
@@ -60,14 +60,14 @@ def create_migration(name):
     """Create a new migration"""
     env = setup_prisma_environment()
     migration_name = name or "schema-update"
-    run_command(["npx", "prisma", "migrate", "dev", "--name", migration_name], env)
+    run_command(["python", "-m", "prisma", "migrate", "dev", "--name", migration_name], env)
     print(f"Migration '{migration_name}' created successfully!")
 
 
 def deploy_migrations():
     """Deploy all pending migrations"""
     env = setup_prisma_environment()
-    run_command(["npx", "prisma", "migrate", "deploy"], env)
+    run_command(["python", "-m", "prisma", "migrate", "deploy"], env)
     print("Migrations deployed successfully!")
 
 
@@ -79,14 +79,14 @@ def reset_database():
         print("Operation canceled.")
         return
     
-    run_command(["npx", "prisma", "migrate", "reset", "--force"], env)
+    run_command(["python", "-m", "prisma", "migrate", "reset", "--force"], env)
     print("Database reset successfully!")
 
 
 def status():
     """Show migration status"""
     env = setup_prisma_environment()
-    run_command(["npx", "prisma", "migrate", "status"], env)
+    run_command(["python", "-m", "prisma", "migrate", "status"], env)
 
 
 def main():
