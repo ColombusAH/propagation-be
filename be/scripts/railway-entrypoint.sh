@@ -50,6 +50,39 @@ else
   echo "Skipping database migration steps"
 fi
 
-# Execute the main command
+# Execute the main command and store the process ID
 echo "Starting application on port $PORT..."
-exec "$@" 
+exec "$@" &
+APP_PID=$!
+
+# Function to check application health
+check_app_health() {
+  local retry_count=0
+  local max_retries=30
+  local retry_delay=2
+  local app_port=${PORT:-8000}
+  local url="http://localhost:${app_port}/health"
+  
+  echo "Waiting for application to be healthy at ${url}..."
+  
+  until curl -s "${url}" | grep -q "healthy"; do
+    retry_count=$((retry_count+1))
+    
+    if [ $retry_count -ge $max_retries ]; then
+      echo "Error: Application did not become healthy after $max_retries attempts"
+      return 1
+    fi
+    
+    echo "Application not healthy yet, retrying in ${retry_delay}s (attempt $retry_count/$max_retries)"
+    sleep $retry_delay
+  done
+  
+  echo "✅ Application is healthy!"
+  return 0
+}
+
+# Check if the application becomes healthy
+check_app_health
+
+# Wait for the application process to finish
+wait $APP_PID 
