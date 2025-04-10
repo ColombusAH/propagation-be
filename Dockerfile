@@ -8,13 +8,15 @@ WORKDIR /app
 # Copy the entire be directory into the container
 COPY be/ .
 
-# Install system dependencies including Node.js for Prisma
+# Install system dependencies including Node.js for Prisma and PostgreSQL client
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     build-essential \
     openssl \
     curl \
-    gnupg && \
+    gnupg \
+    postgresql-client \
+    netcat-traditional && \
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get update && \
     apt-get install -y --no-install-recommends nodejs && \
@@ -44,15 +46,12 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PORT=8000
 ENV PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
 
-# Create non-root user
-RUN adduser --disabled-password --gecos "" appuser && \
-    chown -R appuser:appuser /app && \
-    chown -R appuser:appuser /venv
-USER appuser
+# Create non-root user but keep root for database operations
+# We need root to install PostgreSQL client if it's missing
+# USER appuser (removed)
 
 # Railway will set DATABASE_URL and PORT automatically
 ENTRYPOINT ["/app/scripts/railway-entrypoint.sh"]
 
-# Start the app with default settings
-# Railway will use PORT environment variable automatically
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0"] 
+# Start the app with PORT from environment variable
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"] 

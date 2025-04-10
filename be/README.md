@@ -126,3 +126,9 @@ When the application is running, you can access the API documentation at:
 
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc 
+
+run locally :
+create env if not exists:
+python3 -m venv .venv  
+activate env :
+source .venv/bin/activate
