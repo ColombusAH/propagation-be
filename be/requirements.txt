@@ -9,3 +9,8 @@ pydantic-settings==2.8.1
 python-json-logger==3.3.0
 email-validator==2.2.0
 python-dotenv==1.1.0
+# Security packages
+cryptography==44.0.2
+# Uncomment for rate limiting
+# slowapi==0.1.8
+# redis==5.0.1

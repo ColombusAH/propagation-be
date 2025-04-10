@@ -29,14 +29,12 @@ wait_for_db() {
   local retry_count=0
   local retry_delay=3
   
-  # Skip direct connection test and go straight to Prisma
-  echo "Trying Prisma connection..."
-  
-  until npx prisma migrate status > /dev/null 2>&1; do
+  # Try to connect directly to PostgreSQL
+  until check_postgres_connection; do
     retry_count=$((retry_count+1))
     
     if [ $retry_count -ge $max_retries ]; then
-      echo "Error: Maximum retry attempts ($max_retries) reached. Prisma can't connect to the database."
+      echo "Error: Maximum retry attempts ($max_retries) reached. Can't connect to the database."
       echo "Database connection URL: ${DATABASE_URL//:*:*@/:***@}"  # Mask password
       echo "Troubleshooting:"
       echo "1. Check if DB container is running: docker ps | grep postgres"
@@ -45,11 +43,11 @@ wait_for_db() {
       exit 1
     fi
     
-    echo "Prisma can't connect yet - sleeping for ${retry_delay}s (attempt $retry_count/$max_retries)"
+    echo "Database not ready yet - sleeping for ${retry_delay}s (attempt $retry_count/$max_retries)"
     sleep $retry_delay
   done
   
-  echo "Database is up and Prisma can connect - continuing"
+  echo "Database is up and accessible - continuing"
 }
 
 # Print important environment info for debugging
@@ -76,14 +74,14 @@ apply_migrations() {
     find / -name "schema.prisma" -type f 2>/dev/null || echo "No schema.prisma found"
   fi
   
-  npx prisma migrate deploy
+  python -m prisma migrate deploy
   echo "Migrations applied successfully!"
 }
 
 # Generate Prisma client if needed
 generate_client() {
   echo "Generating Prisma client..."
-  npx prisma generate
+  python -m prisma generate
   echo "Prisma client generated successfully!"
 }
 

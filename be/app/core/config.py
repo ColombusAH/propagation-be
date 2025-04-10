@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
-from typing import Optional
+from typing import Optional, List
 
 class Settings(BaseSettings):
     # API Settings
@@ -16,9 +16,12 @@ class Settings(BaseSettings):
     # Security Settings
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    
+    # Security Headers
+    SECURITY_HEADERS: bool = True  # Enable security headers by default
 
     # CORS Settings
-    BACKEND_CORS_ORIGINS: list[str] = ["*"]
+    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "https://localhost:3000"]
 
     class Config:
         env_file = ".env"
