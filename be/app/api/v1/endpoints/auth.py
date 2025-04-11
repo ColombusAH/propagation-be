@@ -1,4 +1,7 @@
 from fastapi import APIRouter
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -9,6 +12,7 @@ async def auth_root():
 
 @router.get('/me')
 async def get_me():
+    logger.info("Getting me")
     # return a mock rick user info 
     return {
         "id": 1,
