@@ -27,6 +27,7 @@ export const authService = {
    * Login functionality - placeholder for actual implementation
    */
   async login(email: string, password: string): Promise<User | null> {
+    console.log('Logging in with email:', email, 'and password:', password);
     // This would be implemented to call the actual login endpoint
     // For now, we'll just fetch the current user to simulate login
     return this.getCurrentUser();
