@@ -19,14 +19,20 @@ COPY --from=build /app/dist /usr/share/nginx/html
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Create a proper entrypoint script without escape issues
+# Railway sets PORT environment variable dynamically
+# Create entrypoint script for dynamic port configuration
 RUN echo '#!/bin/sh' > /docker-entrypoint.sh && \
-    echo 'sed -i "s/listen 80/listen ${PORT:-80}/g" /etc/nginx/conf.d/default.conf' >> /docker-entrypoint.sh && \
-    echo 'nginx -g "daemon off;"' >> /docker-entrypoint.sh && \
+    echo 'export PORT=${PORT:-80}' >> /docker-entrypoint.sh && \
+    echo 'envsubst \"\$PORT\" < /etc/nginx/conf.d/default.conf > /etc/nginx/conf.d/default.conf.tmp' >> /docker-entrypoint.sh && \
+    echo 'mv /etc/nginx/conf.d/default.conf.tmp /etc/nginx/conf.d/default.conf' >> /docker-entrypoint.sh && \
+    echo 'exec nginx -g "daemon off;"' >> /docker-entrypoint.sh && \
     chmod +x /docker-entrypoint.sh
 
-# Expose the port
+# Install envsubst
+RUN apk add --no-cache gettext
+
+# Expose the port (Railway will override this with their PORT env var)
 EXPOSE 80
 
 # Start the server
-CMD ["/docker-entrypoint.sh"] 
+ENTRYPOINT ["/docker-entrypoint.sh"] 
