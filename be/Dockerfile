@@ -6,7 +6,7 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Copy the entire be directory into the container
-COPY be/ .
+COPY . .
 
 # Install system dependencies including PostgreSQL client
 RUN apt-get update && \
