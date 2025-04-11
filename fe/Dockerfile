@@ -19,13 +19,11 @@ COPY --from=build /app/dist /usr/share/nginx/html
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Railway will assign a PORT environment variable
-# We need to replace the default NGINX port with the Railway PORT at runtime
-# Create a script to handle this
-RUN echo '#!/bin/sh \n\
-sed -i "s/listen 80/listen \${PORT:-80}/g" /etc/nginx/conf.d/default.conf \n\
-nginx -g "daemon off;"' > /docker-entrypoint.sh && \
-chmod +x /docker-entrypoint.sh
+# Create a proper entrypoint script without escape issues
+RUN echo '#!/bin/sh' > /docker-entrypoint.sh && \
+    echo 'sed -i "s/listen 80/listen ${PORT:-80}/g" /etc/nginx/conf.d/default.conf' >> /docker-entrypoint.sh && \
+    echo 'nginx -g "daemon off;"' >> /docker-entrypoint.sh && \
+    chmod +x /docker-entrypoint.sh
 
 # Expose the port
 EXPOSE 80
