@@ -12,6 +12,8 @@ COPY . .
 # Build the app
 RUN npm run build
 
+RUN ls -la
+
 FROM nginx:1.25-alpine
 
 # Copy built files from build stage
