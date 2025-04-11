@@ -24,7 +24,7 @@ RUN python -m venv /venv
 ENV PATH="/venv/bin:$PATH"
 
 # Install Python dependencies
-COPY be/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir prisma
