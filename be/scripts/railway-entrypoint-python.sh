@@ -8,6 +8,11 @@ export PYTHONUNBUFFERED=1
 export PYTHONWARNINGS="ignore::DeprecationWarning"
 export PORT=${PORT:-8000}
 
+# Configure network - check and print networking information for debugging
+echo "Network configuration:"
+ip addr
+echo "---"
+
 echo "Generating Prisma client..."
 python -m prisma generate
 
@@ -35,5 +40,5 @@ else
   echo "Warning: DATABASE_URL not set, skipping migrations"
 fi
 
-echo "Starting application on port $PORT..."
+echo "Starting application on port $PORT with host ${UVICORN_HOST:-0.0.0.0}..."
 exec "$@" 

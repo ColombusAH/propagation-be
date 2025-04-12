@@ -15,6 +15,8 @@ RUN apt-get update && \
     openssl \
     curl \
     postgresql-client \
+    iputils-ping \
+    iproute2 \
     netcat-traditional && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -39,9 +41,11 @@ ENV PYTHONHASHSEED=random
 ENV PYTHONWARNINGS="ignore::DeprecationWarning"
 ENV PORT=8000
 ENV PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
+# Enable IPv6 support in FastAPI/Uvicorn
+ENV UVICORN_HOST="0.0.0.0"
 
 # Railway will set DATABASE_URL and PORT automatically
 ENTRYPOINT ["/app/scripts/railway-entrypoint-python.sh"]
 
-# Start the app with PORT from environment variable
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"] 
+# Start the app with PORT from environment variable and explicit host configuration
+CMD ["sh", "-c", "uvicorn app.main:app --host ${UVICORN_HOST:-0.0.0.0} --port ${PORT:-8000}"] 
