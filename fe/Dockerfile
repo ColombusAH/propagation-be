@@ -17,8 +17,8 @@ RUN mkdir -p /usr/share/nginx/html/healthz && \
     echo "ok" > /usr/share/nginx/html/healthz/index.html && \
     chmod 644 /usr/share/nginx/html/healthz/index.html
 
-# Install minimal requirements
-RUN apk add --no-cache bash
+# Install minimal requirements - add iproute2 for ip command
+RUN apk add --no-cache bash iproute2
 
 # Copy build results and config
 COPY --from=build /app/dist /usr/share/nginx/html

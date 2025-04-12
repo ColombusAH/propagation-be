@@ -18,8 +18,9 @@ iface eth0 inet dhcp
     pre-up sysctl -w net.ipv6.conf.all.disable_ipv6=0
 EOF
 
-    # Start the networking service
-    /etc/init.d/networking restart || true
+    # Alpine doesn't use /etc/init.d/networking
+    # Instead we'll configure the network directly
+    ip link set dev lo up
     
     # Print network configuration for debugging
     echo "Network configuration:"
@@ -27,8 +28,11 @@ EOF
     echo "---"
 fi
 
-# Replace any environment variables in nginx.conf if needed
-# envsubst < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+# Make environment variables available to nginx
+if [ -n "$BACKEND_URL" ]; then
+    echo "Setting BACKEND_URL to: $BACKEND_URL"
+    export ENV_BACKEND_URL="$BACKEND_URL"
+fi
 
 # Configure nginx to use the PORT environment variable
 PORT="${PORT:-80}"
