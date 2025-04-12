@@ -22,8 +22,14 @@ if [ -z "$BACKEND_URL" ] && [ "$RAILWAY_PRIVATE_NETWORK" == "true" ]; then
     fi
 fi
 
-# Make sure the environment variables are accessible to nginx
-# The env directive must be in the main context, so we need to modify the main nginx.conf
+# Print the BACKEND_URL for debugging
+if [ -n "$BACKEND_URL" ]; then
+    echo "BACKEND_URL is set to: $BACKEND_URL"
+else
+    echo "BACKEND_URL is not set"
+fi
+
+# Ensure the env directive is added to nginx.conf
 if [ -n "$BACKEND_URL" ]; then
     echo "Setting BACKEND_URL for Nginx: $BACKEND_URL"
     # Check if env directive already exists, if not add it
