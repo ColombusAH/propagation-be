@@ -28,11 +28,15 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
+# Note: According to Railway docs, private networking is not available during build phase
+# so we can't perform network checks here
+
 # Set environment variables
 ENV PORT=80
-# Leave BACKEND_URL unset to auto-discover it
-# But provide the ability to override it
+# Allow for custom backend URL, but our entrypoint will auto-discover it
 ENV BACKEND_URL=""
+# Ensure IPv6 is enabled
+ENV RAILWAY_PRIVATE_NETWORK=true
 
 EXPOSE 80
 

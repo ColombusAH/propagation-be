@@ -20,8 +20,14 @@ class Settings(BaseSettings):
     # Security Headers
     SECURITY_HEADERS: bool = True  # Enable security headers by default
 
-    # CORS Settings
-    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "https://localhost:3000"]
+    # CORS Settings - include Railway domains and wildcard for development
+    BACKEND_CORS_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "https://localhost:3000",
+        "https://*.railway.app",
+        "http://*.railway.app",
+        "*"  # Allow all origins in development - can be restricted in production
+    ]
 
     class Config:
         env_file = ".env"

@@ -6,11 +6,16 @@ export PYTHONHASHSEED=random
 export PYTHONDONTWRITEBYTECODE=1
 export PYTHONUNBUFFERED=1
 export PYTHONWARNINGS="ignore::DeprecationWarning"
-export PORT=${PORT:-8000}
+export PORT=${PORT:-8002}
 
 # Configure network - check and print networking information for debugging
 echo "Network configuration:"
 ip addr
+echo "---"
+
+# Print IPv6 network information
+echo "IPv6 networking info:"
+ip -6 addr
 echo "---"
 
 echo "Generating Prisma client..."
@@ -40,5 +45,8 @@ else
   echo "Warning: DATABASE_URL not set, skipping migrations"
 fi
 
-echo "Starting application on port $PORT with host ${UVICORN_HOST:-0.0.0.0}..."
+# Set up additional health check endpoint
+export HEALTH_PATH="/health"
+
+echo "Starting application on port $PORT with host ${UVICORN_HOST:-::} (IPv6 enabled)..."
 exec "$@" 

@@ -79,3 +79,8 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 async def health_check():
     """Root health check endpoint for Railway."""
     return {"status": "healthy"}
+
+@app.get("/healthz")
+async def healthz_check():
+    """Health check endpoint for internal communication."""
+    return {"status": "ok"}
