@@ -14,5 +14,5 @@ numReplicas = 1
 # Railway environment variables
 [variables]
 PORT = "8080"
-ENABLE_ALPINE_PRIVATE_NETWORKING = "true"
-PROXY_PASS = "http://anybot-be.railway.internal:8080" 
+     = "true"
+PROXY_PASS = "http://anybotbe.railway.internal" 
