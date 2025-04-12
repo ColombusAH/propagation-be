@@ -42,8 +42,11 @@ echo "Using PORT: $PORT"
 sed -i "s/listen 80 default_server;/listen ${PORT} default_server;/" /etc/nginx/nginx.conf
 sed -i "s/listen \[::\]:80 default_server/listen \[::\]:${PORT} default_server/" /etc/nginx/nginx.conf
 
-# Create a healthcheck file to respond quickly - redundant but ensures it exists
+# Ensure healthcheck path exists and is populated
+mkdir -p /usr/share/nginx/html/healthz
 echo "ok" > /usr/share/nginx/html/healthz/index.html
+chmod 644 /usr/share/nginx/html/healthz/index.html
+echo "Healthcheck path created at /usr/share/nginx/html/healthz/index.html"
 
 # Start nginx with less verbosity
 exec "$@"

@@ -17,8 +17,8 @@ RUN mkdir -p /usr/share/nginx/html/healthz && \
     echo "ok" > /usr/share/nginx/html/healthz/index.html && \
     chmod 644 /usr/share/nginx/html/healthz/index.html
 
-# Install minimal requirements - add iproute2 for ip command
-RUN apk add --no-cache bash iproute2
+# Install minimal requirements - add iproute2 for ip command and curl for healthcheck
+RUN apk add --no-cache bash iproute2 curl
 
 # Copy build results and config
 COPY --from=build /app/dist /usr/share/nginx/html
@@ -34,9 +34,9 @@ ENV ENABLE_ALPINE_PRIVATE_NETWORKING=true
 
 EXPOSE 80
 
-# Use healthcheck instruction
-HEALTHCHECK --interval=5s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget -q -O - http://localhost:$PORT/healthz || exit 1
+# Use healthcheck instruction with more generous settings
+HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:80/healthz || exit 1
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
