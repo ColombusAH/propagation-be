@@ -57,4 +57,4 @@ ENTRYPOINT ["/app/scripts/railway-entrypoint-python.sh"]
 
 # Start the app with PORT from environment variable and explicit host configuration
 # Use 0.0.0.0 to listen on all interfaces (both IPv4 and IPv6)
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8002}"] 
+CMD ["sh", "-c", "uvicorn app.main:app --host :: --port ${PORT:-8002}"]
