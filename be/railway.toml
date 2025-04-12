@@ -7,7 +7,7 @@ dockerfilePath = "be/Dockerfile"
 # Health check path
 healthcheckPath = "/health"
 # Health check timeout in seconds
-healthcheckTimeout = 30
+healthcheckTimeout = 60
 # Max deployment startup time in seconds
 startupTimeout = 180
 # Whether to auto-restart the service on crash
