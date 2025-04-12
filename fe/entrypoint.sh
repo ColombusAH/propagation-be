@@ -18,9 +18,9 @@ iface eth0 inet dhcp
     pre-up sysctl -w net.ipv6.conf.all.disable_ipv6=0
 EOF
 
-    # Alpine doesn't use /etc/init.d/networking
-    # Instead we'll configure the network directly
-    ip link set dev lo up
+    # Try to set loopback interface up, but don't fail if we don't have permission
+    # The interface is likely already up anyway in a managed container environment
+    ip link set dev lo up 2>/dev/null || echo "Note: Could not set loopback interface up (permission issue) - this is usually OK"
     
     # Print network configuration for debugging
     echo "Network configuration:"
