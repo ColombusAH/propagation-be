@@ -10,6 +10,10 @@ COPY . .
 
 ARG VITE_GOOGLE_CLIENT_ID
 ENV VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID} 
+
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL} 
+
 RUN npm run build
 
 # Use slim version for smaller image
