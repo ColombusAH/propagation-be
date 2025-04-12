@@ -30,9 +30,13 @@ fi
 # Replace any environment variables in nginx.conf if needed
 # envsubst < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 
-# Update the listen port dynamically
-PORT="${PORT:-8080}"
+# Configure nginx to use the PORT environment variable
+PORT="${PORT:-80}"
 echo "Using PORT: $PORT"
-sed -i "s/listen 80;/listen ${PORT};/" /etc/nginx/conf.d/default.conf
 
-exec nginx -g "daemon off;"
+# Update the port in the nginx.conf file
+sed -i "s/listen 80;/listen ${PORT};/" /etc/nginx/nginx.conf
+sed -i "s/listen \[::\]:80/listen \[::\]:${PORT}/" /etc/nginx/nginx.conf
+
+# Start nginx
+exec "$@"
