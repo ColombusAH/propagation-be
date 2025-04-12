@@ -24,8 +24,9 @@ fi
 
 # Configure to listen on the PORT environment variable
 if [ -n "$PORT" ]; then
-    sed -i.bak "s|listen 80|listen $PORT|g" /etc/nginx/nginx.conf
-    sed -i.bak "s|listen \[::\]:80|listen \[::\]:$PORT|g" /etc/nginx/nginx.conf
+    # Use specific pattern matching to ensure we only replace the port numbers
+    sed -i.bak "s|listen 80 |listen $PORT |g" /etc/nginx/nginx.conf
+    sed -i.bak "s|listen \[::\]:80 |listen \[::\]:$PORT |g" /etc/nginx/nginx.conf
     echo "Configured nginx to listen on port $PORT"
 fi
 
