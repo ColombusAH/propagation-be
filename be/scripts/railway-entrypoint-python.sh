@@ -24,6 +24,9 @@ ip link show lo
 ip -6 addr show lo
 echo "---"
 
+# Ensure the app directory structure is correct
+mkdir -p /app/logs
+
 echo "Generating Prisma client..."
 python -m prisma generate
 
@@ -51,10 +54,11 @@ else
   echo "Warning: DATABASE_URL not set, skipping migrations"
 fi
 
-# Test self health check before starting
-echo "Testing localhost health checks (will start regardless of result)..."
-(curl -s -f http://127.0.0.1:8002/health || echo "Warning: Health check not responding yet") &
+# Create a health check file for Railway
+if [ -n "$RAILWAY_HEALTHCHECK_PATH" ]; then
+  echo "Railway will check health at: $RAILWAY_HEALTHCHECK_PATH"
+fi
 
 # Start the application
-echo "Starting application on port $PORT with host ${UVICORN_HOST:-::} (IPv6 enabled)..."
+echo "Starting application on port $PORT with host 0.0.0.0 (all interfaces)..."
 exec "$@" 

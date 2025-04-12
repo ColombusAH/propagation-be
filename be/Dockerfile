@@ -41,15 +41,20 @@ ENV PYTHONHASHSEED=random
 ENV PYTHONWARNINGS="ignore::DeprecationWarning"
 ENV PORT=8002
 ENV PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
-# Enable IPv6 support in FastAPI/Uvicorn - bind to all IPv6 addresses
-ENV UVICORN_HOST="::"
+# Enable IPv6 support in FastAPI/Uvicorn - bind to all interfaces (IPv4 and IPv6)
+ENV UVICORN_HOST="0.0.0.0"
 # Enable private networking for Railway
 ENV RAILWAY_PRIVATE_NETWORK=true
 # Tell Railway which health check path to use (can be overridden)
-ENV RAILWAY_HEALTHCHECK_PATH=/health
+ENV RAILWAY_HEALTHCHECK_PATH=/
+
+# Add healthcheck instructions for Docker
+HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:8002/ || exit 1
 
 # Railway will set DATABASE_URL and PORT automatically
 ENTRYPOINT ["/app/scripts/railway-entrypoint-python.sh"]
 
-# Start the app with PORT from environment variable and explicit host configuration for both IPv4 and IPv6
-CMD ["sh", "-c", "uvicorn app.main:app --host ${UVICORN_HOST:-::} --port ${PORT:-8002}"] 
+# Start the app with PORT from environment variable and explicit host configuration
+# Use 0.0.0.0 to listen on all interfaces (both IPv4 and IPv6)
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8002}"] 
