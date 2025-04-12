@@ -31,7 +31,7 @@ RUN chmod +x /docker-entrypoint.sh
 # Set environment variables
 ENV PORT=80
 # Railway handles networking, so we're disabling our custom implementation
-ENV ENABLE_ALPINE_PRIVATE_NETWORKING=false
+ENV ENABLE_ALPINE_PRIVATE_NETWORKING=true
 
 EXPOSE 80
 
