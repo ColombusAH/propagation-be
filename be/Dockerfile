@@ -45,9 +45,11 @@ ENV PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
 ENV UVICORN_HOST="::"
 # Enable private networking for Railway
 ENV RAILWAY_PRIVATE_NETWORK=true
+# Tell Railway which health check path to use (can be overridden)
+ENV RAILWAY_HEALTHCHECK_PATH=/health
 
 # Railway will set DATABASE_URL and PORT automatically
 ENTRYPOINT ["/app/scripts/railway-entrypoint-python.sh"]
 
-# Start the app with PORT from environment variable and explicit host configuration
+# Start the app with PORT from environment variable and explicit host configuration for both IPv4 and IPv6
 CMD ["sh", "-c", "uvicorn app.main:app --host ${UVICORN_HOST:-::} --port ${PORT:-8002}"] 

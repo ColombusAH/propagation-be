@@ -18,6 +18,12 @@ echo "IPv6 networking info:"
 ip -6 addr
 echo "---"
 
+# Check that loopback is correctly configured (for health checks)
+echo "Checking loopback interface:"
+ip link show lo
+ip -6 addr show lo
+echo "---"
+
 echo "Generating Prisma client..."
 python -m prisma generate
 
@@ -45,8 +51,10 @@ else
   echo "Warning: DATABASE_URL not set, skipping migrations"
 fi
 
-# Set up additional health check endpoint
-export HEALTH_PATH="/health"
+# Test self health check before starting
+echo "Testing localhost health checks (will start regardless of result)..."
+(curl -s -f http://127.0.0.1:8002/health || echo "Warning: Health check not responding yet") &
 
+# Start the application
 echo "Starting application on port $PORT with host ${UVICORN_HOST:-::} (IPv6 enabled)..."
 exec "$@" 

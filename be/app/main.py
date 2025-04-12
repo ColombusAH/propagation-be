@@ -72,6 +72,12 @@ app.add_middleware(
 # app.state.limiter = limiter
 # app.add_middleware(SlowAPIMiddleware)
 
+# Root endpoint - needed for Railway's default health check
+@app.get("/")
+async def root():
+    """Root endpoint for Railway's default health check."""
+    return {"status": "ok"}
+
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
