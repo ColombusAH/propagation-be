@@ -7,6 +7,9 @@ RUN npm ci --quiet
 
 # Then copy the rest and build
 COPY . .
+
+ARG VITE_GOOGLE_CLIENT_ID
+ENV VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID} 
 RUN npm run build
 
 # Use slim version for smaller image
