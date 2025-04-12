@@ -39,5 +39,10 @@ EXPOSE 80
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
   CMD curl -f http://localhost:80/healthz || exit 1
 
+# make a call to the be via internal network and print the response
+RUN curl -X GET http://anybotbe.railway.internal:8002/health
+
+
+
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
