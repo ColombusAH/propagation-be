@@ -1,45 +1,37 @@
-import { useState } from 'react';
-import { TextInput, PasswordInput, Paper, Title, Container, Button, Text, Stack } from '@mantine/core';
+import { Paper, Title, Container, Text, Stack, Loader } from '@mantine/core';
 import { useAuth } from '../../contexts/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
+import type { CredentialResponse } from '@react-oauth/google';
 
 export const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const { login, error, isLoading } = useAuth();
+  const { loginWithGoogle, error, isLoading } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await login(email, password);
-    // If login is successful, the user will be set in the AuthContext
-    // and the protected routes will handle the redirection
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    console.log('Google Login Success:', credentialResponse);
+    if (credentialResponse.credential) {
+      await loginWithGoogle(credentialResponse.credential);
+    } else {
+      console.error("Google login failed: No credential received");
+    }
+  };
+
+  const handleGoogleError = () => {
+    console.log('Google Login Failed');
   };
 
   return (
     <Container size={420} my={40}>
-      <Title ta="center">Welcome back!</Title>
+      <Title ta="center">Welcome!</Title>
       <Text c="dimmed" size="sm" ta="center" mt={5}>
-        Enter your credentials to continue
+        Sign in with your Google account to continue
       </Text>
 
       <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-        <form onSubmit={handleSubmit}>
-          <Stack>
-            <TextInput
-              label="Email"
-              placeholder="Your email"
-              value={email}
-              onChange={(e) => setEmail(e.currentTarget.value)}
-              required
-            />
-
-            <PasswordInput
-              label="Password"
-              placeholder="Your password"
-              value={password}
-              onChange={(e) => setPassword(e.currentTarget.value)}
-              required
-            />
-          </Stack>
+        <Stack align="center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+          />
 
           {error && (
             <Text color="red" size="sm" mt="md">
@@ -47,10 +39,8 @@ export const LoginPage = () => {
             </Text>
           )}
 
-          <Button fullWidth mt="xl" type="submit" loading={isLoading}>
-            Sign in
-          </Button>
-        </form>
+          {isLoading && <Loader mt="md" />}
+        </Stack>
       </Paper>
     </Container>
   );

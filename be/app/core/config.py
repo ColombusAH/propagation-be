@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     # Security Settings
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    GOOGLE_CLIENT_ID: str
     
     # Security Headers
     SECURITY_HEADERS: bool = True  # Enable security headers by default
