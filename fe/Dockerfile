@@ -20,9 +20,6 @@ RUN mkdir -p /usr/share/nginx/html/healthz && \
 # Install minimal requirements - add iproute2 for network tools and curl for healthcheck
 RUN apk add --no-cache bash iproute2 curl iputils bind-tools
 
-# Create nginx config directory
-RUN mkdir -p /etc/nginx/conf.d
-
 # Copy build results and config
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/nginx.conf
