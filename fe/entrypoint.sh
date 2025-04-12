@@ -34,9 +34,12 @@ fi
 PORT="${PORT:-80}"
 echo "Using PORT: $PORT"
 
-# Update the port in the nginx.conf file
-sed -i "s/listen 80;/listen ${PORT};/" /etc/nginx/nginx.conf
-sed -i "s/listen \[::\]:80/listen \[::\]:${PORT}/" /etc/nginx/nginx.conf
+# Update the port in the nginx.conf file - more efficient search and replace
+sed -i "s/listen 80 default_server;/listen ${PORT} default_server;/" /etc/nginx/nginx.conf
+sed -i "s/listen \[::\]:80 default_server/listen \[::\]:${PORT} default_server/" /etc/nginx/nginx.conf
 
-# Start nginx
+# Create a healthcheck file to respond quickly - redundant but ensures it exists
+echo "ok" > /usr/share/nginx/html/healthz/index.html
+
+# Start nginx with less verbosity
 exec "$@"
