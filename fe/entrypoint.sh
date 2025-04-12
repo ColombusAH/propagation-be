@@ -11,7 +11,7 @@ echo "Attempting to resolve backend service..."
 getent hosts backend || echo "Could not resolve 'backend' service"
 
 # Determine the Backend URL
-# Default value (ensure scheme)
+# Default value (ensure scheme and port)
 FINAL_BACKEND_URL="http://backend:8002"
 RAW_BACKEND_URL=""
 
@@ -21,18 +21,30 @@ if [ -n "$BACKEND_URL" ]; then
     echo "Using BACKEND_URL from environment: $RAW_BACKEND_URL"
 # Check Railway service name
 elif [ "$RAILWAY_PRIVATE_NETWORK" == "true" ] && [ -n "$RAILWAY_SERVICE_BACKEND" ]; then
-    RAW_BACKEND_URL="${RAILWAY_SERVICE_BACKEND}:8002"
+    # Railway service name usually doesn't include port
+    RAW_BACKEND_URL="${RAILWAY_SERVICE_BACKEND}"
     echo "Using Railway service name: $RAW_BACKEND_URL"
 fi
 
-# If we have a raw URL/hostname, ensure it has the http:// prefix
+# If we have a raw URL/hostname, process it
 if [ -n "$RAW_BACKEND_URL" ]; then
-    # Check if it already starts with http:// or https://
-    if [[ "$RAW_BACKEND_URL" != http://* ]] && [[ "$RAW_BACKEND_URL" != https://* ]]; then
-        FINAL_BACKEND_URL="http://$RAW_BACKEND_URL"
+    TEMP_URL="$RAW_BACKEND_URL"
+    
+    # 1. Ensure Port (add :8002 if no port specified)
+    # Check if the raw value contains a colon after the first character (indicating a port)
+    if [[ ! "$TEMP_URL" =~ .*:[0-9]+$ ]]; then
+        TEMP_URL="${TEMP_URL}:8002"
+        echo "Appended default port :8002 -> $TEMP_URL"
+    else
+        echo "Port seems to be present in raw URL: $TEMP_URL"
+    fi
+
+    # 2. Ensure Scheme (add http:// if no scheme specified)
+    if [[ "$TEMP_URL" != http://* ]] && [[ "$TEMP_URL" != https://* ]]; then
+        FINAL_BACKEND_URL="http://$TEMP_URL"
         echo "Prepended http:// scheme: $FINAL_BACKEND_URL"
     else
-        FINAL_BACKEND_URL="$RAW_BACKEND_URL"
+        FINAL_BACKEND_URL="$TEMP_URL"
         echo "Scheme already present: $FINAL_BACKEND_URL"
     fi
 else
