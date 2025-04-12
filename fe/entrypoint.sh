@@ -22,6 +22,13 @@ if [ -z "$BACKEND_URL" ] && [ "$RAILWAY_PRIVATE_NETWORK" == "true" ]; then
     fi
 fi
 
+# Make sure the BACKEND_URL is available in the Nginx runtime
+if [ -n "$BACKEND_URL" ]; then
+    # Write environment variable to /etc/nginx/conf.d/environment.conf
+    echo "env BACKEND_URL=$BACKEND_URL;" > /etc/nginx/conf.d/environment.conf
+    echo "Exported BACKEND_URL to Nginx environment: $BACKEND_URL"
+fi
+
 # Configure to listen on the PORT environment variable
 if [ -n "$PORT" ]; then
     # Use specific pattern matching to ensure we only replace the port numbers
