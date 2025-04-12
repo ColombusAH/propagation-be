@@ -17,8 +17,8 @@ RUN mkdir -p /usr/share/nginx/html/healthz && \
     echo "ok" > /usr/share/nginx/html/healthz/index.html && \
     chmod 644 /usr/share/nginx/html/healthz/index.html
 
-# Install minimal requirements - add iproute2 for ip command and curl for healthcheck
-RUN apk add --no-cache bash iproute2 curl
+# Install minimal requirements - add iproute2 for network tools and curl for healthcheck
+RUN apk add --no-cache bash iproute2 curl iputils
 
 # Copy build results and config
 COPY --from=build /app/dist /usr/share/nginx/html
@@ -30,19 +30,15 @@ RUN chmod +x /docker-entrypoint.sh
 
 # Set environment variables
 ENV PORT=80
-# Railway handles networking, so we're disabling our custom implementation
-ENV ENABLE_ALPINE_PRIVATE_NETWORKING=true
+# Leave BACKEND_URL unset to auto-discover it
+# But provide the ability to override it
+ENV BACKEND_URL=""
 
 EXPOSE 80
 
 # Use healthcheck instruction with more generous settings
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
   CMD curl -f http://localhost:80/healthz || exit 1
-
-# make a call to the be via internal network and print the response
-RUN curl -X GET http://anybotbe.railway.internal:8002/health
-
-
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
