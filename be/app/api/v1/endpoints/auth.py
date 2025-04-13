@@ -90,7 +90,10 @@ async def login_with_google(
         # 1. Verify the Google token
         request_session = google_requests.Request()
         idinfo = id_token.verify_oauth2_token(
-            google_id_token, request_session, GOOGLE_CLIENT_ID
+            google_id_token, 
+            request_session, 
+            GOOGLE_CLIENT_ID,
+            clock_skew_in_seconds=settings.GOOGLE_TOKEN_TIMEOUT  # Add clock skew tolerance
         )
         logger.info(f"Google token verified successfully for email: {idinfo.get('email')}")
 
