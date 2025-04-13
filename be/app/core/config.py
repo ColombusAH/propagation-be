@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30000
     JWT_ALGORITHM: str = "HS256"
     GOOGLE_CLIENT_ID: str
+    GOOGLE_TOKEN_TIMEOUT: int = 300  # 5 minutes timeout for Google token verification
     
     # Security Headers
     SECURITY_HEADERS: bool = True  # Enable security headers by default
