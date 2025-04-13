@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     # Security Settings
     SECRET_KEY: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30000
     JWT_ALGORITHM: str = "HS256"
     GOOGLE_CLIENT_ID: str
     
