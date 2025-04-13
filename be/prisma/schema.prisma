@@ -31,6 +31,7 @@ model Business {
 
 model User {
   id               String         @id @default(uuid())
+  subId            String?        // provided by google/ others auth providers 
   email            String         @unique
   name             String
   description      String?
@@ -40,6 +41,7 @@ model User {
   longitude        Float?         // Geolocation coordinates
   password         String?
   role             Role
+  verifiedBy       String?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   deletedAt        DateTime?

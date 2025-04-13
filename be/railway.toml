@@ -1,7 +1,7 @@
 [build]
-# Use the Dockerfile in the be directory
+# Use the Dockerfile in the fe directory
 builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
+dockerfilePath = "be/Dockerfile"
 
 [deploy]
 # Health check path
@@ -9,11 +9,13 @@ healthcheckPath = "/health"
 # Health check timeout in seconds
 healthcheckTimeout = 60
 # Max deployment startup time in seconds
-startupTimeout = 600
+startupTimeout = 180
 # Whether to auto-restart the service on crash
 restartPolicyType = "ON_FAILURE"
 # Number of restarts to attempt before giving up
 restartPolicyMaxRetries = 3
+
+# Note: Railway will automatically assign PORT environment variable
 
 [variables]
 PYTHONUNBUFFERED = "1"

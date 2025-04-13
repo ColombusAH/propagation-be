@@ -14,3 +14,7 @@ cryptography==44.0.2
 # Uncomment for rate limiting
 # slowapi==0.1.8
 # redis==5.0.1
+
+# Google OAuth dependencies
+google-auth==2.38.0
+google-api-python-client==2.166.0

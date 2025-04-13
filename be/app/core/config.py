@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "Shifty"
     DEBUG: bool = False
+    MODE: str = "development"
 
     # Database Settings
     DATABASE_URL: str
@@ -15,13 +16,21 @@ class Settings(BaseSettings):
 
     # Security Settings
     SECRET_KEY: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30000
+    JWT_ALGORITHM: str = "HS256"
+    GOOGLE_CLIENT_ID: str
     
     # Security Headers
     SECURITY_HEADERS: bool = True  # Enable security headers by default
 
-    # CORS Settings
-    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "https://localhost:3000"]
+    # CORS Settings - include Railway domains and wildcard for development
+    BACKEND_CORS_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "https://localhost:3000",
+        "https://*.railway.app",
+        "http://*.railway.app",
+        "*"  # Allow all origins in development - can be restricted in production
+    ]
 
     class Config:
         env_file = ".env"

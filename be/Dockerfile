@@ -6,7 +6,7 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Copy the entire be directory into the container
-COPY be/ .
+COPY . .
 
 # Install system dependencies including PostgreSQL client
 RUN apt-get update && \
@@ -15,6 +15,8 @@ RUN apt-get update && \
     openssl \
     curl \
     postgresql-client \
+    iputils-ping \
+    iproute2 \
     netcat-traditional && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -24,7 +26,7 @@ RUN python -m venv /venv
 ENV PATH="/venv/bin:$PATH"
 
 # Install Python dependencies
-COPY be/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir prisma
@@ -37,11 +39,23 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONHASHSEED=random
 ENV PYTHONWARNINGS="ignore::DeprecationWarning"
-ENV PORT=8000
+ENV PORT=8002
 ENV PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
+# Enable IPv6 support in FastAPI/Uvicorn - bind to all interfaces (IPv4 and IPv6)
+ENV UVICORN_HOST="0.0.0.0"
+# Enable private networking for Railway
+ENV RAILWAY_PRIVATE_NETWORK=true
+# Tell Railway which health check path to use (can be overridden)
+ENV RAILWAY_HEALTHCHECK_PATH=/
+
+# Add healthcheck instructions for Docker
+HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:8002/ || exit 1
 
 # Railway will set DATABASE_URL and PORT automatically
 ENTRYPOINT ["/app/scripts/railway-entrypoint-python.sh"]
 
-# Start the app with PORT from environment variable
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"] 
+# Start the app with PORT from environment variable and explicit host configuration
+# Use shell form (sh -c "...") to allow ${PORT:-8002} substitution
+# Use 0.0.0.0 to listen on all interfaces (IPv4 and IPv6)
+CMD sh -c "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8002}"

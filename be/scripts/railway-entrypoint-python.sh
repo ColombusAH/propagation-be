@@ -6,7 +6,26 @@ export PYTHONHASHSEED=random
 export PYTHONDONTWRITEBYTECODE=1
 export PYTHONUNBUFFERED=1
 export PYTHONWARNINGS="ignore::DeprecationWarning"
-export PORT=${PORT:-8000}
+export PORT=${PORT:-8002}
+
+# Configure network - check and print networking information for debugging
+echo "Network configuration:"
+ip addr
+echo "---"
+
+# Print IPv6 network information
+echo "IPv6 networking info:"
+ip -6 addr
+echo "---"
+
+# Check that loopback is correctly configured (for health checks)
+echo "Checking loopback interface:"
+ip link show lo
+ip -6 addr show lo
+echo "---"
+
+# Ensure the app directory structure is correct
+mkdir -p /app/logs
 
 echo "Generating Prisma client..."
 python -m prisma generate
@@ -35,5 +54,11 @@ else
   echo "Warning: DATABASE_URL not set, skipping migrations"
 fi
 
-echo "Starting application on port $PORT..."
+# Create a health check file for Railway
+if [ -n "$RAILWAY_HEALTHCHECK_PATH" ]; then
+  echo "Railway will check health at: $RAILWAY_HEALTHCHECK_PATH"
+fi
+
+# Start the application
+echo "Starting application on port $PORT with host 0.0.0.0 (all interfaces)..."
 exec "$@" 
