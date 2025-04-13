@@ -1,8 +1,15 @@
-import { SimpleGrid, Paper, Text, Title, Group } from '@mantine/core';
+import { SimpleGrid, Paper, Text, Title, Group, Button } from '@mantine/core';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate, Link } from '@tanstack/react-router';
 
 export const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const navigateToSchedules = () => {
+    console.log('Navigating to schedules');
+    navigate({ to: '/schedules' });
+  };
 
   return (
     <>
@@ -19,17 +26,20 @@ export const Dashboard = () => {
         <DashboardCard title="Projects" value="12" />
       </SimpleGrid>
 
-      {user?.role === 'admin' && (
+      {(user?.role === 'ADMIN' || user?.role === 'OWNER') && (
         <div style={{ marginTop: '2rem' }}>
-          <Title order={3} mb="md">Admin Statistics</Title>
+          <Title order={3} mb="md">ניהול מערכת</Title>
           <SimpleGrid cols={{ base: 1, sm: 2 }}>
             <Paper withBorder p="md">
-              <Text fw={500} mb="xs">System Status</Text>
-              <Text c="dimmed">All systems operational</Text>
+              <Text fw={500} mb="xs">לוחות זמנים</Text>
+              <Text c="dimmed" mb="md">נהל את לוחות הזמנים של העובדים</Text>
+              <Link to="/schedules">
+                <Button variant="light">צפה בלוחות הזמנים</Button>
+              </Link>
             </Paper>
             <Paper withBorder p="md">
-              <Text fw={500} mb="xs">Recent Activities</Text>
-              <Text c="dimmed">5 new users registered today</Text>
+              <Text fw={500} mb="xs">סטטיסטיקות מערכת</Text>
+              <Text c="dimmed">כל המערכות פעילות</Text>
             </Paper>
           </SimpleGrid>
         </div>

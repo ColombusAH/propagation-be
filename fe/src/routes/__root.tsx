@@ -9,12 +9,15 @@ const theme = createTheme({
 
 
 export const Route = createRootRoute({
-  component: () => (
-    <MantineProvider theme={theme}>
-      <AuthProvider>
-        <Outlet />
-        <TanStackRouterDevtools />
-      </AuthProvider>
-    </MantineProvider>
-  ),
+  component: () => {
+    console.log('Root route rendered');
+    return (
+      <MantineProvider theme={theme}>
+        <AuthProvider>
+          <Outlet />
+          <TanStackRouterDevtools />
+        </AuthProvider>
+      </MantineProvider>
+    );
+  },
 })

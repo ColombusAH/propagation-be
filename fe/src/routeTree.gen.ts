@@ -11,9 +11,23 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as SchedulesImport } from './routes/schedules'
+import { Route as CreateschedulesImport } from './routes/createschedules'
 import { Route as IndexImport } from './routes/index'
 
 // Create/Update Routes
+
+const SchedulesRoute = SchedulesImport.update({
+  id: '/schedules',
+  path: '/schedules',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const CreateschedulesRoute = CreateschedulesImport.update({
+  id: '/createschedules',
+  path: '/createschedules',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const IndexRoute = IndexImport.update({
   id: '/',
@@ -32,6 +46,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/createschedules': {
+      id: '/createschedules'
+      path: '/createschedules'
+      fullPath: '/createschedules'
+      preLoaderRoute: typeof CreateschedulesImport
+      parentRoute: typeof rootRoute
+    }
+    '/schedules': {
+      id: '/schedules'
+      path: '/schedules'
+      fullPath: '/schedules'
+      preLoaderRoute: typeof SchedulesImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -39,32 +67,42 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/createschedules': typeof CreateschedulesRoute
+  '/schedules': typeof SchedulesRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/createschedules': typeof CreateschedulesRoute
+  '/schedules': typeof SchedulesRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/createschedules': typeof CreateschedulesRoute
+  '/schedules': typeof SchedulesRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/createschedules' | '/schedules'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/createschedules' | '/schedules'
+  id: '__root__' | '/' | '/createschedules' | '/schedules'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CreateschedulesRoute: typeof CreateschedulesRoute
+  SchedulesRoute: typeof SchedulesRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CreateschedulesRoute: CreateschedulesRoute,
+  SchedulesRoute: SchedulesRoute,
 }
 
 export const routeTree = rootRoute
@@ -77,11 +115,19 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/"
+        "/",
+        "/createschedules",
+        "/schedules"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/createschedules": {
+      "filePath": "createschedules.tsx"
+    },
+    "/schedules": {
+      "filePath": "schedules.tsx"
     }
   }
 }
