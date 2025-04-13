@@ -31,26 +31,26 @@ services:
     networks:
       - shifty-network  
 
-  app:
-    build: .
-    volumes:
-      - .:/app
-      - /app/node_modules
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/shifty
-      - PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
-      - SECRET_KEY=${SECRET_KEY:-default_development_key_change_in_production}
-    entrypoint: /app/docker-entrypoint.sh
-    command: uvicorn app.main:app --host 0.0.0.0 --reload
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - shifty-network
+  # app:
+  #   build: .
+  #   volumes:
+  #     - .:/app
+  #     - /app/node_modules
+  #   ports:
+  #     - "8000:8000"
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - DATABASE_URL=postgresql://postgres:postgres@db:5432/shifty
+  #     - PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
+  #     - SECRET_KEY=${SECRET_KEY:-default_development_key_change_in_production}
+  #   entrypoint: /app/docker-entrypoint.sh
+  #   command: uvicorn app.main:app --host 0.0.0.0 --reload
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #   networks:
+  #     - shifty-network
 
 volumes:
   postgres_data:
