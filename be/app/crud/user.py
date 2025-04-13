@@ -36,4 +36,18 @@ async def update_user_google_info(db: Prisma, user_id: str, google_sub_id: str) 
         return updated_user
     except Exception as e:
         logger.error(f"Database error while updating subId for user {user_id}: {e}", exc_info=True)
+        raise
+
+async def get_user_by_id(db: Prisma, user_id: str) -> Optional[User]:
+    """Fetches a user from the database by their unique ID."""
+    try:
+        logger.debug(f"Attempting to find user by ID: {user_id}")
+        user = await db.user.find_unique(where={'id': user_id})
+        if user:
+            logger.debug(f"User found with ID {user_id}")
+        else:
+            logger.debug(f"No user found with ID: {user_id}")
+        return user
+    except Exception as e:
+        logger.error(f"Database error while fetching user by ID {user_id}: {e}", exc_info=True)
         raise 

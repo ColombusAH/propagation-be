@@ -1,27 +1,53 @@
 import type { User } from '../types/user';
-import { env } from '../config/env';
+import { apiClient } from './apiClient';
 
-const API_URL = env.API_URL;
 
 /**
  * Service object for handling authentication-related API calls.
  */
 export const authService = {
   /**
+   * Store JWT token in localStorage
+   */
+  setToken(token: string): void {
+    localStorage.setItem('access_token', token);
+  },
+
+  /**
+   * Get JWT token from localStorage
+   */
+  getToken(): string | null {
+    return localStorage.getItem('access_token');
+  },
+
+  /**
+   * Clear JWT token from localStorage
+   */
+  clearToken(): void {
+    localStorage.removeItem('access_token');
+  },
+  
+  /**
+   * Check if user is logged in (has a token)
+   */
+  isLoggedIn(): boolean {
+    return !!this.getToken();
+  },
+
+  /**
    * Fetches the current user's information from the backend.
    * @returns A Promise resolving to the User object or null if not authenticated or on error.
    */
   async getCurrentUser(): Promise<User | null> {
     try {
-      const response = await fetch(`${API_URL}/auth/me`);
-      
-      if (response.ok) {
-        // Ensure the response is not empty before parsing JSON
-        const text = await response.text();
-        return text ? JSON.parse(text) : null;
+      // If no token, user is not logged in
+      if (!this.isLoggedIn()) {
+        console.log('authService: No token found, user not logged in');
+        return null;
       }
       
-      return null;
+      // Use apiClient which automatically adds authorization header
+      return await apiClient.get<User>('/auth/me');
     } catch (error) {
       console.error('Failed to fetch user:', error);
       return null;
@@ -46,33 +72,29 @@ export const authService = {
    * @returns A Promise resolving to the User object upon successful authentication, or null/throws on error.
    */
   async loginWithGoogle(googleIdToken: string): Promise<User | null> {
-    console.log("authService: Sending Google token to backend:", `${API_URL}/auth/google`);
+    console.log("authService: Sending Google token to backend");
     try {
-      const response = await fetch(`${API_URL}/auth/google`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token: googleIdToken }),
-      });
-
-      if (!response.ok) {
-        // Try to parse error details from backend response
-        let errorDetail = `HTTP error! status: ${response.status}`;
-        try {
-          const errorData = await response.json();
-          errorDetail = errorData.detail || errorDetail; 
-        } catch (parseError) {
-          // Ignore if response body isn't valid JSON
-        }
-        console.error("authService: Google login backend error:", errorDetail);
-        throw new Error(errorDetail); // Throw error to be caught by AuthContext
+      interface GoogleLoginResponse {
+        message: string;
+        user_id: string;
+        role: string;
+        token: string;
       }
-
-      const userData: User = await response.json();
-      console.log("authService: Received user data from backend:", userData);
-      return userData; // Return the user data from the backend
-
+      
+      const data = await apiClient.post<GoogleLoginResponse>('/auth/google', { token: googleIdToken });
+      console.log("authService: Login successful");
+      
+      // Store the JWT token in localStorage
+      if (data.token) {
+        console.log("authService: Storing token in localStorage");
+        this.setToken(data.token);
+        
+        // Get and return current user data
+        return this.getCurrentUser();
+      } else {
+        console.error("authService: No token received in login response");
+        return null;
+      }
     } catch (error) {
       console.error('authService: Failed to login with Google:', error);
       // Re-throw the error so it can be caught by the AuthContext
@@ -81,10 +103,10 @@ export const authService = {
   },
 
   /**
-   * Placeholder logout functionality.
+   * Logs user out by clearing the token.
    */
   async logout(): Promise<void> {
-    // TODO: Implement call to the actual backend logout endpoint
     console.log('User logged out');
+    this.clearToken();
   }
 }; 

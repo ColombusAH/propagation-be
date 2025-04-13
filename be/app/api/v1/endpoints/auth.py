@@ -1,9 +1,9 @@
 """API endpoints for user authentication, including Google OAuth."""
 
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status
 import logging
 from pydantic import BaseModel
-from typing import Dict, Any
+from typing import Dict, Any # For type hints
 
 # Import necessary Google libraries and verification logic
 from google.oauth2 import id_token
@@ -20,6 +20,10 @@ from app.core.security import create_access_token
 from app.db.dependencies import get_db
 # Import user CRUD operations
 from app.crud.user import get_user_by_email, update_user_google_info
+# Import User model for type hints
+from prisma.models import User
+# Import auth dependency
+from app.api.dependencies.auth import get_current_user
 
 settings = get_settings()
 GOOGLE_CLIENT_ID = settings.GOOGLE_CLIENT_ID
@@ -38,30 +42,28 @@ async def auth_root():
     return {"message": "Auth endpoint"} 
 
 
-@router.get('/me')
-async def get_me():
-    """Placeholder endpoint to get the current user (currently returns null)."""
-    logger.info("Getting me")
-    # TODO: Implement logic to return the currently authenticated user based on session/token
-    # This will likely involve reading the JWT cookie set by /google login
-    return None
+@router.get('/me', response_model=User)
+async def get_me(current_user: User = Depends(get_current_user)):
+    """Returns the details of the currently authenticated user."""
+    logger.info(f"Returning authenticated user details for {current_user.email}")
+    # The get_current_user dependency handles authentication and fetching.
+    # We just need to return the user object provided by the dependency.
+    return current_user
 
 @router.post("/google", status_code=status.HTTP_200_OK)
 async def login_with_google(
     request: GoogleLoginRequest,
-    response: Response, # Added Response object
-    db: Prisma = Depends(get_db) # Added DB dependency
-) -> Dict[str, Any]: # Changed return type hint
+    db: Prisma = Depends(get_db) # DB dependency
+) -> Dict[str, Any]:
     """
     Handles user login via Google OAuth.
 
     Receives a Google ID token, verifies it, finds the corresponding user
     in the database (must exist), updates their Google ID (`subId`),
-    generates a JWT, and returns it as an HTTPOnly cookie.
+    generates a JWT, and returns it in the response.
 
     Args:
         request: The request body containing the Google ID token.
-        response: FastAPI Response object to set the cookie.
         db: Prisma database client dependency.
 
     Raises:
@@ -71,7 +73,7 @@ async def login_with_google(
         HTTPException: 503 if database connection fails.
 
     Returns:
-        A dictionary confirming successful login. The JWT is set in a cookie.
+        A dictionary containing the JWT token and user information.
     """
     logger.info("Received Google login request")
     google_id_token = request.token
@@ -139,20 +141,13 @@ async def login_with_google(
         access_token = create_access_token(data=jwt_payload)
         logger.info(f"JWT created for user {db_user.id}")
 
-        # 5. Set JWT as HTTPOnly cookie
-        response.set_cookie(
-            key="access_token",
-            value=access_token,
-            httponly=not settings.DEBUG, # Crucial for security (prevents JS access)
-            secure=not settings.DEBUG, # Send only over HTTPS in production
-            samesite="lax", # Good balance of security and usability
-            path="/", # Cookie available site-wide
-            max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60 # Max age in seconds
-        )
-        logger.debug("Access token cookie set on response.")
-
-        # Return success message (or basic user info if desired)
-        return {"message": "Login successful", "user_id": db_user.id, "role": db_user.role}
+        # Return token directly in response instead of setting cookie
+        return {
+            "message": "Login successful",
+            "user_id": db_user.id, 
+            "role": db_user.role,
+            "token": access_token  # Return JWT token directly
+        }
 
     except ValueError as e:
         # Catches id_token.verify_oauth2_token errors
