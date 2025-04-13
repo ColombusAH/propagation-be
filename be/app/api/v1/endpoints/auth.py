@@ -1,23 +1,28 @@
 """API endpoints for user authentication, including Google OAuth."""
 
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 import logging
 from pydantic import BaseModel
+from typing import Dict, Any
 
 # Import necessary Google libraries and verification logic
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests # Alias to avoid name clash
 
-# Get Google Client ID from settings
+# Import Prisma client and dependency
+from prisma import Prisma
+
+# Get Google Client ID and JWT settings from config
 from app.core.config import get_settings
-# TODO: Potentially import JWT creation/user handling dependencies here
-# from app.core.security import create_access_token
-# from app.db.session import get_db
-# from sqlalchemy.orm import Session
-# from app.crud.user import get_or_create_user_by_google_id
+# Import security functions (JWT)
+from app.core.security import create_access_token
+# Import database dependency
+from app.db.dependencies import get_db
+# Import user CRUD operations
+from app.crud.user import get_user_by_email, update_user_google_info
 
 settings = get_settings()
-GOOGLE_CLIENT_ID = settings.GOOGLE_CLIENT_ID 
+GOOGLE_CLIENT_ID = settings.GOOGLE_CLIENT_ID
 
 logger = logging.getLogger(__name__)
 
@@ -38,41 +43,40 @@ async def get_me():
     """Placeholder endpoint to get the current user (currently returns null)."""
     logger.info("Getting me")
     # TODO: Implement logic to return the currently authenticated user based on session/token
+    # This will likely involve reading the JWT cookie set by /google login
     return None
 
 @router.post("/google", status_code=status.HTTP_200_OK)
-async def login_with_google(request: GoogleLoginRequest):
+async def login_with_google(
+    request: GoogleLoginRequest,
+    response: Response, # Added Response object
+    db: Prisma = Depends(get_db) # Added DB dependency
+) -> Dict[str, Any]: # Changed return type hint
     """
     Handles user login via Google OAuth.
 
-    Receives a Google ID token from the frontend, verifies it against
-    Google's public keys, and checks the audience (client ID).
-
-    If the token is valid, it extracts user information.
-
-    **TODO:**
-    1.  Implement logic to find an existing user in the database matching the
-        Google ID (`sub`) or email, or create a new user if one doesn't exist.
-    2.  Generate an application-specific session token (e.g., JWT) for the
-        authenticated user.
-    3.  Return the session token and potentially user information to the frontend.
+    Receives a Google ID token, verifies it, finds the corresponding user
+    in the database (must exist), updates their Google ID (`subId`),
+    generates a JWT, and returns it as an HTTPOnly cookie.
 
     Args:
         request: The request body containing the Google ID token.
+        response: FastAPI Response object to set the cookie.
+        db: Prisma database client dependency.
 
     Raises:
-        HTTPException: 401 if the token is invalid or verification fails.
+        HTTPException: 401 if the token is invalid, user doesn't exist, or verification fails.
         HTTPException: 500 if GOOGLE_CLIENT_ID is not configured or other internal errors occur.
-        HTTPException: 400 if required info (email, sub) is missing from the token.
+        HTTPException: 400 if required info (email, sub) is missing from the Google token.
+        HTTPException: 503 if database connection fails.
 
     Returns:
-        Currently returns mock user data upon successful token verification.
-        Should eventually return a session token and user data.
+        A dictionary confirming successful login. The JWT is set in a cookie.
     """
     logger.info("Received Google login request")
     google_id_token = request.token
-    logger.debug(f"Received Google ID token: {google_id_token[:10]}...") # Log only prefix for security
-    
+    logger.debug(f"Received Google ID token: {google_id_token[:10]}...") # Log only prefix
+
     if not GOOGLE_CLIENT_ID:
         logger.error("GOOGLE_CLIENT_ID is not configured in settings.")
         raise HTTPException(
@@ -81,57 +85,95 @@ async def login_with_google(request: GoogleLoginRequest):
         )
 
     try:
-        # Verify the token using Google's library
+        # 1. Verify the Google token
         request_session = google_requests.Request()
         idinfo = id_token.verify_oauth2_token(
             google_id_token, request_session, GOOGLE_CLIENT_ID
         )
         logger.info(f"Google token verified successfully for email: {idinfo.get('email')}")
 
-        # Extract user info from idinfo
+        # Extract required user info
         user_email = idinfo.get('email')
-        user_name = idinfo.get('name')
-        google_id = idinfo.get('sub') # 'sub' is the unique Google ID
+        google_sub_id = idinfo.get('sub') # 'sub' is the unique Google ID
 
-        if not user_email or not google_id:
+        if not user_email or not google_sub_id:
             logger.error("Email or Google ID (sub) not found in verified token.")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Could not extract required user information from Google token."
             )
 
-        # --- TODO: Implement Database User Lookup/Creation --- 
-        # user = get_or_create_user_by_google_info(db, google_id, user_email, user_name)
-        # if not user:
-        #     raise HTTPException(status_code=500, detail="Server error processing user data.")
-        logger.warning("DB user lookup/creation not implemented yet.")
-        # --- End DB User TODO ---
+        # 2. Check if user exists in DB
+        logger.debug(f"Checking database for user with email: {user_email}")
+        db_user = await get_user_by_email(db, user_email)
 
-        # --- TODO: Implement Session/JWT Token Generation --- 
-        # access_token = create_access_token(data={"sub": user.email, "user_id": user.id})
-        # return {"access_token": access_token, "token_type": "bearer", "user": user.to_dict()} # Example response
-        logger.warning("Session/JWT token generation not implemented yet.")
-        # --- End Session/JWT TODO ---
-        
-        # Return verified user info (placeholder until DB/JWT is done)
-        return {
-            "id": google_id, 
-            "name": user_name,
-            "email": user_email,
-            "role": "user", # Placeholder role
-            "message": "Token verified, user/session logic pending"
+        if not db_user:
+            logger.warning(f"Login attempt failed: User with email {user_email} not found in database.")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, # Use 401 as user is authenticated by Google but not authorized here
+                detail="User not found or not registered in the system. Please contact your administrator.",
+            )
+        logger.info(f"User found: {db_user.id} ({db_user.email})")
+
+        # 3. Update user's subId if necessary
+        if db_user.subId != google_sub_id:
+            logger.info(f"Updating subId for user {db_user.id} from {db_user.subId} to {google_sub_id}")
+            try:
+                await update_user_google_info(db, user_id=db_user.id, google_sub_id=google_sub_id)
+            except Exception as db_update_error:
+                logger.error(f"Failed to update subId for user {db_user.id}: {db_update_error}", exc_info=True)
+                # Decide if this is fatal; for now, we'll raise 500
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to update user information in database."
+                )
+
+        # 4. Generate JWT
+        jwt_payload = {
+            "sub": db_user.email, # Standard subject claim
+            "user_id": db_user.id,
+            "role": str(db_user.role), # Ensure role is string (enum -> str)
+            "business_id": db_user.businessId
+            # Add other relevant non-sensitive claims if needed (e.g., name)
         }
+        access_token = create_access_token(data=jwt_payload)
+        logger.info(f"JWT created for user {db_user.id}")
+
+        # 5. Set JWT as HTTPOnly cookie
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=not settings.DEBUG, # Crucial for security (prevents JS access)
+            secure=not settings.DEBUG, # Send only over HTTPS in production
+            samesite="lax", # Good balance of security and usability
+            path="/", # Cookie available site-wide
+            max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60 # Max age in seconds
+        )
+        logger.debug("Access token cookie set on response.")
+
+        # Return success message (or basic user info if desired)
+        return {"message": "Login successful", "user_id": db_user.id, "role": db_user.role}
 
     except ValueError as e:
-        # ValueError is raised by verify_oauth2_token on various validation failures
+        # Catches id_token.verify_oauth2_token errors
         logger.error(f"Google token verification failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid Google token: {e}", # Include reason if possible
+            detail=f"Invalid Google token: {e}",
         )
+    except HTTPException as http_exc:
+         # Re-raise HTTPExceptions directly (like 401 user not found)
+         raise http_exc
     except Exception as e:
+        # Catches other unexpected errors (DB connection, JWT creation issues, etc.)
         logger.error(f"An unexpected error occurred during Google login: {e}", exc_info=True)
+        # Check if it's a DB connection issue hinted by dependencies.py
+        if "Database connection not available" in str(e) or "Could not retrieve database connection" in str(e):
+             raise HTTPException(
+                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                 detail="Database service unavailable."
+             )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred during login.",
+            detail="An unexpected internal error occurred during login.",
         )

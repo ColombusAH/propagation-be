@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "Shifty"
     DEBUG: bool = False
+    MODE: str = "development"
 
     # Database Settings
     DATABASE_URL: str
@@ -16,6 +17,7 @@ class Settings(BaseSettings):
     # Security Settings
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    JWT_ALGORITHM: str = "HS256"
     GOOGLE_CLIENT_ID: str
     
     # Security Headers
