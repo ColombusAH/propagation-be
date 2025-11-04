@@ -5,6 +5,9 @@ from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.db.prisma import init_db, shutdown_db
 from app.api.v1.api import api_router
+from app.routers import tags, websocket
+from app.services.database import init_db as init_rfid_db
+from app.services.rfid_reader import rfid_reader_service
 import logging
 from fastapi.middleware.gzip import GZipMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -42,9 +45,32 @@ async def lifespan(app: FastAPI):
     setup_logging()
     logger.info("Starting up application...")
     await init_db(app)
+    
+    # Initialize RFID database tables
+    logger.info("Initializing RFID database...")
+    init_rfid_db()
+    
+    # Optional: Auto-connect to RFID reader on startup
+    # Uncomment if you want automatic connection
+    # try:
+    #     connected = await rfid_reader_service.connect()
+    #     if connected:
+    #         logger.info("RFID reader connected successfully")
+    #     else:
+    #         logger.warning("Failed to connect to RFID reader")
+    # except Exception as e:
+    #     logger.error(f"Error connecting to RFID reader: {e}")
+    
     yield
     # Shutdown
     logger.info("Shutting down application...")
+    
+    # Disconnect RFID reader
+    try:
+        await rfid_reader_service.disconnect()
+    except Exception as e:
+        logger.error(f"Error disconnecting RFID reader: {e}")
+    
     await shutdown_db(app)
 
 app = FastAPI(
@@ -76,10 +102,19 @@ app.add_middleware(
 @app.get("/")
 async def root():
     """Root endpoint for Railway's default health check."""
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "message": "RFID MVP API",
+        "docs": "/docs",
+        "redoc": "/redoc"
+    }
 
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+# Include RFID routers
+app.include_router(tags.router, prefix=f"{settings.API_V1_STR}/tags", tags=["RFID Tags"])
+app.include_router(websocket.router, prefix="/ws", tags=["WebSocket"])
 
 @app.get("/health")
 async def health_check():

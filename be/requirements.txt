@@ -18,3 +18,12 @@ cryptography==44.0.2
 # Google OAuth dependencies
 google-auth==2.38.0
 google-api-python-client==2.166.0
+
+# RFID Tracking System dependencies
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+alembic==1.12.1
+websockets==12.0
+python-dateutil==2.8.2
+pyserial==3.5  # For serial communication with RFID reader
+# chafon-rfid  # Uncomment if available on PyPI or install from GitHub
