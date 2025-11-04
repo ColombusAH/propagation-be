@@ -24,6 +24,8 @@ MANIFEST
 
 # Virtual Environments
 .env
+.env.local
+.env.*.local
 .venv
 venv/
 ENV/
@@ -39,6 +41,8 @@ node_modules/
 .vscode/
 *.swp
 *.swo
+*.sublime-project
+*.sublime-workspace
 
 # Logs
 logs/
@@ -54,10 +58,8 @@ yarn-error.log*
 
 # Misc
 .DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+*.sqlite3
+*.db
 
 # Docker
 .docker/
@@ -69,7 +71,16 @@ htmlcov/
 coverage/
 .coverage.*
 .pytest_cache/
+.tox/
+.hypothesis/
+
+# Railway local development
+.railway/
 
 # Local development
 *.sqlite3
-*.db 
+*.db
+
+# RFID specific
+*.csv  # If you export tag data to CSV
+*.xlsx  # If you export tag data to Excel
