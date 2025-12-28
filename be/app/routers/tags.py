@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, and_
 from typing import Optional, List
 from datetime import datetime, timedelta
+import logging
 from app.services.database import get_db
 from app.models.rfid_tag import RFIDTag, RFIDScanHistory
 from app.schemas.rfid_tag import (
@@ -17,6 +18,7 @@ from app.schemas.rfid_tag import (
 )
 from datetime import timezone
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -289,5 +291,168 @@ async def get_tag_stats(db: Session = Depends(get_db)):
         average_rssi=average_rssi,
         tags_by_location=tags_by_location,
     )
+
+
+@router.post("/reader/connect")
+async def connect_reader():
+    """
+    Connect to the RFID reader.
+    
+    Returns connection status and reader information.
+    """
+    from app.services.rfid_reader import rfid_reader_service
+    
+    try:
+        connected = await rfid_reader_service.connect()
+        if connected:
+            info = await rfid_reader_service.get_reader_info()
+            return {
+                "status": "connected",
+                "message": f"Successfully connected to RFID reader at {rfid_reader_service.reader_ip}:{rfid_reader_service.reader_port}",
+                "reader_info": info
+            }
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to connect to RFID reader at {rfid_reader_service.reader_ip}:{rfid_reader_service.reader_port}. Check IP address and network connection."
+            )
+    except Exception as e:
+        logger.error(f"Error connecting to reader: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Connection error: {str(e)}"
+        )
+
+
+@router.post("/reader/disconnect")
+async def disconnect_reader():
+    """
+    Disconnect from the RFID reader.
+    """
+    from app.services.rfid_reader import rfid_reader_service
+    
+    try:
+        await rfid_reader_service.disconnect()
+        return {
+            "status": "disconnected",
+            "message": "Successfully disconnected from RFID reader"
+        }
+    except Exception as e:
+        logger.error(f"Error disconnecting from reader: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Disconnect error: {str(e)}"
+        )
+
+
+@router.post("/reader/start-scanning")
+async def start_scanning():
+    """
+    Start continuous tag scanning.
+    
+    Tags will be automatically saved to database and broadcast via WebSocket.
+    """
+    from app.services.rfid_reader import rfid_reader_service
+    
+    if not rfid_reader_service.is_connected:
+        raise HTTPException(
+            status_code=400,
+            detail="Reader not connected. Please connect first using POST /api/v1/tags/reader/connect"
+        )
+    
+    try:
+        await rfid_reader_service.start_scanning()
+        return {
+            "status": "scanning",
+            "message": "Started continuous tag scanning. Tags will appear in real-time via WebSocket."
+        }
+    except Exception as e:
+        logger.error(f"Error starting scanning: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error starting scan: {str(e)}"
+        )
+
+
+@router.post("/reader/stop-scanning")
+async def stop_scanning():
+    """
+    Stop continuous tag scanning.
+    """
+    from app.services.rfid_reader import rfid_reader_service
+    
+    try:
+        await rfid_reader_service.stop_scanning()
+        return {
+            "status": "stopped",
+            "message": "Stopped tag scanning"
+        }
+    except Exception as e:
+        logger.error(f"Error stopping scanning: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error stopping scan: {str(e)}"
+        )
+
+
+@router.get("/reader/status")
+async def get_reader_status():
+    """
+    Get current RFID reader status and information.
+    """
+    from app.services.rfid_reader import rfid_reader_service
+    
+    try:
+        info = await rfid_reader_service.get_reader_info()
+        return {
+            "connected": rfid_reader_service.is_connected,
+            "scanning": rfid_reader_service.is_scanning,
+            "reader_info": info,
+            "connection_type": rfid_reader_service.connection_type,
+            "reader_ip": rfid_reader_service.reader_ip,
+            "reader_port": rfid_reader_service.reader_port,
+        }
+    except Exception as e:
+        logger.error(f"Error getting reader status: {e}")
+        return {
+            "connected": False,
+            "scanning": False,
+            "error": str(e)
+        }
+
+
+@router.post("/reader/read-single")
+async def read_single_tag():
+    """
+    Read a single tag (one-time scan).
+    
+    Returns the tag data if found, or None if no tag detected.
+    """
+    from app.services.rfid_reader import rfid_reader_service
+    
+    if not rfid_reader_service.is_connected:
+        raise HTTPException(
+            status_code=400,
+            detail="Reader not connected. Please connect first using POST /api/v1/tags/reader/connect"
+        )
+    
+    try:
+        tag_data = await rfid_reader_service.read_single_tag()
+        if tag_data:
+            return {
+                "status": "success",
+                "tag": tag_data
+            }
+        else:
+            return {
+                "status": "no_tag",
+                "message": "No tag detected. Try moving a tag closer to the reader."
+            }
+    except Exception as e:
+        logger.error(f"Error reading tag: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error reading tag: {str(e)}"
+        )
 
 

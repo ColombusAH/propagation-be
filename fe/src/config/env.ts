@@ -3,9 +3,9 @@
 // Get current environment
 const isDevelopment = import.meta.env.DEV || false;
 
-// In development, use the full URL with port from the environment variable
-// In production, use relative URLs that will be handled by nginx proxy
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+// In development, use relative URLs that will be proxied by Vite to the backend
+// In production, use the full URL or relative URLs handled by nginx proxy
+const API_URL = import.meta.env.VITE_API_URL || (isDevelopment ? '/api/v1' : 'http://localhost:8000/api/v1');
 
 // Get Google Client ID - This MUST be set in your .env file
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;

@@ -11,6 +11,7 @@ from google.auth.transport import requests as google_requests # Alias to avoid n
 
 # Import Prisma client and dependency
 from prisma import Prisma
+from prisma.errors import TableNotFoundError
 
 # Get Google Client ID and JWT settings from config
 from app.core.config import get_settings
@@ -159,6 +160,13 @@ async def login_with_google(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid Google token: {e}",
         )
+    except TableNotFoundError as e:
+        # Handle missing database tables
+        logger.error(f"Database tables not found: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database not initialized. Please run migrations: python scripts/db.py deploy",
+        )
     except HTTPException as http_exc:
          # Re-raise HTTPExceptions directly (like 401 user not found)
          raise http_exc
@@ -171,6 +179,12 @@ async def login_with_google(
                  status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                  detail="Database service unavailable."
              )
+        # Check for table not found in error message
+        if "does not exist" in str(e) or "TableNotFoundError" in str(type(e).__name__):
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Database not initialized. Please run migrations: python scripts/db.py deploy",
+            )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected internal error occurred during login.",

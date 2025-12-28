@@ -1,5 +1,5 @@
 from prisma import Prisma
-from prisma.errors import PrismaError
+from prisma.errors import PrismaError, TableNotFoundError
 from fastapi import FastAPI
 import logging
 from contextlib import asynccontextmanager
@@ -56,8 +56,34 @@ prisma_client = PrismaClient()
 async def init_db(app: FastAPI) -> None:
     """Initialize database connection on startup."""
     try:
+        # Connect to database
         await prisma_client.connect()
         app.state.prisma = prisma_client
+        
+        # Verify tables exist by attempting a simple query
+        # This will raise TableNotFoundError if tables don't exist
+        try:
+            await prisma_client.client.user.find_first()
+            logger.info("Database connection verified and tables exist")
+        except TableNotFoundError as e:
+            logger.error(
+                "Database tables not found. Please run migrations:\n"
+                "  python scripts/db.py generate\n"
+                "  python scripts/db.py deploy"
+            )
+            await prisma_client.disconnect()
+            raise
+        except Exception:
+            # Other errors (like empty table) are fine, we just want to check if tables exist
+            logger.info("Database connection verified")
+            
+    except TableNotFoundError:
+        logger.error(
+            "Database tables not found. Please run migrations:\n"
+            "  python scripts/db.py generate\n"
+            "  python scripts/db.py deploy"
+        )
+        raise
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
         raise

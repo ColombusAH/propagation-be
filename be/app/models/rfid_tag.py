@@ -7,14 +7,8 @@ from app.services.database import Base
 
 
 class RFIDTag(Base):
-    """
-    Master tag list - stores unique RFID tags with aggregated data.
-    
-    EPC is unique and indexed. On duplicate EPC scan, the existing record
-    is updated (read_count incremented, last_seen updated).
-    """
     __tablename__ = "rfid_tags"
-    
+
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     epc = Column(String(128), unique=True, nullable=False, index=True, comment="Electronic Product Code")
     tid = Column(String(128), nullable=True, index=True, comment="Tag ID")
@@ -25,7 +19,10 @@ class RFIDTag(Base):
     frequency = Column(Float, nullable=True, comment="Operating frequency in MHz")
     pc = Column(String(16), nullable=True, comment="Protocol Control bits")
     crc = Column(String(16), nullable=True, comment="Cyclic Redundancy Check")
-    metadata = Column(JSON, nullable=True, comment="Additional flexible data")
+
+    # FIX: rename attribute; keep DB column name "metadata"
+    meta = Column("metadata", JSON, nullable=True, comment="Additional flexible data")
+
     location = Column(String(100), nullable=True, comment="Physical location where scanned")
     notes = Column(Text, nullable=True, comment="User notes (max 500 chars)")
     is_active = Column(Boolean, default=True, nullable=False, index=True, comment="Soft delete flag")
@@ -33,8 +30,7 @@ class RFIDTag(Base):
     last_seen = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False, comment="Most recent scan timestamp")
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-    
-    # Indexes for common queries
+
     __table_args__ = (
         Index('idx_rfid_tags_epc', 'epc'),
         Index('idx_rfid_tags_tid', 'tid'),
@@ -44,14 +40,8 @@ class RFIDTag(Base):
 
 
 class RFIDScanHistory(Base):
-    """
-    Complete audit trail - stores every single scan event.
-    
-    Every scan creates a new entry here, even if the tag already exists
-    in rfid_tags. This provides a complete history of all scan events.
-    """
     __tablename__ = "rfid_scan_history"
-    
+
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     epc = Column(String(128), nullable=False, index=True, comment="Tag EPC (no foreign key constraint)")
     tid = Column(String(128), nullable=True, comment="Tag ID")
@@ -60,14 +50,14 @@ class RFIDScanHistory(Base):
     frequency = Column(Float, nullable=True, comment="Frequency used")
     location = Column(String(100), nullable=True, comment="Location at scan time")
     reader_id = Column(String(100), nullable=True, comment="Identifier of the reader device")
-    metadata = Column(JSON, nullable=True, comment="Additional scan context")
+
+    # FIX: rename attribute; keep DB column name "metadata"
+    meta = Column("metadata", JSON, nullable=True, comment="Additional scan context")
+
     scanned_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True, comment="Scan timestamp")
-    
-    # Indexes for common queries
+
     __table_args__ = (
         Index('idx_rfid_scan_history_epc', 'epc'),
         Index('idx_rfid_scan_history_scanned_at', 'scanned_at'),
         Index('idx_rfid_scan_history_reader_id', 'reader_id'),
     )
-
-

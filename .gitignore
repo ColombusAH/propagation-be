@@ -5,6 +5,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# virtual environments
+be/myenv/
+
 # Python
 __pycache__/
 *.py[cod]
