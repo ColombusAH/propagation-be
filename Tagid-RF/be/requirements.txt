@@ -19,6 +19,7 @@ cryptography==44.0.2
 google-auth==2.38.0
 google-api-python-client==2.166.0
 firebase-admin==6.5.0
+stripe==11.3.0
 
 # RFID Tracking System dependencies
 sqlalchemy==2.0.36
