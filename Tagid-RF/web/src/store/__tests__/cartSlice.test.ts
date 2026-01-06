@@ -33,7 +33,7 @@ describe('CartSlice', () => {
   });
 
   it('should add product by ID', () => {
-    const { addByProductId, items } = store.getState();
+    const { addByProductId } = store.getState();
 
     addByProductId('p1');
 

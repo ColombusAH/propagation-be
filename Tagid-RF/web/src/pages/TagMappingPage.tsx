@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { QRCodeSVG } from 'qrcode.react';
 import { Layout } from '@/components/Layout';
 import { theme } from '@/styles/theme';
-import { useTranslation } from '@/hooks/useTranslation';
 import { useWebSocket } from '@/hooks/useWebSocket';
 
 // Types
@@ -342,7 +341,6 @@ const LiveTagRow = styled.div<{ newItem: boolean }>`
 `;
 
 export function TagMappingPage() {
-    const { t } = useTranslation();
     const [mappings, setMappings] = useState<TagMapping[]>([]);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -364,7 +362,7 @@ export function TagMappingPage() {
     const [verifying, setVerifying] = useState(false);
 
     // WebSocket
-    const { status, connect, disconnect } = useWebSocket({
+    const { status } = useWebSocket({
         url: '/ws/rfid',
         autoConnect: true,
         onMessage: (msg) => {
