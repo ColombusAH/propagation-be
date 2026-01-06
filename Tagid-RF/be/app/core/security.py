@@ -1,11 +1,11 @@
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
-from jose import jwt, JWTError
 import bcrypt
+from jose import JWTError, jwt
 
 from app.core.config import get_settings
-import logging
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -23,7 +23,7 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
-    
+
     try:
         encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         logger.debug("Access token created successfully.")
@@ -33,19 +33,22 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
         # Handle error appropriately, maybe raise a specific exception
         raise ValueError("Could not create access token") from e
 
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifies a plain password against a hashed password."""
     try:
-        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
     except Exception as e:
         logger.error(f"Error verifying password: {e}")
         return False
 
+
 def get_password_hash(password: str) -> str:
     """Hashes a plain password using bcrypt."""
     salt = bcrypt.gensalt()
-    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
-    return hashed.decode('utf-8')
+    hashed = bcrypt.hashpw(password.encode("utf-8"), salt)
+    return hashed.decode("utf-8")
+
 
 def verify_access_token(token: str) -> Optional[Dict[str, Any]]:
     """Verifies a JWT access token and returns its payload if valid."""
@@ -56,7 +59,7 @@ def verify_access_token(token: str) -> Optional[Dict[str, Any]]:
         return payload
     except JWTError as e:
         logger.error(f"Could not validate credentials: {e}")
-        return None # Or raise a specific exception
+        return None  # Or raise a specific exception
     except Exception as e:
         logger.error(f"An unexpected error occurred during token verification: {e}")
-        return None # Or raise a specific exception 
+        return None  # Or raise a specific exception

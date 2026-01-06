@@ -1,0 +1,110 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "be/**"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "be/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+          cache-dependency-path: be/requirements.txt
+
+      - name: Install dependencies
+        working-directory: ./be
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-asyncio httpx faker
+
+      - name: Generate Prisma Client
+        working-directory: ./be
+        run: |
+          prisma generate
+
+      - name: Run linting
+        working-directory: ./be
+        run: |
+          pip install flake8 black isort
+          black --check app/ tests/
+          isort --check-only app/ tests/
+          flake8 app/ --count --statistics
+
+      - name: Run unit tests
+        working-directory: ./be
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          SECRET_KEY: test-secret-key-for-ci
+          JWT_ALGORITHM: HS256
+          GOOGLE_CLIENT_ID: test-client-id
+        run: |
+          pytest tests/unit -v --cov=app --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./be/coverage.xml
+          flags: backend
+          name: backend-coverage
+          fail_ci_if_error: false
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install linting tools
+        run: |
+          pip install black isort flake8 mypy
+
+      - name: Check formatting with Black
+        working-directory: ./be
+        run: black --check app/ tests/
+
+      - name: Check imports with isort
+        working-directory: ./be
+        run: isort --check-only app/ tests/
+
+      - name: Run flake8
+        working-directory: ./be
+        run: flake8 app/ --count --show-source --statistics
+        continue-on-error: true
