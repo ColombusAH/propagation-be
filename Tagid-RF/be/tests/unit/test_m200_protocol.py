@@ -31,7 +31,7 @@ class TestCRC16:
 
     def test_crc16_consistent(self):
         """Test CRC16 produces consistent results."""
-        data = b"\xCF\xFF\x00\x70\x00"
+        data = b"\xcf\xff\x00\x70\x00"
         crc1 = calculate_crc16(data)
         crc2 = calculate_crc16(data)
         assert crc1 == crc2
