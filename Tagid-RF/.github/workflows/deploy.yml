@@ -39,7 +39,7 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          cd be
+          cd Tagid-RF/be
           railway up --detach
           echo "Deployment initiated"
 
@@ -59,14 +59,14 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-          cache-dependency-path: web/package-lock.json
+          cache-dependency-path: Tagid-RF/web/package-lock.json
 
       - name: Install dependencies
-        working-directory: ./web
+        working-directory: ./Tagid-RF/web
         run: npm ci
 
       - name: Build
-        working-directory: ./web
+        working-directory: ./Tagid-RF/web
         run: npm run build
 
       - name: Deploy to Railway
@@ -74,7 +74,7 @@ jobs:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
           npm install -g @railway/cli
-          cd web
+          cd Tagid-RF/web
           railway up --detach
           echo "Frontend deployment initiated"
 

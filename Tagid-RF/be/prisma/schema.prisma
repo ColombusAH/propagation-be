@@ -74,6 +74,10 @@ model User {
   
   // Schedule generation requests
   scheduleGenerationRequests ScheduleGenerationRequest[]
+  
+  // Theft Alerts
+  receiveTheftAlerts Boolean @default(false)  // Opt-in for alerts
+  alertRecipients    AlertRecipient[]
 
   @@index([businessId])
   @@index([email])
@@ -686,11 +690,14 @@ model Payment {
   currency    String          @default("ILS")
   status      PaymentStatus   @default(PENDING)
   provider    PaymentProvider
-  externalId  String?         // Stripe/Tranzila reference
+  externalId  String?         // Stripe/Tranzila/Nexi reference
   metadata    Json?           // Additional gateway data
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
   paidAt      DateTime?
+  
+  // Link to paid tags
+  paidTags    TagMapping[]
   
   @@index([orderId])
   @@index([status])
@@ -708,6 +715,7 @@ enum PaymentStatus {
 enum PaymentProvider {
   STRIPE
   TRANZILA
+  NEXI
   CASH
 }
 
@@ -717,14 +725,77 @@ model TagMapping {
   epc           String   @unique     // UHF tag EPC (original)
   encryptedQr   String   @unique     // Encrypted QR code
   epcHash       String?              // One-way hash for lookup
+  
+  // Product Information
   productId     String?              // Link to product (optional)
+  productDescription String?         // Description of linked product
   containerId   String?              // Link to container (optional)
+  
+  // Payment Tracking
+  isPaid        Boolean  @default(false)  // Payment status
+  paidAt        DateTime?                 // When payment was completed
+  paymentId     String?                   // Link to Payment
+  payment       Payment? @relation(fields: [paymentId], references: [id])
+  
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  
+  // Theft Alerts
+  theftAlerts   TheftAlert[]
   
   @@index([epc])
   @@index([encryptedQr])
   @@index([epcHash])
   @@index([productId])
+  @@index([isPaid])
 } 
+
+// Theft Alert System
+model TheftAlert {
+  id              String   @id @default(uuid())
+  
+  tagId           String
+  tag             TagMapping @relation(fields: [tagId], references: [id])
+  
+  epc             String
+  productDescription String?
+  
+  detectedAt      DateTime @default(now())
+  location        String?
+  
+  alertsSent      AlertRecipient[]
+  
+  resolved        Boolean  @default(false)
+  resolvedAt      DateTime?
+  resolvedBy      String?
+  notes           String?
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([tagId])
+  @@index([resolved])
+  @@index([detectedAt])
+}
+
+model AlertRecipient {
+  id              String   @id @default(uuid())
+  
+  theftAlertId    String
+  theftAlert      TheftAlert @relation(fields: [theftAlertId], references: [id])
+  
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  
+  sentAt          DateTime @default(now())
+  delivered       Boolean  @default(false)
+  deliveredAt     DateTime?
+  read            Boolean  @default(false)
+  readAt          DateTime?
+  
+  @@index([theftAlertId])
+  @@index([userId])
+  @@index([delivered])
+  @@index([read])
+}
+

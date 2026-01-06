@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "scan-and-pay",
+    "slug": "scan-and-pay",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "scanandpay",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "cb06ea88-b303-4e44-95c4-8f71771b746c"
+      }
+    },
+    "owner": "colombusah"
+  },
+  "extra": {
+    "EXPO_PUBLIC_API_URL": "http://localhost:3002",
+    "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_test_..."
+  }
+}

@@ -2,14 +2,14 @@ name: Backend CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, "feature/**"]
     paths:
-      - "be/**"
+      - "Tagid-RF/be/**"
       - ".github/workflows/backend-ci.yml"
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, "feature/**"]
     paths:
-      - "be/**"
+      - "Tagid-RF/be/**"
 
 jobs:
   test:
@@ -39,22 +39,22 @@ jobs:
         with:
           python-version: "3.13"
           cache: "pip"
-          cache-dependency-path: be/requirements.txt
+          cache-dependency-path: Tagid-RF/be/requirements.txt
 
       - name: Install dependencies
-        working-directory: ./be
+        working-directory: ./Tagid-RF/be
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-cov pytest-asyncio httpx faker
 
       - name: Generate Prisma Client
-        working-directory: ./be
+        working-directory: ./Tagid-RF/be
         run: |
           prisma generate
 
       - name: Run linting
-        working-directory: ./be
+        working-directory: ./Tagid-RF/be
         run: |
           pip install flake8 black isort
           black --check app/ tests/
@@ -62,7 +62,7 @@ jobs:
           flake8 app/ --count --statistics
 
       - name: Run unit tests
-        working-directory: ./be
+        working-directory: ./Tagid-RF/be
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
           SECRET_KEY: test-secret-key-for-ci
@@ -75,7 +75,7 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./be/coverage.xml
+          files: ./Tagid-RF/be/coverage.xml
           flags: backend
           name: backend-coverage
           fail_ci_if_error: false
@@ -97,14 +97,14 @@ jobs:
           pip install black isort flake8 mypy
 
       - name: Check formatting with Black
-        working-directory: ./be
+        working-directory: ./Tagid-RF/be
         run: black --check app/ tests/
 
       - name: Check imports with isort
-        working-directory: ./be
+        working-directory: ./Tagid-RF/be
         run: isort --check-only app/ tests/
 
       - name: Run flake8
-        working-directory: ./be
+        working-directory: ./Tagid-RF/be
         run: flake8 app/ --count --show-source --statistics
         continue-on-error: true

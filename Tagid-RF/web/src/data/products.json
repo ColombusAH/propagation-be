@@ -1,0 +1,73 @@
+[
+  {
+    "id": "p1",
+    "barcode": "7290001234567",
+    "name": "Water 1.5L",
+    "priceInCents": 390,
+    "sku": "WAT-15"
+  },
+  {
+    "id": "p2",
+    "barcode": "0001",
+    "name": "Banana (1kg)",
+    "priceInCents": 690,
+    "sku": "BAN-1K"
+  },
+  {
+    "id": "p3",
+    "barcode": "8412345678901",
+    "name": "Pasta 500g",
+    "priceInCents": 1190,
+    "sku": "PAS-500"
+  },
+  {
+    "id": "p4",
+    "barcode": "0012345678905",
+    "name": "Organic Milk 1L",
+    "priceInCents": 545,
+    "sku": "MLK-1L"
+  },
+  {
+    "id": "p5",
+    "barcode": "1234567890128",
+    "name": "Whole Wheat Bread",
+    "priceInCents": 425,
+    "sku": "BRD-WW"
+  },
+  {
+    "id": "p6",
+    "barcode": "9876543210987",
+    "name": "Fresh Eggs (12 pack)",
+    "priceInCents": 850,
+    "sku": "EGG-12"
+  },
+  {
+    "id": "p7",
+    "barcode": "5551234567890",
+    "name": "Olive Oil 500ml",
+    "priceInCents": 1299,
+    "sku": "OIL-OLV"
+  },
+  {
+    "id": "p8",
+    "barcode": "7778889990000",
+    "name": "Tomato Sauce 400g",
+    "priceInCents": 325,
+    "sku": "SAU-TOM"
+  },
+  {
+    "id": "p9",
+    "barcode": "1112223334445",
+    "name": "Cheddar Cheese 200g",
+    "priceInCents": 675,
+    "sku": "CHE-CHD"
+  },
+  {
+    "id": "p10",
+    "barcode": "9998887776665",
+    "name": "Orange Juice 1L",
+    "priceInCents": 595,
+    "sku": "JUI-ORA"
+  }
+]
+

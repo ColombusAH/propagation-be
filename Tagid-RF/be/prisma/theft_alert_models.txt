@@ -1,0 +1,50 @@
+
+// Theft Alert System - NEW MODELS
+
+model TheftAlert {
+  id              String   @id @default(uuid())
+  
+  tagId           String
+  tag             TagMapping @relation(fields: [tagId], references: [id])
+  
+  epc             String
+  productDescription String?
+  
+  detectedAt      DateTime @default(now())
+  location        String?  // Where tag was detected
+  
+  // Alert Recipients
+  alertsSent      AlertRecipient[]
+  
+  resolved        Boolean  @default(false)
+  resolvedAt      DateTime?
+  resolvedBy      String?  // User ID who resolved
+  notes           String?
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([tagId])
+  @@index([resolved])
+  @@index([detectedAt])
+}
+
+model AlertRecipient {
+  id              String   @id @default(uuid())
+  
+  theftAlertId    String
+  theftAlert      TheftAlert @relation(fields: [theftAlertId], references: [id])
+  
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  
+  sentAt          DateTime @default(now())
+  delivered       Boolean  @default(false)
+  deliveredAt     DateTime?
+  read            Boolean  @default(false)
+  readAt          DateTime?
+  
+  @@index([theftAlertId])
+  @@index([userId])
+  @@index([delivered])
+  @@index([read])
+}
