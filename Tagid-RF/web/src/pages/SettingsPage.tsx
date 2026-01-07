@@ -2,6 +2,7 @@ import { useState } from 'react';
 import styled from 'styled-components';
 import { Layout } from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
+import { useStore } from '@/store';
 import { theme } from '@/styles/theme';
 
 const Container = styled.div`
@@ -147,13 +148,13 @@ const RoleBadge = styled.span<{ $role: string }>`
   display: inline-block;
   padding: ${theme.spacing.xs} ${theme.spacing.md};
   background: ${props => {
-        switch (props.$role) {
-            case 'ADMIN': return theme.colors.error;
-            case 'MANAGER': return theme.colors.primary;
-            case 'CASHIER': return theme.colors.success;
-            default: return theme.colors.gray[600];
-        }
-    }};
+    switch (props.$role) {
+      case 'ADMIN': return theme.colors.error;
+      case 'MANAGER': return theme.colors.primary;
+      case 'CASHIER': return theme.colors.success;
+      default: return theme.colors.gray[600];
+    }
+  }};
   color: white;
   border-radius: ${theme.borderRadius.sm};
   font-size: ${theme.typography.fontSize.sm};
@@ -170,165 +171,165 @@ const RoleBadge = styled.span<{ $role: string }>`
  * - Admin: System configuration
  */
 export function SettingsPage() {
-    const { userRole } = useAuth();
-    const [language, setLanguage] = useState('he');
-    const [notifications, setNotifications] = useState(true);
-    const [darkMode, setDarkMode] = useState(false);
-    const [autoReceipt, setAutoReceipt] = useState(true);
-    const [reportFormat, setReportFormat] = useState('pdf');
+  const { userRole } = useAuth();
+  const [language, setLanguage] = useState('he');
+  const [notifications, setNotifications] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
+  const [autoReceipt, setAutoReceipt] = useState(true);
+  const [reportFormat, setReportFormat] = useState('pdf');
 
-    const canSeeReceiptSettings = userRole && ['CASHIER', 'MANAGER', 'ADMIN'].includes(userRole);
-    const canSeeReportSettings = userRole && ['MANAGER', 'ADMIN'].includes(userRole);
-    const canSeeSystemSettings = userRole === 'ADMIN';
+  const canSeeReceiptSettings = userRole && ['CASHIER', 'MANAGER', 'ADMIN'].includes(userRole);
+  const canSeeReportSettings = userRole && ['MANAGER', 'ADMIN'].includes(userRole);
+  const canSeeSystemSettings = userRole === 'ADMIN';
 
-    const handleSave = () => {
-        alert('הגדרות נשמרו בהצלחה!');
-    };
+  const handleSave = () => {
+    alert('הגדרות נשמרו בהצלחה!');
+  };
 
-    return (
-        <Layout>
-            <Container>
-                <Header>
-                    <Title>הגדרות</Title>
-                    <Subtitle>נהל את ההעדפות והאפשרויות שלך</Subtitle>
-                </Header>
+  return (
+    <Layout>
+      <Container>
+        <Header>
+          <Title>הגדרות</Title>
+          <Subtitle>נהל את ההעדפות והאפשרויות שלך</Subtitle>
+        </Header>
 
-                {/* General Settings - All Users */}
-                <Section>
-                    <SectionTitle>הגדרות כלליות</SectionTitle>
+        {/* General Settings - All Users */}
+        <Section>
+          <SectionTitle>הגדרות כלליות</SectionTitle>
 
-                    <SettingRow>
-                        <SettingInfo>
-                            <SettingLabel>שפה</SettingLabel>
-                            <SettingDescription>בחר את שפת הממשק</SettingDescription>
-                        </SettingInfo>
-                        <Select value={language} onChange={(e) => setLanguage(e.target.value)}>
-                            <option value="he">עברית</option>
-                            <option value="en">English</option>
-                            <option value="ar">العربية</option>
-                        </Select>
-                    </SettingRow>
+          <SettingRow>
+            <SettingInfo>
+              <SettingLabel>שפה</SettingLabel>
+              <SettingDescription>בחר את שפת הממשק</SettingDescription>
+            </SettingInfo>
+            <Select value={language} onChange={(e) => setLanguage(e.target.value)}>
+              <option value="he">עברית</option>
+              <option value="en">English</option>
+              <option value="ar">العربية</option>
+            </Select>
+          </SettingRow>
 
-                    <SettingRow>
-                        <SettingInfo>
-                            <SettingLabel>מצב כהה</SettingLabel>
-                            <SettingDescription>החלף בין מצב בהיר לכהה</SettingDescription>
-                        </SettingInfo>
-                        <ToggleSwitch>
-                            <ToggleInput
-                                type="checkbox"
-                                checked={darkMode}
-                                onChange={(e) => setDarkMode(e.target.checked)}
-                            />
-                            <ToggleSlider />
-                        </ToggleSwitch>
-                    </SettingRow>
+          <SettingRow>
+            <SettingInfo>
+              <SettingLabel>מצב כהה</SettingLabel>
+              <SettingDescription>החלף בין מצב בהיר לכהה</SettingDescription>
+            </SettingInfo>
+            <ToggleSwitch>
+              <ToggleInput
+                type="checkbox"
+                checked={darkMode}
+                onChange={(e) => setDarkMode(e.target.checked)}
+              />
+              <ToggleSlider />
+            </ToggleSwitch>
+          </SettingRow>
 
-                    <SettingRow>
-                        <SettingInfo>
-                            <SettingLabel>התראות</SettingLabel>
-                            <SettingDescription>קבל התראות על פעילות חשובה</SettingDescription>
-                        </SettingInfo>
-                        <ToggleSwitch>
-                            <ToggleInput
-                                type="checkbox"
-                                checked={notifications}
-                                onChange={(e) => setNotifications(e.target.checked)}
-                            />
-                            <ToggleSlider />
-                        </ToggleSwitch>
-                    </SettingRow>
-                </Section>
+          <SettingRow>
+            <SettingInfo>
+              <SettingLabel>התראות</SettingLabel>
+              <SettingDescription>קבל התראות על פעילות חשובה</SettingDescription>
+            </SettingInfo>
+            <ToggleSwitch>
+              <ToggleInput
+                type="checkbox"
+                checked={notifications}
+                onChange={(e) => setNotifications(e.target.checked)}
+              />
+              <ToggleSlider />
+            </ToggleSwitch>
+          </SettingRow>
+        </Section>
 
-                {/* Receipt Settings - Cashier+ */}
-                {canSeeReceiptSettings && (
-                    <Section>
-                        <SectionTitle>הגדרות קבלות</SectionTitle>
+        {/* Receipt Settings - Cashier+ */}
+        {canSeeReceiptSettings && (
+          <Section>
+            <SectionTitle>הגדרות קבלות</SectionTitle>
 
-                        <SettingRow>
-                            <SettingInfo>
-                                <SettingLabel>הדפסה אוטומטית</SettingLabel>
-                                <SettingDescription>הדפס קבלה אוטומטית לאחר כל עסקה</SettingDescription>
-                            </SettingInfo>
-                            <ToggleSwitch>
-                                <ToggleInput
-                                    type="checkbox"
-                                    checked={autoReceipt}
-                                    onChange={(e) => setAutoReceipt(e.target.checked)}
-                                />
-                                <ToggleSlider />
-                            </ToggleSwitch>
-                        </SettingRow>
-                    </Section>
-                )}
+            <SettingRow>
+              <SettingInfo>
+                <SettingLabel>הדפסה אוטומטית</SettingLabel>
+                <SettingDescription>הדפס קבלה אוטומטית לאחר כל עסקה</SettingDescription>
+              </SettingInfo>
+              <ToggleSwitch>
+                <ToggleInput
+                  type="checkbox"
+                  checked={autoReceipt}
+                  onChange={(e) => setAutoReceipt(e.target.checked)}
+                />
+                <ToggleSlider />
+              </ToggleSwitch>
+            </SettingRow>
+          </Section>
+        )}
 
-                {/* Report Settings - Manager+ */}
-                {canSeeReportSettings && (
-                    <Section>
-                        <SectionTitle>הגדרות דוחות</SectionTitle>
+        {/* Report Settings - Manager+ */}
+        {canSeeReportSettings && (
+          <Section>
+            <SectionTitle>הגדרות דוחות</SectionTitle>
 
-                        <SettingRow>
-                            <SettingInfo>
-                                <SettingLabel>פורמט דוח</SettingLabel>
-                                <SettingDescription>בחר פורמט ברירת מחדל לייצוא דוחות</SettingDescription>
-                            </SettingInfo>
-                            <Select value={reportFormat} onChange={(e) => setReportFormat(e.target.value)}>
-                                <option value="pdf">PDF</option>
-                                <option value="excel">Excel</option>
-                                <option value="csv">CSV</option>
-                            </Select>
-                        </SettingRow>
-                    </Section>
-                )}
+            <SettingRow>
+              <SettingInfo>
+                <SettingLabel>פורמט דוח</SettingLabel>
+                <SettingDescription>בחר פורמט ברירת מחדל לייצוא דוחות</SettingDescription>
+              </SettingInfo>
+              <Select value={reportFormat} onChange={(e) => setReportFormat(e.target.value)}>
+                <option value="pdf">PDF</option>
+                <option value="excel">Excel</option>
+                <option value="csv">CSV</option>
+              </Select>
+            </SettingRow>
+          </Section>
+        )}
 
-                {/* System Settings - Admin Only */}
-                {canSeeSystemSettings && (
-                    <Section>
-                        <SectionTitle>הגדרות מערכת</SectionTitle>
+        {/* System Settings - Admin Only */}
+        {canSeeSystemSettings && (
+          <Section>
+            <SectionTitle>הגדרות מערכת</SectionTitle>
 
-                        <SettingRow>
-                            <SettingInfo>
-                                <SettingLabel>ניהול משתמשים</SettingLabel>
-                                <SettingDescription>הוסף, ערוך או הסר משתמשים מהמערכת</SettingDescription>
-                            </SettingInfo>
-                            <Button onClick={() => alert('ניהול משתמשים (בפיתוח)')}>
-                                נהל משתמשים
-                            </Button>
-                        </SettingRow>
+            <SettingRow>
+              <SettingInfo>
+                <SettingLabel>ניהול משתמשים</SettingLabel>
+                <SettingDescription>הוסף, ערוך או הסר משתמשים מהמערכת</SettingDescription>
+              </SettingInfo>
+              <Button onClick={() => alert('ניהול משתמשים (בפיתוח)')}>
+                נהל משתמשים
+              </Button>
+            </SettingRow>
 
-                        <SettingRow>
-                            <SettingInfo>
-                                <SettingLabel>גיבוי מערכת</SettingLabel>
-                                <SettingDescription>צור גיבוי של כל נתוני המערכת</SettingDescription>
-                            </SettingInfo>
-                            <Button onClick={() => alert('גיבוי מערכת (בפיתוח)')}>
-                                צור גיבוי
-                            </Button>
-                        </SettingRow>
-                    </Section>
-                )}
+            <SettingRow>
+              <SettingInfo>
+                <SettingLabel>גיבוי מערכת</SettingLabel>
+                <SettingDescription>צור גיבוי של כל נתוני המערכת</SettingDescription>
+              </SettingInfo>
+              <Button onClick={() => alert('גיבוי מערכת (בפיתוח)')}>
+                צור גיבוי
+              </Button>
+            </SettingRow>
+          </Section>
+        )}
 
-                {/* Account Info */}
-                <Section>
-                    <SectionTitle>פרטי חשבון</SectionTitle>
+        {/* Account Info */}
+        <Section>
+          <SectionTitle>פרטי חשבון</SectionTitle>
 
-                    <SettingRow>
-                        <SettingInfo>
-                            <SettingLabel>תפקיד נוכחי</SettingLabel>
-                            <SettingDescription>רמת ההרשאה שלך במערכת</SettingDescription>
-                        </SettingInfo>
-                        <RoleBadge $role={userRole || 'CUSTOMER'}>
-                            {userRole === 'ADMIN' ? 'מנהל מערכת' :
-                                userRole === 'MANAGER' ? 'מנהל' :
-                                    userRole === 'CASHIER' ? 'קופאי' : 'לקוח'}
-                        </RoleBadge>
-                    </SettingRow>
-                </Section>
+          <SettingRow>
+            <SettingInfo>
+              <SettingLabel>תפקיד נוכחי</SettingLabel>
+              <SettingDescription>רמת ההרשאה שלך במערכת</SettingDescription>
+            </SettingInfo>
+            <RoleBadge $role={userRole || 'CUSTOMER'}>
+              {userRole === 'ADMIN' ? 'מנהל מערכת' :
+                userRole === 'MANAGER' ? 'מנהל' :
+                  userRole === 'CASHIER' ? 'קופאי' : 'לקוח'}
+            </RoleBadge>
+          </SettingRow>
+        </Section>
 
-                <Button onClick={handleSave} style={{ width: '100%', padding: theme.spacing.md }}>
-                    שמור הגדרות
-                </Button>
-            </Container>
-        </Layout>
-    );
+        <Button onClick={handleSave} style={{ width: '100%', padding: theme.spacing.md }}>
+          שמור הגדרות
+        </Button>
+      </Container>
+    </Layout>
+  );
 }
