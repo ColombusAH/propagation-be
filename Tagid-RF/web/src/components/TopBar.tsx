@@ -102,6 +102,8 @@ export function TopBar() {
   const { t } = useTranslation();
   const { userRole } = useAuth();
 
+  const isAdmin = userRole === 'ADMIN';
+  const isManager = userRole === 'MANAGER';
   const canSeeDashboard = userRole && ['CASHIER', 'MANAGER', 'ADMIN'].includes(userRole);
   const canSeeTransactions = userRole && ['MANAGER', 'ADMIN'].includes(userRole);
   const isStaff = userRole && ['CASHIER', 'MANAGER', 'ADMIN'].includes(userRole);
@@ -127,8 +129,14 @@ export function TopBar() {
             </>
           )}
 
-          {/* Staff: Notifications (in-app alerts, not push) */}
+          {/* Staff: Notifications */}
           {isStaff && <NavItem to="/notifications">התראות</NavItem>}
+
+          {/* Manager+: User Management */}
+          {(isAdmin || isManager) && <NavItem to="/users">משתמשים</NavItem>}
+
+          {/* Admin only: Store Management */}
+          {isAdmin && <NavItem to="/stores">חנויות</NavItem>}
 
           {canSeeDashboard && <NavItem to="/tag-mapping">{t('nav.tagMapping')}</NavItem>}
           <NavItem to="/settings">{t('settings.title')}</NavItem>
