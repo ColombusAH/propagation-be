@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { Layout } from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStore } from '@/store';
+import { useTranslation } from '@/hooks/useTranslation';
 import { theme } from '@/styles/theme';
 
 const Container = styled.div`
@@ -190,15 +191,15 @@ export function SettingsPage() {
   const canSeeSystemSettings = userRole === 'ADMIN';
 
   const handleSave = () => {
-    alert('הגדרות נשמרו בהצלחה!');
+    alert(t('settings.settingsSaved'));
   };
 
   return (
     <Layout>
       <Container>
         <Header>
-          <Title>הגדרות</Title>
-          <Subtitle>נהל את ההעדפות והאפשרויות שלך</Subtitle>
+          <Title>{t('settings.title')}</Title>
+          <Subtitle>{t('settings.subtitle')}</Subtitle>
         </Header>
 
         {/* General Settings - All Users */}
@@ -218,8 +219,8 @@ export function SettingsPage() {
 
           <SettingRow>
             <SettingInfo>
-              <SettingLabel>מטבע</SettingLabel>
-              <SettingDescription>בחר את המטבע המועדף</SettingDescription>
+              <SettingLabel>{t('settings.currency')}</SettingLabel>
+              <SettingDescription>{t('settings.currencyDesc')}</SettingDescription>
             </SettingInfo>
             <Select value={currency} onChange={(e) => setCurrency(e.target.value as any)}>
               <option value="ILS">₪ שקל</option>
@@ -230,8 +231,8 @@ export function SettingsPage() {
 
           <SettingRow>
             <SettingInfo>
-              <SettingLabel>מצב כהה</SettingLabel>
-              <SettingDescription>החלף בין מצב בהיר לכהה</SettingDescription>
+              <SettingLabel>{t('settings.darkMode')}</SettingLabel>
+              <SettingDescription>{t('settings.darkModeDesc')}</SettingDescription>
             </SettingInfo>
             <ToggleSwitch>
               <ToggleInput
@@ -245,8 +246,8 @@ export function SettingsPage() {
 
           <SettingRow>
             <SettingInfo>
-              <SettingLabel>התראות</SettingLabel>
-              <SettingDescription>קבל התראות על פעילות חשובה</SettingDescription>
+              <SettingLabel>{t('settings.notifications')}</SettingLabel>
+              <SettingDescription>{t('settings.notificationsDesc')}</SettingDescription>
             </SettingInfo>
             <ToggleSwitch>
               <ToggleInput
@@ -303,25 +304,25 @@ export function SettingsPage() {
         {/* System Settings - Admin Only */}
         {canSeeSystemSettings && (
           <Section>
-            <SectionTitle>הגדרות מערכת</SectionTitle>
+            <SectionTitle>{t('settings.system')}</SectionTitle>
 
             <SettingRow>
               <SettingInfo>
-                <SettingLabel>ניהול משתמשים</SettingLabel>
-                <SettingDescription>הוסף, ערוך או הסר משתמשים מהמערכת</SettingDescription>
+                <SettingLabel>{t('settings.userManagement')}</SettingLabel>
+                <SettingDescription>{t('settings.userManagementDesc')}</SettingDescription>
               </SettingInfo>
-              <Button onClick={() => alert('ניהול משתמשים (בפיתוח)')}>
-                נהל משתמשים
+              <Button onClick={() => alert(t('settings.userManagement') + ' (in development)')}>
+                {t('settings.manageUsers')}
               </Button>
             </SettingRow>
 
             <SettingRow>
               <SettingInfo>
-                <SettingLabel>גיבוי מערכת</SettingLabel>
-                <SettingDescription>צור גיבוי של כל נתוני המערכת</SettingDescription>
+                <SettingLabel>{t('settings.backup')}</SettingLabel>
+                <SettingDescription>{t('settings.backupDesc')}</SettingDescription>
               </SettingInfo>
-              <Button onClick={() => alert('גיבוי מערכת (בפיתוח)')}>
-                צור גיבוי
+              <Button onClick={() => alert(t('settings.backup') + ' (in development)')}>
+                {t('settings.createBackup')}
               </Button>
             </SettingRow>
           </Section>
@@ -345,7 +346,7 @@ export function SettingsPage() {
         </Section>
 
         <Button onClick={handleSave} style={{ width: '100%', padding: theme.spacing.md }}>
-          שמור הגדרות
+          {t('settings.saveSettings')}
         </Button>
       </Container>
     </Layout>
