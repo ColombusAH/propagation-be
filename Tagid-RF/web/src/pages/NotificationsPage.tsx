@@ -182,8 +182,8 @@ export function NotificationsPage() {
         <Layout>
             <Container>
                 <Header>
-                    <Title>🔔 התראות</Title>
-                    <Subtitle>עדכונים ואלרטים מהמערכת</Subtitle>
+                    <Title>התראות</Title>
+                    <Subtitle>עדכונים מהמערכת</Subtitle>
                 </Header>
 
                 {mockNotifications.length === 0 ? (
