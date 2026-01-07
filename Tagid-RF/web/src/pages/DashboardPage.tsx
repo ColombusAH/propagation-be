@@ -125,18 +125,18 @@ const RoleBadge = styled.span<{ $role: string }>`
 
 const LogoutButton = styled.button`
   padding: ${theme.spacing.sm} ${theme.spacing.lg};
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: ${theme.borderRadius.lg};
+  background: ${theme.colors.surface};
+  color: ${theme.colors.text};
+  border: 1px solid ${theme.colors.border};
+  border-radius: ${theme.borderRadius.md};
   font-size: ${theme.typography.fontSize.sm};
   font-weight: ${theme.typography.fontWeight.medium};
   cursor: pointer;
   transition: all ${theme.transitions.fast};
   
   &:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateY(-2px);
+    background: ${theme.colors.backgroundAlt};
+    border-color: ${theme.colors.gray[300]};
   }
 `;
 
@@ -144,7 +144,51 @@ const HeaderTop = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: ${theme.spacing.md};
+  margin-bottom: ${theme.spacing.lg};
+`;
+
+const RoleSwitcher = styled.div`
+  display: flex;
+  gap: ${theme.spacing.xs};
+  background: ${theme.colors.backgroundAlt};
+  padding: ${theme.spacing.xs};
+  border-radius: ${theme.borderRadius.md};
+  border: 1px solid ${theme.colors.border};
+`;
+
+const RoleButton = styled.button<{ $active: boolean; $color: string }>`
+  padding: ${theme.spacing.xs} ${theme.spacing.md};
+  background: ${props => props.$active ? props.$color : 'transparent'};
+  color: ${props => props.$active ? 'white' : theme.colors.text};
+  border: none;
+  border-radius: ${theme.borderRadius.sm};
+  font-size: ${theme.typography.fontSize.sm};
+  font-weight: ${theme.typography.fontWeight.medium};
+  cursor: pointer;
+  transition: all ${theme.transitions.fast};
+  
+  &:hover {
+    background: ${props => props.$active ? props.$color : theme.colors.gray[200]};
+  }
+`;
+
+const InfoBanner = styled.div`
+  background: ${theme.colors.infoLight};
+  border: 1px solid ${theme.colors.info};
+  border-left: 4px solid ${theme.colors.info};
+  border-radius: ${theme.borderRadius.md};
+  padding: ${theme.spacing.md};
+  margin-bottom: ${theme.spacing.lg};
+  color: ${theme.colors.infoDark};
+  font-size: ${theme.typography.fontSize.sm};
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.sm};
+  
+  &::before {
+    content: 'ℹ️';
+    font-size: ${theme.typography.fontSize.lg};
+  }
 `;
 
 /**
@@ -154,6 +198,9 @@ const HeaderTop = styled.div`
  */
 export function DashboardPage() {
   const { userRole, logout } = useAuth();
+  const [demoRole, setDemoRole] = useState<string | null>(null);
+  const activeRole = demoRole || userRole;
+
   const [stats] = useState({
     revenue: 15420,
     sales: 48,
@@ -187,22 +234,69 @@ export function DashboardPage() {
     }
   };
 
+  const getRoleDescription = (role: string) => {
+    switch (role) {
+      case 'ADMIN': return 'גישה מלאה לכל הנתונים, ניהול משתמשים, והגדרות מערכת';
+      case 'MANAGER': return 'גישה לדוחות, ניתוח נתונים, וניהול טרנזקציות';
+      case 'CASHIER': return 'גישה לסריקה, מכירות, וטרנזקציות של היום';
+      default: return 'גישה לקניות, עגלה, והזמנות אישיות';
+    }
+  };
+
   return (
     <Layout>
       <Container>
         <Header>
           <HeaderTop>
             <div>
-              <RoleBadge $role={userRole || 'CUSTOMER'} style={{ background: getRoleColor(userRole || 'CUSTOMER') }}>
-                {getRoleName(userRole || 'CUSTOMER')}
+              <RoleBadge $role={activeRole || 'CUSTOMER'} style={{ background: getRoleColor(activeRole || 'CUSTOMER') }}>
+                {getRoleName(activeRole || 'CUSTOMER')}
               </RoleBadge>
               <Title>דשבורד מכירות</Title>
               <Subtitle>סקירה כללית של העסק שלך</Subtitle>
             </div>
-            <LogoutButton onClick={logout}>
-              התנתק
-            </LogoutButton>
+            <div style={{ display: 'flex', gap: theme.spacing.md, alignItems: 'flex-start' }}>
+              <RoleSwitcher>
+                <RoleButton
+                  $active={activeRole === 'CUSTOMER'}
+                  $color={theme.colors.gray[600]}
+                  onClick={() => setDemoRole('CUSTOMER')}
+                >
+                  לקוח
+                </RoleButton>
+                <RoleButton
+                  $active={activeRole === 'CASHIER'}
+                  $color={theme.colors.success}
+                  onClick={() => setDemoRole('CASHIER')}
+                >
+                  קופאי
+                </RoleButton>
+                <RoleButton
+                  $active={activeRole === 'MANAGER'}
+                  $color={theme.colors.primary}
+                  onClick={() => setDemoRole('MANAGER')}
+                >
+                  מנהל
+                </RoleButton>
+                <RoleButton
+                  $active={activeRole === 'ADMIN'}
+                  $color={theme.colors.error}
+                  onClick={() => setDemoRole('ADMIN')}
+                >
+                  מנהל מערכת
+                </RoleButton>
+              </RoleSwitcher>
+              <LogoutButton onClick={logout}>
+                התנתק
+              </LogoutButton>
+            </div>
           </HeaderTop>
+
+          {demoRole && (
+            <InfoBanner>
+              מצב תצוגה: {getRoleDescription(demoRole)}
+            </InfoBanner>
+          )}
         </Header>
 
         <StatsGrid>
@@ -210,21 +304,25 @@ export function DashboardPage() {
             title="הכנסות היום"
             value={`₪${stats.revenue.toLocaleString()}`}
             trend={{ value: 12, isPositive: true }}
+            accentColor={theme.colors.primary}
           />
           <StatCard
             title="מכירות"
             value={stats.sales}
             trend={{ value: 8, isPositive: true }}
+            accentColor={theme.colors.success}
           />
           <StatCard
             title="פריטים נמכרו"
             value={stats.items}
             trend={{ value: 5, isPositive: false }}
+            accentColor={theme.colors.gray[400]}
           />
           <StatCard
             title="ממוצע טרנזקציה"
             value={`₪${stats.avgTransaction}`}
             trend={{ value: 15, isPositive: true }}
+            accentColor={theme.colors.info}
           />
         </StatsGrid>
 

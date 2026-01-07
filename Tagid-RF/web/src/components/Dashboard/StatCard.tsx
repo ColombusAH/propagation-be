@@ -4,29 +4,45 @@ import { theme } from '@/styles/theme';
 interface StatCardProps {
   title: string;
   value: string | number;
-  icon?: string;
   trend?: {
     value: number;
     isPositive: boolean;
   };
+  accentColor?: string;
 }
 
-const Card = styled.div`
+const Card = styled.div<{ $accentColor?: string }>`
   background: ${theme.colors.surface};
   border: 1px solid ${theme.colors.border};
+  border-left: 4px solid ${props => props.$accentColor || theme.colors.primary};
   border-radius: ${theme.borderRadius.lg};
   padding: ${theme.spacing.xl};
   transition: all ${theme.transitions.base};
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: ${props => props.$accentColor || theme.colors.primary};
+    opacity: 0.02;
+    border-radius: ${theme.borderRadius.lg};
+    pointer-events: none;
+  }
   
   &:hover {
-    border-color: ${theme.colors.gray[300]};
-    box-shadow: ${theme.shadows.sm};
+    border-left-width: 6px;
+    box-shadow: ${theme.shadows.md};
+    transform: translateY(-2px);
   }
 `;
 
 const Title = styled.h3`
   font-size: ${theme.typography.fontSize.sm};
-  font-weight: ${theme.typography.fontWeight.medium};
+  font-weight: ${theme.typography.fontWeight.semibold};
   color: ${theme.colors.textSecondary};
   margin: 0 0 ${theme.spacing.md} 0;
   text-transform: uppercase;
@@ -46,21 +62,20 @@ const Trend = styled.div<{ $isPositive: boolean }>`
   display: flex;
   align-items: center;
   gap: ${theme.spacing.xs};
-  font-weight: ${theme.typography.fontWeight.medium};
+  font-weight: ${theme.typography.fontWeight.semibold};
   
   &::before {
     content: '${props => props.$isPositive ? '↑' : '↓'}';
+    font-size: ${theme.typography.fontSize.lg};
   }
 `;
 
 /**
- * StatCard - Minimal dashboard statistic card
- * 
- * Clean white design with subtle borders
+ * StatCard - Dashboard statistic card with subtle color accent
  */
-export function StatCard({ title, value, trend }: StatCardProps) {
+export function StatCard({ title, value, trend, accentColor }: StatCardProps) {
   return (
-    <Card>
+    <Card $accentColor={accentColor}>
       <Title>{title}</Title>
       <Value>{value}</Value>
       {trend && (
