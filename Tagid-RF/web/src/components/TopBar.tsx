@@ -116,16 +116,20 @@ export function TopBar() {
           <NavItem to="/scan">{t('nav.scan')}</NavItem>
           <NavItem to="/catalog">{t('nav.catalog')}</NavItem>
 
-          {/* Customers see cart, staff see notifications */}
+          {/* Customers: Cart + Orders */}
           {isCustomer && (
-            <NavItem to="/cart">
-              {t('nav.cart')}
-              {cartItemCount > 0 && <Badge>{cartItemCount}</Badge>}
-            </NavItem>
+            <>
+              <NavItem to="/cart">
+                {t('nav.cart')}
+                {cartItemCount > 0 && <Badge>{cartItemCount}</Badge>}
+              </NavItem>
+              <NavItem to="/orders">{t('nav.orders')}</NavItem>
+            </>
           )}
+
+          {/* Staff: Notifications (in-app alerts, not push) */}
           {isStaff && <NavItem to="/notifications">התראות</NavItem>}
 
-          <NavItem to="/orders">{t('nav.orders')}</NavItem>
           {canSeeDashboard && <NavItem to="/tag-mapping">{t('nav.tagMapping')}</NavItem>}
           <NavItem to="/settings">{t('settings.title')}</NavItem>
         </Nav>
