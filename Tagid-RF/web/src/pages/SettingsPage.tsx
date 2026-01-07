@@ -172,7 +172,14 @@ const RoleBadge = styled.span<{ $role: string }>`
  */
 export function SettingsPage() {
   const { userRole } = useAuth();
-  const [language, setLanguage] = useState('he');
+
+  // Connect to store for language and currency
+  const locale = useStore((state) => state.locale);
+  const currency = useStore((state) => state.currency);
+  const toggleLocale = useStore((state) => state.toggleLocale);
+  const setCurrency = useStore((state) => state.setCurrency);
+
+  // Local settings
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const [autoReceipt, setAutoReceipt] = useState(true);
@@ -201,12 +208,23 @@ export function SettingsPage() {
           <SettingRow>
             <SettingInfo>
               <SettingLabel>שפה</SettingLabel>
-              <SettingDescription>בחר את שפת הממשק</SettingDescription>
+              <SettingDescription>בחר את שפת הממשק (עברית ⇄ English)</SettingDescription>
             </SettingInfo>
-            <Select value={language} onChange={(e) => setLanguage(e.target.value)}>
+            <Select value={locale} onChange={() => toggleLocale()}>
               <option value="he">עברית</option>
               <option value="en">English</option>
-              <option value="ar">العربية</option>
+            </Select>
+          </SettingRow>
+
+          <SettingRow>
+            <SettingInfo>
+              <SettingLabel>מטבע</SettingLabel>
+              <SettingDescription>בחר את המטבע המועדף</SettingDescription>
+            </SettingInfo>
+            <Select value={currency} onChange={(e) => setCurrency(e.target.value as any)}>
+              <option value="ILS">₪ שקל</option>
+              <option value="USD">$ דולר</option>
+              <option value="EUR">€ יורו</option>
             </Select>
           </SettingRow>
 
