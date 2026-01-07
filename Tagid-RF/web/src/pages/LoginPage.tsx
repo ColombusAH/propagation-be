@@ -129,28 +129,28 @@ const roles = [
     name: 'לקוח',
     icon: 'C',
     description: 'קניות ועגלה',
-    color: theme.colors.accent.blue,
+    color: '#6B7280', // Gray
   },
   {
     id: 'CASHIER',
     name: 'קופאי',
     icon: 'K',
     description: 'סריקה ותשלום',
-    color: theme.colors.accent.green,
+    color: '#059669', // Green
   },
   {
     id: 'MANAGER',
     name: 'מנהל',
     icon: 'M',
     description: 'דוחות וניהול',
-    color: theme.colors.accent.orange,
+    color: '#4F46E5', // Blue
   },
   {
     id: 'ADMIN',
     name: 'מנהל מערכת',
     icon: 'A',
     description: 'הרשאות מלאות',
-    color: theme.colors.accent.purple,
+    color: '#DC2626', // Red
   },
 ];
 

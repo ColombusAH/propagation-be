@@ -171,10 +171,10 @@ export function DashboardPage() {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'ADMIN': return theme.colors.accent.purple;
-      case 'MANAGER': return theme.colors.accent.orange;
-      case 'CASHIER': return theme.colors.accent.green;
-      default: return theme.colors.accent.blue;
+      case 'ADMIN': return theme.colors.error; // Red
+      case 'MANAGER': return theme.colors.primary; // Blue
+      case 'CASHIER': return theme.colors.success; // Green
+      default: return theme.colors.gray[600]; // Gray
     }
   };
 
@@ -211,28 +211,28 @@ export function DashboardPage() {
             value={`₪${stats.revenue.toLocaleString()}`}
             icon="💰"
             trend={{ value: 12, isPositive: true }}
-            gradient={theme.colors.primaryGradient}
+            gradient="linear-gradient(135deg, #4F46E5 0%, #2563EB 100%)"
           />
           <StatCard
             title="מכירות"
             value={stats.sales}
             icon="🛒"
             trend={{ value: 8, isPositive: true }}
-            gradient="linear-gradient(135deg, #10b981 0%, #059669 100%)"
+            gradient="linear-gradient(135deg, #059669 0%, #047857 100%)"
           />
           <StatCard
             title="פריטים נמכרו"
             value={stats.items}
             icon="📦"
             trend={{ value: 5, isPositive: false }}
-            gradient="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
+            gradient="linear-gradient(135deg, #6B7280 0%, #4B5563 100%)"
           />
           <StatCard
             title="ממוצע טרנזקציה"
             value={`₪${stats.avgTransaction}`}
             icon="📈"
             trend={{ value: 15, isPositive: true }}
-            gradient="linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)"
+            gradient="linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)"
           />
         </StatsGrid>
 
