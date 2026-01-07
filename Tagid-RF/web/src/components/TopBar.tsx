@@ -109,8 +109,8 @@ export function TopBar() {
     <Header>
       <NavContainer>
         <Nav>
-          {canSeeDashboard && <NavItem to="/dashboard">דשבורד</NavItem>}
-          {canSeeTransactions && <NavItem to="/transactions">טרנזקציות</NavItem>}
+          {canSeeDashboard && <NavItem to="/dashboard">{t('dashboard.title')}</NavItem>}
+          {canSeeTransactions && <NavItem to="/transactions">{t('nav.transactions')}</NavItem>}
           <NavItem to="/scan">{t('nav.scan')}</NavItem>
           <NavItem to="/catalog">{t('nav.catalog')}</NavItem>
           <NavItem to="/cart">
@@ -118,8 +118,8 @@ export function TopBar() {
             {cartItemCount > 0 && <Badge>{cartItemCount}</Badge>}
           </NavItem>
           <NavItem to="/orders">{t('nav.orders')}</NavItem>
-          {canSeeDashboard && <NavItem to="/tag-mapping">תגיות</NavItem>}
-          <NavItem to="/settings">הגדרות</NavItem>
+          {canSeeDashboard && <NavItem to="/tag-mapping">{t('nav.tagMapping')}</NavItem>}
+          <NavItem to="/settings">{t('settings.title')}</NavItem>
         </Nav>
         <LanguageSwitch />
       </NavContainer>
