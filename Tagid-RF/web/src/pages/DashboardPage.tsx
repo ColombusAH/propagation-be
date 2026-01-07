@@ -209,30 +209,22 @@ export function DashboardPage() {
           <StatCard
             title="הכנסות היום"
             value={`₪${stats.revenue.toLocaleString()}`}
-            icon="💰"
             trend={{ value: 12, isPositive: true }}
-            gradient="linear-gradient(135deg, #4F46E5 0%, #2563EB 100%)"
           />
           <StatCard
             title="מכירות"
             value={stats.sales}
-            icon="🛒"
             trend={{ value: 8, isPositive: true }}
-            gradient="linear-gradient(135deg, #059669 0%, #047857 100%)"
           />
           <StatCard
             title="פריטים נמכרו"
             value={stats.items}
-            icon="📦"
             trend={{ value: 5, isPositive: false }}
-            gradient="linear-gradient(135deg, #6B7280 0%, #4B5563 100%)"
           />
           <StatCard
             title="ממוצע טרנזקציה"
             value={`₪${stats.avgTransaction}`}
-            icon="📈"
             trend={{ value: 15, isPositive: true }}
-            gradient="linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)"
           />
         </StatsGrid>
 
