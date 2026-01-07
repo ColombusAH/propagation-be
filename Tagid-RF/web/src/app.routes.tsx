@@ -4,6 +4,7 @@ import { TransactionsPage } from './pages/TransactionsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { NotificationSettingsPage } from './pages/NotificationSettingsPage';
+import { StoreManagementPage } from './pages/StoreManagementPage';
 import { ScanPage } from './pages/ScanPage';
 import { CatalogPage } from './pages/CatalogPage';
 import { CartPage } from './pages/CartPage';
@@ -23,6 +24,7 @@ export function AppRoutes() {
       <Route path="/settings" element={<SettingsPage />} />
       <Route path="/notifications" element={<NotificationsPage />} />
       <Route path="/notification-settings" element={<NotificationSettingsPage />} />
+      <Route path="/stores" element={<StoreManagementPage />} />
       <Route path="/scan" element={<ScanPage />} />
       <Route path="/catalog" element={<CatalogPage />} />
       <Route path="/cart" element={<CartPage />} />
