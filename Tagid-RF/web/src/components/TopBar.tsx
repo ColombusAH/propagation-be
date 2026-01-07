@@ -119,6 +119,7 @@ export function TopBar() {
           </NavItem>
           <NavItem to="/orders">{t('nav.orders')}</NavItem>
           {canSeeDashboard && <NavItem to="/tag-mapping">תגיות</NavItem>}
+          <NavItem to="/settings">הגדרות</NavItem>
         </Nav>
         <LanguageSwitch />
       </NavContainer>

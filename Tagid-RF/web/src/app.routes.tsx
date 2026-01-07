@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { DashboardPage } from './pages/DashboardPage';
 import { TransactionsPage } from './pages/TransactionsPage';
+import { SettingsPage } from './pages/SettingsPage';
 import { ScanPage } from './pages/ScanPage';
 import { CatalogPage } from './pages/CatalogPage';
 import { CartPage } from './pages/CartPage';
@@ -17,6 +18,7 @@ export function AppRoutes() {
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/transactions" element={<TransactionsPage />} />
+      <Route path="/settings" element={<SettingsPage />} />
       <Route path="/scan" element={<ScanPage />} />
       <Route path="/catalog" element={<CatalogPage />} />
       <Route path="/cart" element={<CartPage />} />
