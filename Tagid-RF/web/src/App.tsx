@@ -6,6 +6,7 @@ import { theme } from './styles/theme';
 import { AppRoutes } from './app.routes';
 import { useStore } from './store';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ToastContainer } from './components/Toast/ToastContainer';
 import productsData from './data/products.json';
 
 export function App() {
@@ -25,9 +26,9 @@ export function App() {
         <BrowserRouter>
           <AppRoutes />
         </BrowserRouter>
+        <ToastContainer />
       </ThemeProvider>
     </ErrorBoundary>
   );
 }
-
 
