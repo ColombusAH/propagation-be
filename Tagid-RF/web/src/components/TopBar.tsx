@@ -104,6 +104,8 @@ export function TopBar() {
 
   const canSeeDashboard = userRole && ['CASHIER', 'MANAGER', 'ADMIN'].includes(userRole);
   const canSeeTransactions = userRole && ['MANAGER', 'ADMIN'].includes(userRole);
+  const isStaff = userRole && ['CASHIER', 'MANAGER', 'ADMIN'].includes(userRole);
+  const isCustomer = !userRole || userRole === 'CUSTOMER';
 
   return (
     <Header>
@@ -113,10 +115,16 @@ export function TopBar() {
           {canSeeTransactions && <NavItem to="/transactions">{t('nav.transactions')}</NavItem>}
           <NavItem to="/scan">{t('nav.scan')}</NavItem>
           <NavItem to="/catalog">{t('nav.catalog')}</NavItem>
-          <NavItem to="/cart">
-            {t('nav.cart')}
-            {cartItemCount > 0 && <Badge>{cartItemCount}</Badge>}
-          </NavItem>
+
+          {/* Customers see cart, staff see notifications */}
+          {isCustomer && (
+            <NavItem to="/cart">
+              {t('nav.cart')}
+              {cartItemCount > 0 && <Badge>{cartItemCount}</Badge>}
+            </NavItem>
+          )}
+          {isStaff && <NavItem to="/notifications">התראות</NavItem>}
+
           <NavItem to="/orders">{t('nav.orders')}</NavItem>
           {canSeeDashboard && <NavItem to="/tag-mapping">{t('nav.tagMapping')}</NavItem>}
           <NavItem to="/settings">{t('settings.title')}</NavItem>
