@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { DashboardPage } from './pages/DashboardPage';
 import { ScanPage } from './pages/ScanPage';
 import { CatalogPage } from './pages/CatalogPage';
 import { CartPage } from './pages/CartPage';
@@ -12,7 +13,8 @@ import { TagMappingPage } from './pages/TagMappingPage';
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/scan" replace />} />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/scan" element={<ScanPage />} />
       <Route path="/catalog" element={<CatalogPage />} />
       <Route path="/cart" element={<CartPage />} />
@@ -22,7 +24,7 @@ export function AppRoutes() {
       <Route path="/qr-generator" element={<QRGeneratorPage />} />
       <Route path="/containers" element={<ContainerPage />} />
       <Route path="/tag-mapping" element={<TagMappingPage />} />
-      <Route path="*" element={<Navigate to="/scan" replace />} />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
 }

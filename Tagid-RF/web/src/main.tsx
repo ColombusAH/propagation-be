@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './App';
-import { registerServiceWorker } from '@/lib/pwa/registerSW';
+import { registerServiceWorker } from './lib/pwa/registerSW';
 
 // Register service worker for PWA features
 registerServiceWorker();

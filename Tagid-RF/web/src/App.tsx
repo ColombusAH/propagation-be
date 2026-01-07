@@ -7,17 +7,24 @@ import { AppRoutes } from './app.routes';
 import { useStore } from './store';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastContainer } from './components/Toast/ToastContainer';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { LoginPage } from './pages/LoginPage';
 import productsData from './data/products.json';
 
-export function App() {
+function AppContent() {
   const loadProducts = useStore((state) => state.loadProducts);
   const isLoaded = useStore((state) => state.isLoaded);
+  const { isAuthenticated, login } = useAuth();
 
   useEffect(() => {
     if (!isLoaded) {
       loadProducts(productsData);
     }
   }, [loadProducts, isLoaded]);
+
+  if (!isAuthenticated) {
+    return <LoginPage onLogin={login} />;
+  }
 
   return (
     <ErrorBoundary>
@@ -29,6 +36,14 @@ export function App() {
         <ToastContainer />
       </ThemeProvider>
     </ErrorBoundary>
+  );
+}
+
+export function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

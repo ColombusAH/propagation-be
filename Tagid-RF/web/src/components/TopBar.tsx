@@ -6,10 +6,11 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { LanguageSwitch } from './LanguageSwitch';
 
 const Header = styled.header`
-  background-color: ${theme.colors.primary};
-  color: white;
-  padding: ${theme.spacing.md};
-  box-shadow: ${theme.shadows.md};
+  background: ${theme.colors.surface};
+  color: ${theme.colors.text};
+  padding: ${theme.spacing.md} ${theme.spacing.xl};
+  box-shadow: ${theme.shadows.sm};
+  border-bottom: 1px solid ${theme.colors.border};
   position: sticky;
   top: 0;
   z-index: ${theme.zIndex.header};
@@ -19,33 +20,52 @@ const NavContainer = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  gap: ${theme.spacing.sm};
+  gap: ${theme.spacing.lg};
 `;
 
 const Nav = styled.nav`
   display: flex;
   align-items: center;
   gap: ${theme.spacing.sm};
+  
+  @media (max-width: ${theme.breakpoints.tablet}) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 `;
 
 const NavItem = styled(NavLink)`
-  color: white;
+  color: ${theme.colors.textSecondary};
   text-decoration: none;
   font-weight: ${theme.typography.fontWeight.medium};
   font-size: ${theme.typography.fontSize.sm};
   padding: ${theme.spacing.sm} ${theme.spacing.md};
   border-radius: ${theme.borderRadius.md};
   position: relative;
-  transition: background-color ${theme.transitions.fast};
+  transition: all ${theme.transitions.fast};
+  white-space: nowrap;
 
   &:hover {
-    background-color: ${theme.colors.primaryDark};
+    color: ${theme.colors.primary};
+    background: ${theme.colors.backgroundAlt};
   }
 
   &.active {
-    background-color: ${theme.colors.primaryDark};
+    color: ${theme.colors.primary};
+    background: ${theme.colors.backgroundAlt};
+    font-weight: ${theme.typography.fontWeight.semibold};
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: ${theme.spacing.md};
+      right: ${theme.spacing.md};
+      height: 2px;
+      background: ${theme.colors.primary};
+    }
   }
 
   @media (max-width: ${theme.breakpoints.mobile}) {
@@ -56,9 +76,9 @@ const NavItem = styled(NavLink)`
 
 const Badge = styled.span`
   position: absolute;
-  top: -4px;
-  right: -4px;
-  background-color: ${theme.colors.danger};
+  top: 4px;
+  right: 4px;
+  background-color: ${theme.colors.error};
   color: white;
   border-radius: ${theme.borderRadius.full};
   min-width: 18px;
@@ -66,13 +86,13 @@ const Badge = styled.span`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: ${theme.typography.fontSize.xs};
   font-weight: ${theme.typography.fontWeight.bold};
   padding: 0 4px;
 
   [dir="rtl"] & {
     right: auto;
-    left: -4px;
+    left: 4px;
   }
 `;
 
@@ -84,16 +104,15 @@ export function TopBar() {
     <Header>
       <NavContainer>
         <Nav>
-          <NavItem to="/scan">📷 {t('nav.scan')}</NavItem>
-          <NavItem to="/catalog">📦 {t('nav.catalog')}</NavItem>
+          <NavItem to="/dashboard">דשבורד</NavItem>
+          <NavItem to="/scan">{t('nav.scan')}</NavItem>
+          <NavItem to="/catalog">{t('nav.catalog')}</NavItem>
           <NavItem to="/cart">
-            🛒 {t('nav.cart')}
+            {t('nav.cart')}
             {cartItemCount > 0 && <Badge>{cartItemCount}</Badge>}
           </NavItem>
-          <NavItem to="/orders">📋 {t('nav.orders')}</NavItem>
-          <NavItem to="/qr-generator">🏷️ {t('nav.qrGenerator')}</NavItem>
-          <NavItem to="/containers">🛁 {t('nav.containers')}</NavItem>
-          <NavItem to="/tag-mapping">🔐 {t('nav.tagMapping')}</NavItem>
+          <NavItem to="/orders">{t('nav.orders')}</NavItem>
+          <NavItem to="/tag-mapping">תגיות</NavItem>
         </Nav>
         <LanguageSwitch />
       </NavContainer>
