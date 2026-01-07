@@ -31,13 +31,12 @@ class TestRFIDTagPaymentFields:
         assert tag.store_id == 1
 
     def test_rfid_tag_default_payment_status(self):
-        """Test RFIDTag default is_paid is False."""
+        """Test RFIDTag is_paid column has default=False."""
         from app.models.rfid_tag import RFIDTag
         
-        tag = RFIDTag(epc="E200-TEST-002")
-        
-        # Default should be False (unpaid)
-        assert tag.is_paid is False
+        # Check the column definition has default=False
+        is_paid_col = RFIDTag.__table__.c.is_paid
+        assert is_paid_col.default.arg is False
 
     def test_rfid_tag_paid_at_field(self):
         """Test RFIDTag paid_at timestamp field."""

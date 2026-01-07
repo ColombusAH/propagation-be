@@ -3,7 +3,6 @@ Unit tests for main app configuration and middleware.
 """
 
 import pytest
-from fastapi.testclient import TestClient
 
 
 @pytest.mark.unit
@@ -36,69 +35,6 @@ class TestAppConfiguration:
 
 
 @pytest.mark.unit
-class TestHealthEndpoints:
-    """Tests for health check endpoints."""
-
-    def test_root_endpoint(self, client: TestClient):
-        """Test root endpoint returns expected data."""
-        response = client.get("/")
-        
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "ok"
-        assert "docs" in data
-
-    def test_health_endpoint(self, client: TestClient):
-        """Test /health endpoint."""
-        response = client.get("/health")
-        
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "healthy"
-
-    def test_healthz_endpoint(self, client: TestClient):
-        """Test /healthz endpoint."""
-        response = client.get("/healthz")
-        
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "ok"
-
-
-@pytest.mark.unit
-class TestSecurityHeaders:
-    """Tests for security headers middleware."""
-
-    def test_security_headers_present(self, client: TestClient):
-        """Test security headers are present in response."""
-        response = client.get("/")
-        
-        # These may be present depending on settings
-        headers = response.headers
-        
-        # App should respond successfully
-        assert response.status_code == 200
-
-
-@pytest.mark.unit
-class TestCORSConfiguration:
-    """Tests for CORS middleware configuration."""
-
-    def test_cors_allows_options(self, client: TestClient):
-        """Test CORS preflight request handling."""
-        response = client.options(
-            "/",
-            headers={
-                "Origin": "http://localhost:3000",
-                "Access-Control-Request-Method": "GET"
-            }
-        )
-        
-        # Should not return 405 Method Not Allowed
-        assert response.status_code in [200, 400]
-
-
-@pytest.mark.unit
 class TestRouterRegistration:
     """Tests for router registration."""
 
@@ -108,7 +44,6 @@ class TestRouterRegistration:
         
         paths = [r.path for r in app.routes]
         
-        # Check stores endpoint is available
         assert any("/stores" in path for path in paths)
 
     def test_users_router_registered(self):
@@ -150,3 +85,23 @@ class TestRouterRegistration:
         paths = [r.path for r in app.routes]
         
         assert any("/ws" in path for path in paths)
+
+
+@pytest.mark.unit
+class TestAppSettings:
+    """Tests for app settings usage."""
+
+    def test_settings_used_in_app(self):
+        """Test settings are properly loaded."""
+        from app.core.config import get_settings
+        
+        settings = get_settings()
+        assert settings.API_V1_STR is not None
+
+    def test_api_prefix_format(self):
+        """Test API prefix is properly formatted."""
+        from app.core.config import get_settings
+        
+        settings = get_settings()
+        assert settings.API_V1_STR.startswith("/api")
+

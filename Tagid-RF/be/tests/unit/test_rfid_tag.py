@@ -17,7 +17,9 @@ class TestRFIDTagModel:
         tag = RFIDTag(epc="E200-1234-5678-9ABC")
         
         assert tag.epc == "E200-1234-5678-9ABC"
-        assert tag.is_paid is False
+        # is_paid has default=False in column definition
+        is_paid_col = RFIDTag.__table__.c.is_paid
+        assert is_paid_col.default.arg is False
 
     def test_rfid_tag_full_creation(self):
         """Test RFIDTag with all fields."""
