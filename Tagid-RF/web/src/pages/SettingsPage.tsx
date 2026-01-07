@@ -331,18 +331,32 @@ export function SettingsPage() {
 
         {/* Account Info */}
         <Section>
-          <SectionTitle>פרטי חשבון</SectionTitle>
+          <SectionTitle>{t('settings.account')}</SectionTitle>
 
           <SettingRow>
             <SettingInfo>
-              <SettingLabel>תפקיד נוכחי</SettingLabel>
-              <SettingDescription>רמת ההרשאה שלך במערכת</SettingDescription>
+              <SettingLabel>{t('settings.currentRole')}</SettingLabel>
+              <SettingDescription>{t('settings.roleDesc')}</SettingDescription>
             </SettingInfo>
             <RoleBadge $role={userRole || 'CUSTOMER'}>
               {userRole === 'ADMIN' ? 'מנהל מערכת' :
                 userRole === 'MANAGER' ? 'מנהל' :
                   userRole === 'CASHIER' ? 'קופאי' : 'לקוח'}
             </RoleBadge>
+          </SettingRow>
+
+          <SettingRow>
+            <SettingInfo>
+              <SettingLabel>{t('dashboard.logout')}</SettingLabel>
+              <SettingDescription>התנתק מהחשבון שלך</SettingDescription>
+            </SettingInfo>
+            <Button onClick={() => {
+              if (confirm('האם אתה בטוח שברצונך להתנתק?')) {
+                window.location.href = '/';
+              }
+            }}>
+              {t('dashboard.logout')}
+            </Button>
           </SettingRow>
         </Section>
 
