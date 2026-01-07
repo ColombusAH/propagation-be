@@ -10,7 +10,14 @@ from pydantic import BaseModel, Field
 
 
 class PaymentProviderEnum(str, Enum):
-    """Payment provider options."""
+    """
+    Supported payment providers.
+    
+    - STRIPE: International credit card processing
+    - TRANZILA: Israeli payment gateway
+    - NEXI: European payment processor
+    - CASH: Cash payments (recorded manually)
+    """
 
     STRIPE = "STRIPE"
     TRANZILA = "TRANZILA"
@@ -19,7 +26,15 @@ class PaymentProviderEnum(str, Enum):
 
 
 class PaymentStatusEnum(str, Enum):
-    """Payment status options."""
+    """
+    Payment processing status.
+    
+    - PENDING: Payment created but not yet processed
+    - PROCESSING: Payment is being processed by provider
+    - COMPLETED: Payment successfully completed
+    - FAILED: Payment failed (card declined, insufficient funds, etc.)
+    - REFUNDED: Payment was refunded to customer
+    """
 
     PENDING = "PENDING"
     PROCESSING = "PROCESSING"
@@ -29,15 +44,43 @@ class PaymentStatusEnum(str, Enum):
 
 
 class PaymentIntentRequest(BaseModel):
-    """Request to create a payment intent."""
+    """
+    Request to create a payment intent.
+    
+    A payment intent represents the intention to collect payment.
+    Create this before showing payment UI to the customer.
+    
+    Example:
+        ```python
+        intent = PaymentIntentRequest(
+            order_id="order_123",
+            amount=15000,  # 150.00 ILS in agorot
+            currency="ILS",
+            payment_provider="STRIPE"
+        )
+        ```
+    """
 
-    order_id: str = Field(..., description="Order ID")
-    amount: int = Field(..., description="Amount in agorot/cents", gt=0)
-    currency: str = Field(default="ILS", description="Currency code")
-    payment_provider: PaymentProviderEnum = Field(
-        default=PaymentProviderEnum.STRIPE, description="Payment provider to use"
+    order_id: str = Field(..., description="Order ID to associate with this payment")
+    amount: int = Field(
+        ...,
+        description="Amount in smallest currency unit (agorot for ILS, cents for USD)",
+        gt=0,
+        examples=[15000, 5000, 100000]
     )
-    metadata: Optional[dict] = Field(default=None, description="Additional metadata")
+    currency: str = Field(
+        default="ILS",
+        description="ISO 4217 currency code (ILS, USD, EUR, etc.)",
+        examples=["ILS", "USD", "EUR"]
+    )
+    payment_provider: PaymentProviderEnum = Field(
+        default=PaymentProviderEnum.STRIPE,
+        description="Payment provider to use for processing"
+    )
+    metadata: Optional[dict] = Field(
+        default=None,
+        description="Additional metadata to store with payment"
+    )
 
 
 class PaymentIntentResponse(BaseModel):
