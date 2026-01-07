@@ -11,7 +11,7 @@ from app.api.v1.api import api_router
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.db.prisma import init_db, shutdown_db
-from app.routers import tags, websocket, stores, users, notifications
+from app.routers import tags, websocket, stores, users, notifications, exit_scan
 from app.services.database import init_db as init_rfid_db
 from app.services.rfid_reader import rfid_reader_service
 
@@ -124,6 +124,7 @@ app.include_router(websocket.router, prefix="/ws", tags=["WebSocket"])
 app.include_router(stores.router, prefix=f"{settings.API_V1_STR}", tags=["Stores"])
 app.include_router(users.router, prefix=f"{settings.API_V1_STR}", tags=["Users"])
 app.include_router(notifications.router, prefix=f"{settings.API_V1_STR}", tags=["Notifications"])
+app.include_router(exit_scan.router, prefix=f"{settings.API_V1_STR}", tags=["Exit Scan"])
 
 
 @app.get("/health")
