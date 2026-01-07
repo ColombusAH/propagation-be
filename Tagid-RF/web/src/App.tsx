@@ -5,6 +5,7 @@ import { GlobalStyles } from './styles/global';
 import { theme } from './styles/theme';
 import { AppRoutes } from './app.routes';
 import { useStore } from './store';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import productsData from './data/products.json';
 
 export function App() {
@@ -18,12 +19,15 @@ export function App() {
   }, [loadProducts, isLoaded]);
 
   return (
-    <ThemeProvider theme={theme}>
-      <GlobalStyles />
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider theme={theme}>
+        <GlobalStyles />
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
+
 
