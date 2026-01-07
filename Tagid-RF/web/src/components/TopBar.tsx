@@ -105,6 +105,7 @@ export function TopBar() {
       <NavContainer>
         <Nav>
           <NavItem to="/dashboard">דשבורד</NavItem>
+          <NavItem to="/transactions">טרנזקציות</NavItem>
           <NavItem to="/scan">{t('nav.scan')}</NavItem>
           <NavItem to="/catalog">{t('nav.catalog')}</NavItem>
           <NavItem to="/cart">
