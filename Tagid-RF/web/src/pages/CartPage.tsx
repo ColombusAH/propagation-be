@@ -4,6 +4,7 @@ import { Layout } from '@/components/Layout';
 import { QuantityInput } from '@/components/QuantityInput';
 import { EmptyState } from '@/components/EmptyState';
 import { useStore } from '@/store';
+import { useTranslation } from '@/hooks/useTranslation';
 import { formatCurrency } from '@/lib/utils/currency';
 import { theme } from '@/styles/theme';
 
@@ -137,9 +138,9 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
     props.variant === 'secondary' ? theme.colors.text : 'white'};
   border: 1px solid
     ${(props) =>
-      props.variant === 'secondary'
-        ? theme.colors.border
-        : theme.colors.primary};
+    props.variant === 'secondary'
+      ? theme.colors.border
+      : theme.colors.primary};
   border-radius: ${theme.borderRadius.md};
   padding: ${theme.spacing.md} ${theme.spacing.lg};
   font-weight: ${theme.typography.fontWeight.medium};
@@ -149,14 +150,15 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
 
   &:hover {
     background-color: ${(props) =>
-      props.variant === 'secondary'
-        ? theme.colors.border
-        : theme.colors.primaryDark};
+    props.variant === 'secondary'
+      ? theme.colors.border
+      : theme.colors.primaryDark};
   }
 `;
 
 export function CartPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { items, getProductById, setQty, remove, clear, getTotalInCents } =
     useStore();
 
@@ -173,10 +175,10 @@ export function CartPage() {
         <Container>
           <EmptyState
             icon="🛒"
-            title="Your cart is empty"
-            message="Scan products or browse the catalog to add items to your cart."
+            title={t('cart.empty')}
+            message={t('cart.emptyMessage')}
             action={
-              <Button onClick={() => navigate('/scan')}>Start Scanning</Button>
+              <Button onClick={() => navigate('/scan')}>{t('scan.title')}</Button>
             }
           />
         </Container>
@@ -187,7 +189,7 @@ export function CartPage() {
   return (
     <Layout>
       <Container>
-        <Title>🛒 Shopping Cart</Title>
+        <Title>{t('cart.title')}</Title>
 
         <CartItems>
           {cartItems.map(({ product, productId, qty }) => (
@@ -215,15 +217,15 @@ export function CartPage() {
 
         <Summary>
           <SummaryRow>
-            <SummaryLabel>Total</SummaryLabel>
+            <SummaryLabel>{t('cart.total')}</SummaryLabel>
             <SummaryValue>{formatCurrency(total)}</SummaryValue>
           </SummaryRow>
           <Actions>
             <Button variant="secondary" onClick={clear}>
-              Clear Cart
+              {t('cart.remove')}
             </Button>
             <Button onClick={() => navigate('/checkout')}>
-              Proceed to Checkout
+              {t('cart.checkout')}
             </Button>
           </Actions>
         </Summary>

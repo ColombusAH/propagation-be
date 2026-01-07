@@ -14,6 +14,7 @@ import productsData from './data/products.json';
 function AppContent() {
   const loadProducts = useStore((state) => state.loadProducts);
   const isLoaded = useStore((state) => state.isLoaded);
+  const locale = useStore((state) => state.locale);
   const { isAuthenticated, login } = useAuth();
 
   useEffect(() => {
@@ -21,6 +22,12 @@ function AppContent() {
       loadProducts(productsData);
     }
   }, [loadProducts, isLoaded]);
+
+  // Set RTL direction based on locale
+  useEffect(() => {
+    document.documentElement.dir = locale === 'he' ? 'rtl' : 'ltr';
+    document.documentElement.lang = locale;
+  }, [locale]);
 
   if (!isAuthenticated) {
     return <LoginPage onLogin={login} />;

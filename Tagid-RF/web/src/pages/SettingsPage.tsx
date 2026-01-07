@@ -173,6 +173,7 @@ const RoleBadge = styled.span<{ $role: string }>`
  */
 export function SettingsPage() {
   const { userRole } = useAuth();
+  const { t } = useTranslation();
 
   // Connect to store for language and currency
   const locale = useStore((state) => state.locale);

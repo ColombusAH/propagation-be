@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { Layout } from '@/components/Layout';
 import { EmptyState } from '@/components/EmptyState';
 import { useStore } from '@/store';
+import { useTranslation } from '@/hooks/useTranslation';
 import { formatCurrency } from '@/lib/utils/currency';
 import { theme } from '@/styles/theme';
 
@@ -115,6 +116,7 @@ const Button = styled.button`
 
 export function OrdersPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { list, getProductById } = useStore();
   const orders = list();
 
@@ -124,10 +126,10 @@ export function OrdersPage() {
         <Container>
           <EmptyState
             icon="📋"
-            title="No orders yet"
-            message="You haven't placed any orders yet. Start shopping to see your orders here."
+            title={t('orders.empty')}
+            message={t('orders.emptyMessage')}
             action={
-              <Button onClick={() => navigate('/scan')}>Start Shopping</Button>
+              <Button onClick={() => navigate('/scan')}>{t('cart.continueShopping')}</Button>
             }
           />
         </Container>
@@ -138,7 +140,7 @@ export function OrdersPage() {
   return (
     <Layout>
       <Container>
-        <Title>📋 Order History</Title>
+        <Title>{t('orders.title')}</Title>
 
         <OrdersList>
           {orders.map((order) => {
@@ -150,9 +152,9 @@ export function OrdersPage() {
               >
                 <OrderHeader>
                   <OrderInfo>
-                    <OrderId>Order #{order.id.slice(0, 8)}</OrderId>
+                    <OrderId>{t('orders.orderNumber')} #{order.id.slice(0, 8)}</OrderId>
                     <OrderDate>{orderDate.toLocaleString()}</OrderDate>
-                    <Status>{order.status}</Status>
+                    <Status>{t('orders.paid')}</Status>
                   </OrderInfo>
                   <OrderTotal>
                     {formatCurrency(order.totalInCents)}
