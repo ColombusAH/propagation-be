@@ -299,56 +299,79 @@ export function DashboardPage() {
           )}
         </Header>
 
-        <StatsGrid>
-          <StatCard
-            title="הכנסות היום"
-            value={`₪${stats.revenue.toLocaleString()}`}
-            trend={{ value: 12, isPositive: true }}
-            accentColor={theme.colors.primary}
-          />
-          <StatCard
-            title="מכירות"
-            value={stats.sales}
-            trend={{ value: 8, isPositive: true }}
-            accentColor={theme.colors.success}
-          />
-          <StatCard
-            title="פריטים נמכרו"
-            value={stats.items}
-            trend={{ value: 5, isPositive: false }}
-            accentColor={theme.colors.gray[400]}
-          />
-          <StatCard
-            title="ממוצע טרנזקציה"
-            value={`₪${stats.avgTransaction}`}
-            trend={{ value: 15, isPositive: true }}
-            accentColor={theme.colors.info}
-          />
-        </StatsGrid>
+        {/* Customers see their orders only */}
+        {activeRole === 'CUSTOMER' && (
+          <Section>
+            <SectionTitle>ההזמנות שלי</SectionTitle>
+            <EmptyState>
+              <p style={{ fontSize: theme.typography.fontSize.lg, marginBottom: theme.spacing.md }}>
+                👋 ברוך הבא!
+              </p>
+              <p style={{ color: theme.colors.textSecondary }}>
+                כלקוח, תוכל לראות כאן את ההזמנות שלך, לעקוב אחרי משלוחים ולנהל את החשבון שלך.
+              </p>
+              <p style={{ color: theme.colors.textSecondary, marginTop: theme.spacing.md }}>
+                עבור לקטלוג כדי להתחיל לקנות!
+              </p>
+            </EmptyState>
+          </Section>
+        )}
 
-        <Section>
-          <SectionTitle>טרנזקציות אחרונות</SectionTitle>
-          {recentTransactions.length > 0 ? (
-            <TransactionList>
-              {recentTransactions.map(txn => (
-                <TransactionItem key={txn.id}>
-                  <TransactionInfo>
-                    <TransactionId>{txn.id}</TransactionId>
-                    <TransactionTime>{txn.time}</TransactionTime>
-                  </TransactionInfo>
-                  <TransactionAmount $type={txn.type}>
-                    ₪{txn.amount.toLocaleString()}
-                  </TransactionAmount>
-                </TransactionItem>
-              ))}
-            </TransactionList>
-          ) : (
-            <EmptyState>אין טרנזקציות להצגה</EmptyState>
-          )}
-        </Section>
+        {/* Cashiers, Managers, and Admins see sales dashboard */}
+        {(activeRole === 'CASHIER' || activeRole === 'MANAGER' || activeRole === 'ADMIN') && (
+          <>
+            <StatsGrid>
+              <StatCard
+                title="הכנסות היום"
+                value={`₪${stats.revenue.toLocaleString()}`}
+                trend={{ value: 12, isPositive: true }}
+                accentColor={theme.colors.primary}
+              />
+              <StatCard
+                title="מכירות"
+                value={stats.sales}
+                trend={{ value: 8, isPositive: true }}
+                accentColor={theme.colors.success}
+              />
+              <StatCard
+                title="פריטים נמכרו"
+                value={stats.items}
+                trend={{ value: 5, isPositive: false }}
+                accentColor={theme.colors.gray[400]}
+              />
+              <StatCard
+                title="ממוצע טרנזקציה"
+                value={`₪${stats.avgTransaction}`}
+                trend={{ value: 15, isPositive: true }}
+                accentColor={theme.colors.info}
+              />
+            </StatsGrid>
+
+            <Section>
+              <SectionTitle>טרנזקציות אחרונות</SectionTitle>
+              {recentTransactions.length > 0 ? (
+                <TransactionList>
+                  {recentTransactions.map(txn => (
+                    <TransactionItem key={txn.id}>
+                      <TransactionInfo>
+                        <TransactionId>{txn.id}</TransactionId>
+                        <TransactionTime>{txn.time}</TransactionTime>
+                      </TransactionInfo>
+                      <TransactionAmount $type={txn.type}>
+                        ₪{txn.amount.toLocaleString()}
+                      </TransactionAmount>
+                    </TransactionItem>
+                  ))}
+                </TransactionList>
+              ) : (
+                <EmptyState>אין טרנזקציות להצגה</EmptyState>
+              )}
+            </Section>
+          </>
+        )}
 
         {/* Role-specific content */}
-        {(userRole === 'ADMIN' || userRole === 'MANAGER') && (
+        {(activeRole === 'ADMIN' || activeRole === 'MANAGER') && (
           <Section>
             <SectionTitle>תוכן למנהלים בלבד</SectionTitle>
             <p style={{ color: theme.colors.textSecondary }}>
@@ -357,7 +380,7 @@ export function DashboardPage() {
           </Section>
         )}
 
-        {userRole === 'ADMIN' && (
+        {activeRole === 'ADMIN' && (
           <Section>
             <SectionTitle>תוכן למנהל מערכת בלבד</SectionTitle>
             <p style={{ color: theme.colors.textSecondary }}>

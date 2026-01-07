@@ -4,6 +4,7 @@ import { useStore } from '@/store';
 import { theme } from '@/styles/theme';
 import { useTranslation } from '@/hooks/useTranslation';
 import { LanguageSwitch } from './LanguageSwitch';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Header = styled.header`
   background: ${theme.colors.surface};
@@ -99,13 +100,17 @@ const Badge = styled.span`
 export function TopBar() {
   const cartItemCount = useStore((state) => state.getCartItemCount());
   const { t } = useTranslation();
+  const { userRole } = useAuth();
+
+  const canSeeDashboard = userRole && ['CASHIER', 'MANAGER', 'ADMIN'].includes(userRole);
+  const canSeeTransactions = userRole && ['MANAGER', 'ADMIN'].includes(userRole);
 
   return (
     <Header>
       <NavContainer>
         <Nav>
-          <NavItem to="/dashboard">דשבורד</NavItem>
-          <NavItem to="/transactions">טרנזקציות</NavItem>
+          {canSeeDashboard && <NavItem to="/dashboard">דשבורד</NavItem>}
+          {canSeeTransactions && <NavItem to="/transactions">טרנזקציות</NavItem>}
           <NavItem to="/scan">{t('nav.scan')}</NavItem>
           <NavItem to="/catalog">{t('nav.catalog')}</NavItem>
           <NavItem to="/cart">
@@ -113,7 +118,7 @@ export function TopBar() {
             {cartItemCount > 0 && <Badge>{cartItemCount}</Badge>}
           </NavItem>
           <NavItem to="/orders">{t('nav.orders')}</NavItem>
-          <NavItem to="/tag-mapping">תגיות</NavItem>
+          {canSeeDashboard && <NavItem to="/tag-mapping">תגיות</NavItem>}
         </Nav>
         <LanguageSwitch />
       </NavContainer>
