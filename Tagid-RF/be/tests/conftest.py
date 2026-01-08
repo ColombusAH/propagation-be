@@ -3,15 +3,31 @@ Pytest configuration and fixtures for the Shifty RFID system tests.
 """
 
 import asyncio
+import os
 from typing import AsyncGenerator, Generator
 
 import pytest
-from fastapi.testclient import TestClient
-from httpx import ASGITransport, AsyncClient
 
-from app.core.config import settings
-from app.db.prisma import prisma_client
-from app.main import app
+# Only import these for integration tests
+# This prevents loading firebase_admin during unit tests
+
+
+def _get_app():
+    """Lazy load the FastAPI app."""
+    from app.main import app
+    return app
+
+
+def _get_prisma():
+    """Lazy load the Prisma client."""
+    from app.db.prisma import prisma_client
+    return prisma_client
+
+
+def _get_settings():
+    """Lazy load settings."""
+    from app.core.config import settings
+    return settings
 
 
 # Configure asyncio for tests
@@ -23,9 +39,19 @@ def event_loop() -> Generator:
     loop.close()
 
 
+# Set up test environment variables at module level to ensure they are available
+# during test collection, as some modules import config at module level.
+os.environ.setdefault("DATABASE_URL", "postgresql://test:test@localhost:5432/test_db")
+os.environ.setdefault("SECRET_KEY", "test_secret_key_for_unit_tests")
+os.environ.setdefault("GOOGLE_CLIENT_ID", "test_google_client_id")
+os.environ.setdefault("RFID_DATABASE_URL", "postgresql://test:test@localhost:5432/test_rfid_db")
+
+
 @pytest.fixture
 def client() -> Generator:
     """Create a test client for synchronous tests."""
+    from fastapi.testclient import TestClient
+    app = _get_app()
     with TestClient(app) as c:
         yield c
 
@@ -33,14 +59,17 @@ def client() -> Generator:
 @pytest.fixture
 async def async_client() -> AsyncGenerator:
     """Provide async HTTP client for testing."""
+    from httpx import ASGITransport, AsyncClient
+    app = _get_app()
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=False)
 async def setup_test_database():
     """Set up test database connection."""
+    prisma_client = _get_prisma()
     await prisma_client.connect()
     yield
     await prisma_client.disconnect()
@@ -49,6 +78,7 @@ async def setup_test_database():
 @pytest.fixture
 async def db():
     """Provide database access for tests."""
+    prisma_client = _get_prisma()
     yield prisma_client.client
 
 
