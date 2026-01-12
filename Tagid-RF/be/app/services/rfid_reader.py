@@ -24,11 +24,55 @@ from app.services.m200_protocol import (
     M200Commands,
     M200ResponseParser,
     M200Status,
+    # Core commands
     build_get_device_info_command,
     build_inventory_command,
     build_stop_inventory_command,
     parse_device_info,
     parse_inventory_response,
+    # High priority
+    build_module_init_command,
+    build_set_power_command,
+    build_read_tag_command,
+    # Medium priority
+    build_set_rf_protocol_command,
+    build_get_rf_protocol_command,
+    build_set_network_command,
+    build_get_network_command,
+    parse_network_response,
+    build_set_rssi_filter_command,
+    build_get_rssi_filter_command,
+    build_set_all_params_command,
+    build_get_all_params_command,
+    # Tag commands
+    build_select_tag_command,
+    build_set_query_param_command,
+    build_get_query_param_command,
+    # GPIO
+    build_set_gpio_param_command,
+    build_get_gpio_param_command,
+    build_get_gpio_levels_command,
+    parse_gpio_levels,
+    # Relays
+    build_relay1_command,
+    build_relay2_command,
+    # Gate
+    build_get_gate_status_command,
+    parse_gate_status,
+    build_set_gate_param_command,
+    build_get_gate_param_command,
+    build_set_eas_mask_command,
+    build_get_eas_mask_command,
+    # WiFi & Remote
+    build_set_remote_server_command,
+    build_get_remote_server_command,
+    build_set_wifi_command,
+    build_get_wifi_command,
+    # I/O & Permission
+    build_set_io_param_command,
+    build_get_io_param_command,
+    build_set_permission_command,
+    build_get_permission_command,
 )
 
 logger = logging.getLogger(__name__)
@@ -599,6 +643,244 @@ class RFIDReaderService:
         """
         logger.warning("Tag writing not yet implemented for M-200")
         return False
+
+    # =========================================================================
+    # HIGH PRIORITY - Module Control
+    # =========================================================================
+
+    async def initialize_device(self) -> bool:
+        """Initialize/reset the M-200 device."""
+        if not self.is_connected:
+            return False
+        try:
+            cmd = build_module_init_command()
+            response_bytes = await asyncio.to_thread(self._send_command, cmd)
+            response = M200ResponseParser.parse(response_bytes, strict_crc=False)
+            return response.success
+        except Exception as e:
+            logger.error(f"Failed to initialize device: {e}")
+            return False
+
+    async def set_power(self, power_dbm: int) -> bool:
+        """Set RF output power (0-30 dBm)."""
+        if not self.is_connected:
+            return False
+        try:
+            cmd = build_set_power_command(power_dbm)
+            response_bytes = await asyncio.to_thread(self._send_command, cmd)
+            response = M200ResponseParser.parse(response_bytes, strict_crc=False)
+            if response.success:
+                logger.info(f"Set RF power to {power_dbm} dBm")
+            return response.success
+        except Exception as e:
+            logger.error(f"Failed to set power: {e}")
+            return False
+
+    async def read_tag_memory(
+        self, mem_bank: int, start_addr: int, word_count: int
+    ) -> Optional[bytes]:
+        """
+        Read tag memory.
+        
+        Args:
+            mem_bank: 0=Reserved, 1=EPC, 2=TID, 3=User
+            start_addr: Starting word address
+            word_count: Number of 16-bit words to read
+        """
+        if not self.is_connected:
+            return None
+        try:
+            cmd = build_read_tag_command(mem_bank, start_addr, word_count)
+            response_bytes = await asyncio.to_thread(self._send_command, cmd)
+            response = M200ResponseParser.parse(response_bytes, strict_crc=False)
+            if response.success:
+                return response.data
+            return None
+        except Exception as e:
+            logger.error(f"Failed to read tag memory: {e}")
+            return None
+
+    # =========================================================================
+    # MEDIUM PRIORITY - Configuration
+    # =========================================================================
+
+    async def get_network_config(self) -> Dict[str, Any]:
+        """Get current network configuration."""
+        if not self.is_connected:
+            return {"error": "Not connected"}
+        try:
+            cmd = build_get_network_command()
+            response_bytes = await asyncio.to_thread(self._send_command, cmd)
+            response = M200ResponseParser.parse(response_bytes, strict_crc=False)
+            if response.success:
+                return parse_network_response(response.data)
+            return {"error": M200Status.get_description(response.status)}
+        except Exception as e:
+            return {"error": str(e)}
+
+    async def set_network_config(
+        self, ip: str, subnet: str = "255.255.255.0", 
+        gateway: str = "192.168.1.1", port: int = 4001
+    ) -> bool:
+        """Set network configuration."""
+        if not self.is_connected:
+            return False
+        try:
+            cmd = build_set_network_command(ip, subnet, gateway, port)
+            response_bytes = await asyncio.to_thread(self._send_command, cmd)
+            response = M200ResponseParser.parse(response_bytes, strict_crc=False)
+            return response.success
+        except Exception as e:
+            logger.error(f"Failed to set network: {e}")
+            return False
+
+    async def set_rssi_filter(self, antenna: int, threshold: int) -> bool:
+        """Set RSSI threshold for antenna."""
+        if not self.is_connected:
+            return False
+        try:
+            cmd = build_set_rssi_filter_command(antenna, threshold)
+            response_bytes = await asyncio.to_thread(self._send_command, cmd)
+            response = M200ResponseParser.parse(response_bytes, strict_crc=False)
+            return response.success
+        except Exception as e:
+            logger.error(f"Failed to set RSSI filter: {e}")
+            return False
+
+    async def get_all_params(self) -> Dict[str, Any]:
+        """Get all device parameters."""
+        if not self.is_connected:
+            return {"error": "Not connected"}
+        try:
+            cmd = build_get_all_params_command()
+            response_bytes = await asyncio.to_thread(self._send_command, cmd)
+            response = M200ResponseParser.parse(response_bytes, strict_crc=False)
+            return {"success": response.success, "data": response.data.hex().upper()}
+        except Exception as e:
+            return {"error": str(e)}
+
+    # =========================================================================
+    # GPIO Control
+    # =========================================================================
+
+    async def get_gpio_levels(self) -> Dict[str, int]:
+        """Get current GPIO pin levels."""
+        if not self.is_connected:
+            return {}
+        try:
+            cmd = build_get_gpio_levels_command()
+            response_bytes = await asyncio.to_thread(self._send_command, cmd)
+            response = M200ResponseParser.parse(response_bytes, strict_crc=False)
+            if response.success:
+                return parse_gpio_levels(response.data)
+            return {}
+        except Exception as e:
+            logger.error(f"Failed to get GPIO levels: {e}")
+            return {}
+
+    async def set_gpio(self, pin: int, direction: int, level: int = 0) -> bool:
+        """Configure GPIO pin."""
+        if not self.is_connected:
+            return False
+        try:
+            cmd = build_set_gpio_param_command(pin, direction, level)
+            response_bytes = await asyncio.to_thread(self._send_command, cmd)
+            response = M200ResponseParser.parse(response_bytes, strict_crc=False)
+            return response.success
+        except Exception as e:
+            logger.error(f"Failed to set GPIO: {e}")
+            return False
+
+    # =========================================================================
+    # Relay Control
+    # =========================================================================
+
+    async def control_relay(self, relay_num: int, close: bool = True) -> bool:
+        """Control relay 1 or 2."""
+        if not self.is_connected:
+            return False
+        try:
+            if relay_num == 1:
+                cmd = build_relay1_command(close)
+            elif relay_num == 2:
+                cmd = build_relay2_command(close)
+            else:
+                logger.error(f"Invalid relay number: {relay_num}")
+                return False
+            
+            response_bytes = await asyncio.to_thread(self._send_command, cmd)
+            response = M200ResponseParser.parse(response_bytes, strict_crc=False)
+            if response.success:
+                logger.info(f"Relay {relay_num} {'closed' if close else 'opened'}")
+            return response.success
+        except Exception as e:
+            logger.error(f"Failed to control relay: {e}")
+            return False
+
+    # =========================================================================
+    # Gate Control
+    # =========================================================================
+
+    async def get_gate_status(self) -> Dict[str, Any]:
+        """Get gate detection status."""
+        if not self.is_connected:
+            return {"error": "Not connected"}
+        try:
+            cmd = build_get_gate_status_command()
+            response_bytes = await asyncio.to_thread(self._send_command, cmd)
+            response = M200ResponseParser.parse(response_bytes, strict_crc=False)
+            if response.success:
+                return parse_gate_status(response.data)
+            return {"error": M200Status.get_description(response.status)}
+        except Exception as e:
+            return {"error": str(e)}
+
+    async def set_gate_config(
+        self, mode: int = 1, sensitivity: int = 80, direction_detect: bool = True
+    ) -> bool:
+        """Configure gate detection mode."""
+        if not self.is_connected:
+            return False
+        try:
+            cmd = build_set_gate_param_command(mode, sensitivity, direction_detect)
+            response_bytes = await asyncio.to_thread(self._send_command, cmd)
+            response = M200ResponseParser.parse(response_bytes, strict_crc=False)
+            return response.success
+        except Exception as e:
+            logger.error(f"Failed to set gate config: {e}")
+            return False
+
+    # =========================================================================
+    # Query & Select Commands
+    # =========================================================================
+
+    async def set_query_params(
+        self, q_value: int = 4, session: int = 0, target: int = 0
+    ) -> bool:
+        """Set Query command parameters for inventory optimization."""
+        if not self.is_connected:
+            return False
+        try:
+            cmd = build_set_query_param_command(q_value, session, target)
+            response_bytes = await asyncio.to_thread(self._send_command, cmd)
+            response = M200ResponseParser.parse(response_bytes, strict_crc=False)
+            return response.success
+        except Exception as e:
+            logger.error(f"Failed to set query params: {e}")
+            return False
+
+    async def select_tag(self, epc_mask: str) -> bool:
+        """Select specific tag for subsequent operations."""
+        if not self.is_connected:
+            return False
+        try:
+            cmd = build_select_tag_command(epc_mask)
+            response_bytes = await asyncio.to_thread(self._send_command, cmd)
+            response = M200ResponseParser.parse(response_bytes, strict_crc=False)
+            return response.success
+        except Exception as e:
+            logger.error(f"Failed to select tag: {e}")
+            return False
 
 
 # Singleton instance
