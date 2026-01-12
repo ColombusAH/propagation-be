@@ -31,6 +31,7 @@ class RFIDReaderService:
         self.reader_port = getattr(settings, 'RFID_READER_PORT', 4001)
         self.connection_type = getattr(settings, 'RFID_CONNECTION_TYPE', 'wifi')
         self.reader_id = getattr(settings, 'RFID_READER_ID', 'CF-H906-001')
+        self.simulation_mode = getattr(settings, 'RFID_SIMULATION_MODE', True)
         self.is_connected = False
         self.is_scanning = False
         self.reader = None  # Will hold reader connection object
@@ -44,6 +45,11 @@ class RFIDReaderService:
         Returns:
             bool: True if connection successful, False otherwise
         """
+        if self.simulation_mode:
+            logger.info("RFID Simulation Mode active - skipping hardware connection")
+            self.is_connected = True
+            return True
+
         try:
             if self.connection_type == 'wifi':
                 return await self._connect_wifi()
@@ -93,9 +99,28 @@ class RFIDReaderService:
     
     async def _connect_serial(self) -> bool:
         """Connect via Serial/USB."""
-        # TODO: Implement serial connection
-        logger.warning("Serial connection not yet implemented")
-        return False
+        try:
+            import serial
+            # In a real implementation, we would use settings for port/baudrate
+            # For now, we just attempt to open a serial port if configured
+            port = getattr(settings, 'RFID_SERIAL_PORT', 'COM1')
+            baudrate = getattr(settings, 'RFID_SERIAL_BAUDRATE', 115200)
+            
+            logger.info(f"Attempting serial connection on {port} at {baudrate} baud")
+            # This is a synchronous call, in a real async app we might use a thread pool
+            ser = serial.Serial(port, baudrate, timeout=1)
+            if ser.is_open:
+                self.reader = ser
+                self.is_connected = True
+                logger.info(f"Connected to RFID reader via serial on {port}")
+                return True
+            return False
+        except ImportError:
+            logger.error("pyserial library not installed")
+            return False
+        except Exception as e:
+            logger.error(f"Serial connection failed: {e}")
+            return False
     
     async def disconnect(self):
         """Disconnect from RFID reader."""
@@ -143,22 +168,50 @@ class RFIDReaderService:
     
     async def _scan_loop(self, callback: Optional[Callable] = None):
         """Main scanning loop."""
+        logger.info(f"Scan loop started. Simulation mode: {self.simulation_mode}")
+        
         while self.is_scanning and self.is_connected:
             try:
-                # Read tags from reader
-                tags = await self.read_single_tag()
-                
-                if tags:
-                    # Process each tag
-                    for tag_data in tags if isinstance(tags, list) else [tags]:
-                        await self._process_tag(tag_data, callback)
-                
-                # Small delay to prevent CPU spinning
-                await asyncio.sleep(0.1)
+                if self.simulation_mode:
+                    # Generate simulated tag data
+                    import random
+                    import string
+                    
+                    # Generate a random EPC-like string
+                    epc = "E2" + "".join(random.choices("0123456789ABCDEF", k=22))
+                    rssi = random.uniform(-70, -30)
+                    
+                    tags = {
+                        "epc": epc,
+                        "rssi": rssi,
+                        "antenna_port": random.randint(1, 4),
+                        "location": "Warehouse-Sim",
+                        "metadata": {"simulated": True}
+                    }
+                    
+                    # Log simulation scan
+                    logger.debug(f"Simulated scan: {epc}")
+                    
+                    # Process the simulated tag
+                    await self._process_tag(tags, callback)
+                    
+                    # Delay between scans in simulation mode (1-3 seconds)
+                    await asyncio.sleep(random.uniform(1.0, 3.0))
+                else:
+                    # Read tags from reader
+                    tags = await self.read_single_tag()
+                    
+                    if tags:
+                        # Process each tag
+                        for tag_data in tags if isinstance(tags, list) else [tags]:
+                            await self._process_tag(tag_data, callback)
+                    
+                    # Small delay to prevent CPU spinning
+                    await asyncio.sleep(0.1)
                 
             except Exception as e:
                 logger.error(f"Error in scan loop: {e}", exc_info=True)
-                await asyncio.sleep(1)  # Wait before retrying
+                await asyncio.sleep(2)  # Wait before retrying
     
     async def _process_tag(self, tag_data: Dict[str, Any], callback: Optional[Callable] = None):
         """
@@ -247,6 +300,8 @@ class RFIDReaderService:
                 db.close()
                 
         except Exception as e:
+            if 'db' in locals():
+                db.rollback()
             logger.error(f"Error processing tag: {e}", exc_info=True)
     
     async def stop_scanning(self):

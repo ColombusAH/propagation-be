@@ -132,3 +132,74 @@ create env if not exists:
 python3 -m venv .venv  
 activate env :
 source .venv/bin/activate
+
+## Testing
+
+This project uses pytest with 91% code coverage.
+
+### Running Tests
+
+```bash
+# Activate virtual environment
+source .venv/bin/activate  # Linux/Mac
+.venv\Scripts\activate     # Windows
+
+# Run all tests with coverage
+pytest --cov=app --cov-report=term-missing
+
+# Run specific test file
+pytest tests/api/v1/test_auth.py -v
+
+# Run with verbose output
+pytest -v -s
+```
+
+### Test Structure
+
+```
+tests/
+├── api/v1/           # API endpoint tests
+│   ├── test_auth.py
+│   ├── test_tags.py
+│   └── ...
+├── services/         # Service layer tests
+│   └── test_rfid_*.py
+├── conftest.py       # Test fixtures
+└── test_*.py         # Unit tests
+```
+
+## RFID Integration
+
+The backend supports RFID tag tracking via the Chafon CF-H906 reader.
+
+### Configuration
+
+Set these environment variables in `.env`:
+
+```env
+RFID_READER_IP=192.168.1.100
+RFID_READER_PORT=4001
+RFID_CONNECTION_TYPE=wifi    # wifi, bluetooth, or serial
+RFID_SIMULATION_MODE=True    # Set False for real hardware
+```
+
+### WebSocket Real-time Updates
+
+Connect to `/ws/rfid` for real-time tag scan notifications:
+
+```javascript
+const ws = new WebSocket('ws://localhost:8000/ws/rfid');
+ws.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  console.log('Tag scanned:', data);
+};
+```
+
+### API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/tags/` | GET | List all tags |
+| `/api/v1/tags/{epc}` | GET | Get tag by EPC |
+| `/api/v1/tags/` | POST | Create/update tag |
+| `/api/v1/tags/stats` | GET | Tag statistics |

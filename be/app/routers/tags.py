@@ -52,8 +52,8 @@ async def create_or_update_tag(tag: RFIDTagCreate, db: Session = Depends(get_db)
             existing.crc = tag.crc
         if tag.user_memory:
             existing.user_memory = tag.user_memory
-        if tag.metadata:
-            existing.metadata = tag.metadata
+        if tag.tag_metadata:
+            existing.tag_metadata = tag.tag_metadata
         
         db.commit()
         db.refresh(existing)
@@ -66,7 +66,7 @@ async def create_or_update_tag(tag: RFIDTagCreate, db: Session = Depends(get_db)
             antenna_port=tag.antenna_port,
             frequency=tag.frequency,
             location=tag.location,
-            metadata=tag.metadata,
+            tag_metadata=tag.tag_metadata,
             scanned_at=datetime.now(timezone.utc),
         )
         db.add(history)
@@ -84,7 +84,7 @@ async def create_or_update_tag(tag: RFIDTagCreate, db: Session = Depends(get_db)
             frequency=tag.frequency,
             pc=tag.pc,
             crc=tag.crc,
-            metadata=tag.metadata,
+            tag_metadata=tag.tag_metadata,
             location=tag.location,
             notes=tag.notes,
         )
@@ -100,7 +100,7 @@ async def create_or_update_tag(tag: RFIDTagCreate, db: Session = Depends(get_db)
             antenna_port=tag.antenna_port,
             frequency=tag.frequency,
             location=tag.location,
-            metadata=tag.metadata,
+            tag_metadata=tag.tag_metadata,
             scanned_at=datetime.now(timezone.utc),
         )
         db.add(history)
@@ -181,8 +181,8 @@ async def update_tag(tag_id: int, tag_update: RFIDTagUpdate, db: Session = Depen
         tag.notes = tag_update.notes
     if tag_update.user_memory is not None:
         tag.user_memory = tag_update.user_memory
-    if tag_update.metadata is not None:
-        tag.metadata = tag_update.metadata
+    if tag_update.tag_metadata is not None:
+        tag.tag_metadata = tag_update.tag_metadata
     if tag_update.is_active is not None:
         tag.is_active = tag_update.is_active
     

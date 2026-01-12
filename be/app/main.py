@@ -50,16 +50,16 @@ async def lifespan(app: FastAPI):
     logger.info("Initializing RFID database...")
     init_rfid_db()
     
-    # Optional: Auto-connect to RFID reader on startup
-    # Uncomment if you want automatic connection
-    # try:
-    #     connected = await rfid_reader_service.connect()
-    #     if connected:
-    #         logger.info("RFID reader connected successfully")
-    #     else:
-    #         logger.warning("Failed to connect to RFID reader")
-    # except Exception as e:
-    #     logger.error(f"Error connecting to RFID reader: {e}")
+    # Auto-connect to RFID reader on startup
+    try:
+        connected = await rfid_reader_service.connect()
+        if connected:
+            logger.info("RFID reader initialized successfully")
+            await rfid_reader_service.start_scanning()
+        else:
+            logger.warning("Failed to initialize RFID reader")
+    except Exception as e:
+        logger.error(f"Error initializing RFID reader: {e}")
     
     yield
     # Shutdown

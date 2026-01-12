@@ -41,11 +41,13 @@ class Settings(BaseSettings):
     RFID_READER_PORT: int = 4001  # Default RFID reader port
     RFID_CONNECTION_TYPE: str = "wifi"  # wifi, bluetooth, or serial
     RFID_READER_ID: str = "CF-H906-001"  # Unique identifier for this reader
+    RFID_SIMULATION_MODE: bool = True  # Enable simulation mode for testing
     LOG_LEVEL: str = "INFO"  # Logging level: DEBUG, INFO, WARNING, ERROR
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = {
+        "env_file": ".env",
+        "case_sensitive": True,
+    }
 
 @lru_cache()
 def get_settings() -> Settings:
