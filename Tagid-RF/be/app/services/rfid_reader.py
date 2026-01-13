@@ -72,7 +72,7 @@ class RFIDReaderService:
         self._socket: Optional[socket.socket] = None
         self._scan_task: Optional[asyncio.Task] = None
         self._device_info: Optional[Dict[str, Any]] = None
-    
+
     def get_status(self) -> Dict[str, Any]:
         """Get current service status."""
         return {

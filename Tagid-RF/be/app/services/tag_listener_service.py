@@ -146,25 +146,91 @@ class TagListenerService:
     async def _broadcast_tag(self, tag_data: Dict[str, Any]):
         """Broadcast tag data to WebSocket clients."""
         try:
-            # Check DB status
+            from app.db.prisma import prisma_client
+            from app.models.rfid_tag import RFIDTag
+            from app.services.database import SessionLocal
+            from app.services.encryption import decrypt_qr_code
+
             epc = tag_data.get("epc")
+            tag_id = tag_data.get("tag_id")
+
+            existing_tag_db = None
+            encryption_status = {"is_encrypted": False, "decrypted_qr": None}
+
             if epc:
-                from app.db.prisma import prisma_client
+                # 1. Check Prisma for Encryption Mapping (Anti-Counterfeit)
+                try:
+                    async with prisma_client.client as db:
+                        mapping = await db.tagmapping.find_unique(where={"epc": epc})
+                        if mapping and mapping.encryptedQr:
+                            encryption_status["is_encrypted"] = True
+                            try:
+                                encryption_status["decrypted_qr"] = decrypt_qr_code(
+                                    mapping.encryptedQr
+                                )
+                            except Exception as e:
+                                logger.error(f"Error decrypting QR code for EPC {epc}: {e}")
+                                encryption_status["decrypted_qr"] = "Decryption Failed"
+                except Exception as e:
+                    logger.error(f"Prisma check error: {e}")
 
-                mapping = await prisma_client.client.tagmapping.find_unique(where={"epc": epc})
+                # 2. Check SQLAlchemy for Product/Payment Info (Inventory/Theft)
+                try:
 
-                tag_data["is_mapped"] = bool(mapping)
-                if mapping:
-                    tag_data["target_qr"] = mapping.encryptedQr
+                    def get_tag_info():
+                        db = SessionLocal()
+                        try:
+                            return db.query(RFIDTag).filter(RFIDTag.epc == epc).first()
+                        finally:
+                            db.close()
 
-            message = {
-                "type": "tag_scanned",
-                "data": tag_data,
-                "timestamp": datetime.now().isoformat(),
+                    existing_tag_db = await asyncio.to_thread(get_tag_info)
+                except Exception as e:
+                    logger.error(f"SQLAlchemy check error: {e}")
+
+            # Broadcast to WebSocket
+            tag_payload = {
+                "tag_id": tag_id,
+                "epc": epc,
+                "rssi": tag_data.get("rssi"),
+                "antenna_port": tag_data.get("antenna_port"),
+                "timestamp": tag_data.get("timestamp"),
+                # Product Info from SQLAlchemy
+                "product_name": existing_tag_db.product_name if existing_tag_db else None,
+                "product_sku": existing_tag_db.product_sku if existing_tag_db else None,
+                "price": existing_tag_db.price_cents if existing_tag_db else None,
+                "is_paid": existing_tag_db.is_paid if existing_tag_db else False,
+                **encryption_status,
             }
-            await manager.broadcast(message)
+
+            await manager.broadcast(
+                {
+                    "type": "tag_scanned",
+                    "data": tag_payload,
+                }
+            )
+
+            # THEFT ALERT LOGIC
+            # If tag exists, has a product mapped, and is NOT paid
+            if existing_tag_db and existing_tag_db.product_name and not existing_tag_db.is_paid:
+                logger.warning(
+                    f"🚨 THEFT ALERT: Unpaid item scanned! EPC: {epc}, Product: {existing_tag_db.product_name}"
+                )
+                await manager.broadcast(
+                    {
+                        "type": "theft_alert",
+                        "data": {
+                            "message": f"Unpaid item detected: {existing_tag_db.product_name}",
+                            "tag": tag_payload,
+                            "severity": "critical",
+                            "timestamp": datetime.now().isoformat(),
+                            "location": "Gate",  # Assuming getting scanned here means passing the gate
+                        },
+                    }
+                )
+
         except Exception as e:
-            logger.error(f"Error broadcasting tag: {e}")
+            logger.error(f"Error broadcasting tag: {e}", exc_info=True)
 
     def get_recent_tags(self, count: int = 50) -> List[Dict[str, Any]]:
         """Get recent scanned tags."""
