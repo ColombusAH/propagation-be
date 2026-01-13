@@ -200,7 +200,7 @@ async def get_notifications(
     query = db.query(Notification).filter(Notification.user_id == user_id)
 
     if unread_only:
-        query = query.filter(Notification.is_read == False)
+        query = query.filter(Notification.is_read.is_(False))
 
     notifications = query.order_by(Notification.created_at.desc()).limit(limit).all()
 

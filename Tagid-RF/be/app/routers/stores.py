@@ -78,14 +78,14 @@ async def list_stores(is_active: Optional[bool] = None, db: Session = Depends(ge
         # Count sellers in store
         seller_count = (
             db.query(User)
-            .filter(User.store_id == store.id, User.role == "SELLER", User.is_active == True)
+            .filter(User.store_id == store.id, User.role == "SELLER", User.is_active.is_(True))
             .count()
         )
 
         # Get manager name
         manager = (
             db.query(User)
-            .filter(User.store_id == store.id, User.role == "MANAGER", User.is_active == True)
+            .filter(User.store_id == store.id, User.role == "MANAGER", User.is_active.is_(True))
             .first()
         )
 
@@ -139,13 +139,13 @@ async def get_store(store_id: int, db: Session = Depends(get_db)):
     # Get stats
     seller_count = (
         db.query(User)
-        .filter(User.store_id == store.id, User.role == "SELLER", User.is_active == True)
+        .filter(User.store_id == store.id, User.role == "SELLER", User.is_active.is_(True))
         .count()
     )
 
     manager = (
         db.query(User)
-        .filter(User.store_id == store.id, User.role == "MANAGER", User.is_active == True)
+        .filter(User.store_id == store.id, User.role == "MANAGER", User.is_active.is_(True))
         .first()
     )
 

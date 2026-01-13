@@ -114,7 +114,7 @@ async def check_exit_scan(request: ExitScanRequest, db: Session = Depends(get_db
 
         # Get all stakeholders for this store
         stakeholders = db.query(User).filter(
-            User.is_active == True, User.role.in_(["ADMIN", "MANAGER", "SELLER"])
+            User.is_active.is_(True), User.role.in_(["ADMIN", "MANAGER", "SELLER"])
         )
 
         if store_id:
