@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { DashboardPage } from './pages/DashboardPage';
 import { TransactionsPage } from './pages/TransactionsPage';
+import { PaymentsPage } from './pages/PaymentsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { NotificationSettingsPage } from './pages/NotificationSettingsPage';
@@ -15,6 +16,7 @@ import { OrdersPage } from './pages/OrdersPage';
 import { QRGeneratorPage } from './pages/QRGeneratorPage';
 import { ContainerPage } from './pages/ContainerPage';
 import { TagMappingPage } from './pages/TagMappingPage';
+import ReaderSettingsPage from './pages/ReaderSettingsPage';
 
 export function AppRoutes() {
   return (
@@ -22,6 +24,7 @@ export function AppRoutes() {
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/transactions" element={<TransactionsPage />} />
+      <Route path="/payments" element={<PaymentsPage />} />
       <Route path="/settings" element={<SettingsPage />} />
       <Route path="/notifications" element={<NotificationsPage />} />
       <Route path="/notification-settings" element={<NotificationSettingsPage />} />
@@ -36,6 +39,7 @@ export function AppRoutes() {
       <Route path="/qr-generator" element={<QRGeneratorPage />} />
       <Route path="/containers" element={<ContainerPage />} />
       <Route path="/tag-mapping" element={<TagMappingPage />} />
+      <Route path="/reader-settings" element={<ReaderSettingsPage />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );

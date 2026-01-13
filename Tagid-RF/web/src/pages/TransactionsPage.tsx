@@ -139,21 +139,21 @@ const Status = styled.span<{ $status: string }>`
   font-size: ${theme.typography.fontSize.sm};
   font-weight: ${theme.typography.fontWeight.medium};
   background: ${props => {
-        switch (props.$status) {
-            case 'completed': return theme.colors.successLight;
-            case 'pending': return theme.colors.warningLight;
-            case 'failed': return theme.colors.errorLight;
-            default: return theme.colors.gray[100];
-        }
-    }};
+    switch (props.$status) {
+      case 'completed': return theme.colors.successLight;
+      case 'pending': return theme.colors.warningLight;
+      case 'failed': return theme.colors.errorLight;
+      default: return theme.colors.gray[100];
+    }
+  }};
   color: ${props => {
-        switch (props.$status) {
-            case 'completed': return theme.colors.successDark;
-            case 'pending': return theme.colors.warningDark;
-            case 'failed': return theme.colors.errorDark;
-            default: return theme.colors.gray[700];
-        }
-    }};
+    switch (props.$status) {
+      case 'completed': return theme.colors.successDark;
+      case 'pending': return theme.colors.warningDark;
+      case 'failed': return theme.colors.errorDark;
+      default: return theme.colors.gray[700];
+    }
+  }};
 `;
 
 const Amount = styled.span<{ $type: 'income' | 'expense' }>`
@@ -178,14 +178,14 @@ const RoleInfo = styled.div`
 `;
 
 interface Transaction {
-    id: string;
-    date: string;
-    time: string;
-    customer: string;
-    amount: number;
-    status: 'completed' | 'pending' | 'failed';
-    items: number;
-    paymentMethod: string;
+  id: string;
+  date: string;
+  time: string;
+  customer: string;
+  amount: number;
+  status: 'completed' | 'pending' | 'failed';
+  items: number;
+  paymentMethod: string;
 }
 
 /**
@@ -198,171 +198,246 @@ interface Transaction {
  * - ADMIN: All + export + delete
  */
 export function TransactionsPage() {
-    const { userRole } = useAuth();
-    const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
-    const [dateFrom, setDateFrom] = useState('');
-    const [dateTo, setDateTo] = useState('');
+  const { userRole } = useAuth();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
-    // Mock data - replace with API call
-    const [transactions] = useState<Transaction[]>([
-        { id: 'TXN-001', date: '2026-01-07', time: '10:30', customer: 'לקוח א', amount: 450, status: 'completed', items: 3, paymentMethod: 'אשראי' },
-        { id: 'TXN-002', date: '2026-01-07', time: '11:15', customer: 'לקוח ב', amount: 280, status: 'completed', items: 2, paymentMethod: 'מזומן' },
-        { id: 'TXN-003', date: '2026-01-07', time: '12:00', customer: 'לקוח ג', amount: 620, status: 'pending', items: 5, paymentMethod: 'אשראי' },
-        { id: 'TXN-004', date: '2026-01-06', time: '13:45', customer: 'לקוח ד', amount: 150, status: 'completed', items: 1, paymentMethod: 'מזומן' },
-        { id: 'TXN-005', date: '2026-01-06', time: '14:20', customer: 'לקוח ה', amount: 890, status: 'failed', items: 4, paymentMethod: 'אשראי' },
-    ]);
+  // Mock data - replace with API call
+  const [transactions] = useState<Transaction[]>([
+    { id: 'TXN-001', date: '2026-01-07', time: '10:30', customer: 'לקוח א', amount: 450, status: 'completed', items: 3, paymentMethod: 'אשראי' },
+    { id: 'TXN-002', date: '2026-01-07', time: '11:15', customer: 'לקוח ב', amount: 280, status: 'completed', items: 2, paymentMethod: 'מזומן' },
+    { id: 'TXN-003', date: '2026-01-07', time: '12:00', customer: 'לקוח ג', amount: 620, status: 'pending', items: 5, paymentMethod: 'אשראי' },
+    { id: 'TXN-004', date: '2026-01-06', time: '13:45', customer: 'לקוח ד', amount: 150, status: 'completed', items: 1, paymentMethod: 'מזומן' },
+    { id: 'TXN-005', date: '2026-01-06', time: '14:20', customer: 'לקוח ה', amount: 890, status: 'failed', items: 4, paymentMethod: 'אשראי' },
+  ]);
 
-    const getRolePermissions = () => {
-        switch (userRole) {
-            case 'ADMIN':
-                return { canExport: true, canDelete: true, canViewAll: true, canFilter: true };
-            case 'MANAGER':
-                return { canExport: true, canDelete: false, canViewAll: true, canFilter: true };
-            case 'CASHIER':
-                return { canExport: false, canDelete: false, canViewAll: false, canFilter: false };
-            default: // CUSTOMER
-                return { canExport: false, canDelete: false, canViewAll: false, canFilter: false };
-        }
-    };
+  const getRolePermissions = () => {
+    switch (userRole) {
+      case 'ADMIN':
+        return { canExport: true, canDelete: true, canViewAll: true, canFilter: true };
+      case 'MANAGER':
+        return { canExport: true, canDelete: false, canViewAll: true, canFilter: true };
+      case 'CASHIER':
+        return { canExport: false, canDelete: false, canViewAll: false, canFilter: false };
+      default: // CUSTOMER
+        return { canExport: false, canDelete: false, canViewAll: false, canFilter: false };
+    }
+  };
 
-    const permissions = getRolePermissions();
+  const permissions = getRolePermissions();
 
-    const filteredTransactions = transactions.filter(txn => {
-        if (!permissions.canViewAll && txn.date !== '2026-01-07') return false;
-        if (searchTerm && !txn.id.toLowerCase().includes(searchTerm.toLowerCase()) &&
-            !txn.customer.includes(searchTerm)) return false;
-        if (statusFilter !== 'all' && txn.status !== statusFilter) return false;
-        if (dateFrom && txn.date < dateFrom) return false;
-        if (dateTo && txn.date > dateTo) return false;
-        return true;
-    });
+  const filteredTransactions = transactions.filter(txn => {
+    if (!permissions.canViewAll && txn.date !== '2026-01-07') return false;
+    if (searchTerm && !txn.id.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      !txn.customer.includes(searchTerm)) return false;
+    if (statusFilter !== 'all' && txn.status !== statusFilter) return false;
+    if (dateFrom && txn.date < dateFrom) return false;
+    if (dateTo && txn.date > dateTo) return false;
+    return true;
+  });
 
-    const handleExport = () => {
-        alert('ייצוא ל-CSV (בפיתוח)');
-    };
+  const handleExport = () => {
+    alert('ייצוא ל-CSV (בפיתוח)');
+  };
 
-    const getRoleMessage = () => {
-        switch (userRole) {
-            case 'ADMIN':
-                return 'מנהל מערכת: גישה מלאה לכל הטרנזקציות + ייצוא + מחיקה';
-            case 'MANAGER':
-                return 'מנהל: גישה לכל הטרנזקציות + ייצוא + פילטרים';
-            case 'CASHIER':
-                return 'קופאי: גישה לטרנזקציות של היום בלבד';
-            default:
-                return 'לקוח: גישה לטרנזקציות שלך בלבד';
-        }
-    };
+  const getRoleMessage = () => {
+    switch (userRole) {
+      case 'ADMIN':
+        return 'מנהל מערכת: גישה מלאה לכל הטרנזקציות + ייצוא + מחיקה';
+      case 'MANAGER':
+        return 'מנהל: גישה לכל הטרנזקציות + ייצוא + פילטרים';
+      case 'CASHIER':
+        return 'קופאי: גישה לטרנזקציות של היום בלבד';
+      default:
+        return 'לקוח: גישה לטרנזקציות שלך בלבד';
+    }
+  };
 
-    return (
-        <Layout>
-            <Container>
-                <Header>
-                    <Title>ניהול טרנזקציות</Title>
-                    <Subtitle>צפייה וניהול של כל העסקאות במערכת</Subtitle>
-                </Header>
+  return (
+    <Layout>
+      <Container>
+        <Header>
+          <Title>ניהול טרנזקציות</Title>
+          <Subtitle>צפייה וניהול של כל העסקאות במערכת</Subtitle>
+        </Header>
 
-                <RoleInfo>
-                    {getRoleMessage()}
-                </RoleInfo>
+        <RoleInfo>
+          {getRoleMessage()}
+        </RoleInfo>
 
-                {permissions.canFilter && (
-                    <Filters>
-                        <FilterGroup>
-                            <Label>חיפוש</Label>
-                            <Input
-                                type="text"
-                                placeholder="מספר טרנזקציה או לקוח..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </FilterGroup>
+        {/* Financial Analytics Summary */}
+        {(userRole === 'ADMIN' || userRole === 'MANAGER') && (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '1rem',
+            marginBottom: '1.5rem'
+          }}>
+            <div style={{
+              background: 'white',
+              border: '1px solid #e2e8f0',
+              borderRadius: '12px',
+              padding: '1.25rem'
+            }}>
+              <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.5rem' }}>
+                סה"כ הכנסות
+              </div>
+              <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#1e293b' }}>
+                ₪{transactions.reduce((sum, t) => t.status === 'completed' ? sum + t.amount : sum, 0).toLocaleString()}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#059669', marginTop: '0.5rem' }}>
+                ↑ 12% מהשבוע שעבר
+              </div>
+            </div>
+            <div style={{
+              background: 'white',
+              border: '1px solid #e2e8f0',
+              borderRadius: '12px',
+              padding: '1.25rem'
+            }}>
+              <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.5rem' }}>
+                עסקאות הושלמו
+              </div>
+              <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#059669' }}>
+                {transactions.filter(t => t.status === 'completed').length}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.5rem' }}>
+                מתוך {transactions.length} עסקאות
+              </div>
+            </div>
+            <div style={{
+              background: 'white',
+              border: '1px solid #e2e8f0',
+              borderRadius: '12px',
+              padding: '1.25rem'
+            }}>
+              <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.5rem' }}>
+                ממתינות לאישור
+              </div>
+              <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#d97706' }}>
+                {transactions.filter(t => t.status === 'pending').length}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#d97706', marginTop: '0.5rem' }}>
+                דורשות טיפול
+              </div>
+            </div>
+            <div style={{
+              background: 'white',
+              border: '1px solid #e2e8f0',
+              borderRadius: '12px',
+              padding: '1.25rem'
+            }}>
+              <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.5rem' }}>
+                עסקאות שנכשלו
+              </div>
+              <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#dc2626' }}>
+                {transactions.filter(t => t.status === 'failed').length}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#dc2626', marginTop: '0.5rem' }}>
+                לבדיקה
+              </div>
+            </div>
+          </div>
+        )}
 
-                        <FilterGroup>
-                            <Label>סטטוס</Label>
-                            <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                                <option value="all">הכל</option>
-                                <option value="completed">הושלם</option>
-                                <option value="pending">ממתין</option>
-                                <option value="failed">נכשל</option>
-                            </Select>
-                        </FilterGroup>
+        {permissions.canFilter && (
+          <Filters>
+            <FilterGroup>
+              <Label>חיפוש</Label>
+              <Input
+                type="text"
+                placeholder="מספר טרנזקציה או לקוח..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </FilterGroup>
 
-                        <FilterGroup>
-                            <Label>מתאריך</Label>
-                            <Input
-                                type="date"
-                                value={dateFrom}
-                                onChange={(e) => setDateFrom(e.target.value)}
-                            />
-                        </FilterGroup>
+            <FilterGroup>
+              <Label>סטטוס</Label>
+              <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                <option value="all">הכל</option>
+                <option value="completed">הושלם</option>
+                <option value="pending">ממתין</option>
+                <option value="failed">נכשל</option>
+              </Select>
+            </FilterGroup>
 
-                        <FilterGroup>
-                            <Label>עד תאריך</Label>
-                            <Input
-                                type="date"
-                                value={dateTo}
-                                onChange={(e) => setDateTo(e.target.value)}
-                            />
-                        </FilterGroup>
+            <FilterGroup>
+              <Label>מתאריך</Label>
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+              />
+            </FilterGroup>
 
-                        <Actions>
-                            {permissions.canExport && (
-                                <Button onClick={handleExport}>ייצוא CSV</Button>
-                            )}
-                            <Button $variant="secondary" onClick={() => {
-                                setSearchTerm('');
-                                setStatusFilter('all');
-                                setDateFrom('');
-                                setDateTo('');
-                            }}>
-                                נקה
-                            </Button>
-                        </Actions>
-                    </Filters>
-                )}
+            <FilterGroup>
+              <Label>עד תאריך</Label>
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+              />
+            </FilterGroup>
 
-                {filteredTransactions.length > 0 ? (
-                    <Table>
-                        <Thead>
-                            <Tr>
-                                <Th>מספר</Th>
-                                <Th>תאריך</Th>
-                                <Th>שעה</Th>
-                                <Th>לקוח</Th>
-                                <Th>פריטים</Th>
-                                <Th>אמצעי תשלום</Th>
-                                <Th>סכום</Th>
-                                <Th>סטטוס</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
-                            {filteredTransactions.map((txn) => (
-                                <Tr key={txn.id}>
-                                    <Td>{txn.id}</Td>
-                                    <Td>{txn.date}</Td>
-                                    <Td>{txn.time}</Td>
-                                    <Td>{txn.customer}</Td>
-                                    <Td>{txn.items}</Td>
-                                    <Td>{txn.paymentMethod}</Td>
-                                    <Td>
-                                        <Amount $type="income">₪{txn.amount.toLocaleString()}</Amount>
-                                    </Td>
-                                    <Td>
-                                        <Status $status={txn.status}>
-                                            {txn.status === 'completed' ? 'הושלם' :
-                                                txn.status === 'pending' ? 'ממתין' : 'נכשל'}
-                                        </Status>
-                                    </Td>
-                                </Tr>
-                            ))}
-                        </Tbody>
-                    </Table>
-                ) : (
-                    <EmptyState>לא נמצאו טרנזקציות</EmptyState>
-                )}
-            </Container>
-        </Layout>
-    );
+            <Actions>
+              {permissions.canExport && (
+                <Button onClick={handleExport}>ייצוא CSV</Button>
+              )}
+              <Button $variant="secondary" onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+                setDateFrom('');
+                setDateTo('');
+              }}>
+                נקה
+              </Button>
+            </Actions>
+          </Filters>
+        )}
+
+        {filteredTransactions.length > 0 ? (
+          <Table>
+            <Thead>
+              <Tr>
+                <Th>מספר</Th>
+                <Th>תאריך</Th>
+                <Th>שעה</Th>
+                <Th>לקוח</Th>
+                <Th>פריטים</Th>
+                <Th>אמצעי תשלום</Th>
+                <Th>סכום</Th>
+                <Th>סטטוס</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {filteredTransactions.map((txn) => (
+                <Tr key={txn.id}>
+                  <Td>{txn.id}</Td>
+                  <Td>{txn.date}</Td>
+                  <Td>{txn.time}</Td>
+                  <Td>{txn.customer}</Td>
+                  <Td>{txn.items}</Td>
+                  <Td>{txn.paymentMethod}</Td>
+                  <Td>
+                    <Amount $type="income">₪{txn.amount.toLocaleString()}</Amount>
+                  </Td>
+                  <Td>
+                    <Status $status={txn.status}>
+                      {txn.status === 'completed' ? 'הושלם' :
+                        txn.status === 'pending' ? 'ממתין' : 'נכשל'}
+                    </Status>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        ) : (
+          <EmptyState>לא נמצאו טרנזקציות</EmptyState>
+        )}
+      </Container>
+    </Layout>
+  );
 }

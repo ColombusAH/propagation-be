@@ -14,6 +14,7 @@ from app.db.prisma import init_db, shutdown_db
 from app.routers import tags, websocket, stores, users, notifications, exit_scan
 from app.services.database import init_db as init_rfid_db
 from app.services.rfid_reader import rfid_reader_service
+from app.services.tag_listener_service import tag_listener_service
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -50,12 +51,21 @@ async def lifespan(app: FastAPI):
     # Startup
     setup_logging()
     logger.info("Starting up application...")
-    await init_db(app)
+    
+    # Initialize Prisma Client
+    # Initialize Prisma Client
+    try:
+        await init_db(app)
+    except Exception as e:
+        logger.error(f"WARNING: Prisma DB initialization failed: {e}. Running without main DB.")
+        # Proceed without DB - some features may fail
 
-    # Initialize RFID database tables
-    logger.info("Initializing RFID database...")
-    init_rfid_db()
-<<<<<<< HEAD:Tagid-RF/be/app/main.py
+    # Initialize RFID database tables (SQLAlchemy)
+    try:
+        logger.info("Initializing RFID database...")
+        init_rfid_db()
+    except Exception as e:
+        logger.error(f"WARNING: RFID DB initialization failed: {e}. Running without RFID DB.")
 
     # Optional: Auto-connect to RFID reader on startup
     # Uncomment if you want automatic connection
@@ -68,6 +78,7 @@ async def lifespan(app: FastAPI):
     # except Exception as e:
     #     logger.error(f"Error connecting to RFID reader: {e}")
 
+<<<<<<< Updated upstream
 =======
     
     # Auto-connect to RFID reader on startup
@@ -82,9 +93,23 @@ async def lifespan(app: FastAPI):
         logger.error(f"Error initializing RFID reader: {e}")
     
 >>>>>>> origin/main:be/app/main.py
+=======
+    try:
+        tag_listener_service.start()
+        logger.info("Tag listener service started")
+    except Exception as e:
+        logger.error(f"Failed to start tag listener: {e}")
+
+>>>>>>> Stashed changes
     yield
     # Shutdown
     logger.info("Shutting down application...")
+
+    # Stop tag listener
+    try:
+        tag_listener_service.stop()
+    except Exception as e:
+        logger.error(f"Error stopping tag listener: {e}")
 
     # Disconnect RFID reader
     try:
@@ -92,7 +117,10 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Error disconnecting RFID reader: {e}")
 
-    await shutdown_db(app)
+    try:
+        await shutdown_db(app)
+    except Exception as e:
+        logger.error(f"Error disconnecting DB: {e}")
 
 
 app = FastAPI(

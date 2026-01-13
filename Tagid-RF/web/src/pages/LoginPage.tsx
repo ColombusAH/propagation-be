@@ -155,7 +155,7 @@ const roles = [
 ];
 
 interface LoginPageProps {
-  onLogin: (role: string) => void;
+  onLogin: (role: string, token: string) => void;
 }
 
 /**
@@ -165,10 +165,35 @@ interface LoginPageProps {
  */
 export function LoginPage({ onLogin }: LoginPageProps) {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (selectedRole) {
-      onLogin(selectedRole);
+      try {
+        setLoading(true);
+        setError(null);
+        // Call Dev Login API
+        const response = await fetch('/api/v1/auth/dev-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: selectedRole })
+        });
+
+        if (!response.ok) {
+          throw new Error('Login failed');
+        }
+
+        const data = await response.json();
+        // data = { message, user_id, role, token }
+
+        onLogin(selectedRole, data.token);
+      } catch (err) {
+        console.error("Login error:", err);
+        setError("Login failed. Check server.");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -178,6 +203,8 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         <Logo>R</Logo>
         <Title>מערכת RFID</Title>
         <Subtitle>בחר את התפקיד שלך להתחברות</Subtitle>
+
+        {error && <div style={{ color: 'red', textAlign: 'center', marginBottom: '10px' }}>{error}</div>}
 
         <RoleGrid>
           {roles.map(role => (
@@ -195,11 +222,11 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         </RoleGrid>
 
         <LoginButton
-          $disabled={!selectedRole}
-          disabled={!selectedRole}
+          $disabled={!selectedRole || loading}
+          disabled={!selectedRole || loading}
           onClick={handleLogin}
         >
-          {selectedRole ? `התחבר כ${roles.find(r => r.id === selectedRole)?.name}` : 'בחר תפקיד'}
+          {loading ? 'מתחבר...' : (selectedRole ? `התחבר כ${roles.find(r => r.id === selectedRole)?.name}` : 'בחר תפקיד')}
         </LoginButton>
       </LoginCard>
     </Container>

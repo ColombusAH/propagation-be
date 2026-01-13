@@ -55,6 +55,76 @@ async def auth_root():
     return {"message": "Auth endpoint"}
 
 
+class DevLoginRequest(BaseModel):
+    """Request model for development login."""
+
+    role: str = "STORE_MANAGER"
+
+
+@router.post("/dev-login", response_model=TokenResponse)
+async def dev_login(request: DevLoginRequest, db: Prisma = Depends(get_db)):
+    """
+    Development endpoint to login as any role without credentials.
+    Creates a dev user if one doesn't exist for the role.
+    """
+    # Allow only if not production (you might want to check settings.ENVIRONMENT)
+    # For now, we assume this is safe for your local setup
+
+    email = f"dev_{request.role.lower()}@example.com"
+    role = request.role.upper()
+
+    # Map Frontend Roles to Prisma Schema Roles
+    role_mapping = {
+        "ADMIN": "SUPER_ADMIN",
+        "MANAGER": "STORE_MANAGER",
+        "CASHIER": "EMPLOYEE",
+        "CUSTOMER": "CUSTOMER",
+    }
+    prisma_role = role_mapping.get(role, "EMPLOYEE")
+
+    # Ensure a dummy business exists
+    business = await db.business.find_first(where={"name": "Dev Business"})
+    if not business:
+        business = await db.business.create(data={"name": "Dev Business"})
+
+    # Try to find existing dev user
+    user = await get_user_by_email(db, email)
+
+    if not user:
+        logger.info(f"Creating new dev user for role: {prisma_role}")
+        # Create new dev user
+        try:
+            user = await create_user(
+                db=db,
+                email=email,
+                password="devpassword",
+                name=f"Dev {role.title()}",
+                phone="000-000-0000",
+                address="Dev Environment",
+                business_id=business.id,
+                role=prisma_role,
+            )
+        except Exception as e:
+            logger.error(f"Failed to create dev user: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to create dev user: {str(e)}")
+
+    # Generate Token
+    jwt_payload = {
+        "sub": user.email,
+        "user_id": user.id,
+        "role": str(user.role),
+        "business_id": user.businessId,
+    }
+    access_token = create_access_token(data=jwt_payload)
+
+    return TokenResponse(
+        message=f"Dev login successful as {role}",
+        user_id=user.id,
+        role=str(user.role),
+        token=access_token,
+    )
+
+
 @router.get("/me", response_model=User)
 async def get_me(current_user: User = Depends(get_current_user)):
     """Returns the details of the currently authenticated user."""

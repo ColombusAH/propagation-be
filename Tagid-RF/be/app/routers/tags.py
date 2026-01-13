@@ -922,3 +922,97 @@ async def read_single_tag():
     except Exception as e:
         logger.error(f"Error reading tag: {e}")
         raise HTTPException(status_code=500, detail=f"Error reading tag: {str(e)}")
+
+
+@router.get("/live/recent")
+async def get_live_tags(
+    count: int = Query(50, ge=1, le=200, description="Number of tags to return"),
+):
+    """
+    Get recent tags from the live tag listener.
+    
+    Returns tags that were received via the TCP listener server (push mode).
+    These are real-time tags that the reader sends automatically when detected.
+    
+    Args:
+        count (int): Number of recent tags to return (1-200). Default: 50
+        
+    Returns:
+        dict: Live tag data containing:
+            - tags (list): List of recent tag events
+            - stats (dict): Statistics about the listener
+            
+    Example:
+        ```python
+        GET /api/v1/tags/live/recent?count=20
+        
+        # Response
+        {
+            "tags": [
+                {
+                    "epc": "25A858",
+                    "timestamp": "2026-01-11T10:09:58.844000",
+                    "reader_ip": "192.168.1.200",
+                    "epc_length": 3
+                }
+            ],
+            "stats": {
+                "total_scans": 15,
+                "unique_epcs": 3
+            }
+        }
+        ```
+        
+    Notes:
+        - This requires the tag_listener_server.py to be running
+        - Tags are stored in memory and cleared on server restart
+        - Different from /recent/scans which queries the database
+    """
+    try:
+        # Try to import from the standalone listener
+        import sys
+        import os
+        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+        from tag_listener_server import tag_store
+        
+        tags = tag_store.get_recent(count)
+        stats = {
+            "total_scans": tag_store.get_total_count(),
+            "unique_epcs": tag_store.get_unique_count(),
+        }
+        return {"tags": tags, "stats": stats}
+    except ImportError:
+        return {
+            "tags": [],
+            "stats": {"total_scans": 0, "unique_epcs": 0},
+            "message": "Tag listener not running or not available"
+        }
+
+
+@router.get("/live/stats")
+async def get_live_stats():
+    """
+    Get statistics from the live tag listener.
+    
+    Returns:
+        dict: Listener statistics
+    """
+    try:
+        import sys
+        import os
+        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+        from tag_listener_server import tag_store
+        
+        return {
+            "running": True,
+            "total_scans": tag_store.get_total_count(),
+            "unique_epcs": tag_store.get_unique_count(),
+        }
+    except ImportError:
+        return {
+            "running": False,
+            "total_scans": 0,
+            "unique_epcs": 0,
+            "message": "Tag listener not available"
+        }
+

@@ -14,24 +14,24 @@ export function useWebSocket({ url, onMessage, autoConnect = true }: UseWebSocke
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeoutRef = useRef<number | undefined>(undefined);
 
+    // Use ref for onMessage to avoid reconnecting when callback identity changes
+    const onMessageRef = useRef(onMessage);
+    useEffect(() => {
+        onMessageRef.current = onMessage;
+    }, [onMessage]);
+
     const connect = useCallback(() => {
-        if (wsRef.current?.readyState === WebSocket.OPEN) return;
-
-        // Handle relative URLs or full URLs
-        // If running via Vite proxy, we can use relative URL, but WS protocol needs explicit host
-        // or rely on browser to resolve relative to current origin if using wss://?
-        // Usually standard is: 
-        // const wsUrl = url.startsWith('ws') ? url : `ws://${window.location.host}${url}`;
-        // But we are using Vite proxy for /api... standard WebSocket usually needs explicit port or proxy setup.
-        // For local dev with proxy: ws://localhost:5173/api/ws... wait, vite proxy can proxy WS too.
-
-        // Let's assume the URL passed is correct or relative.
-        // If relative API URL is used in Vite:
+        // Prepare URL
         const fullUrl = url.startsWith('http') || url.startsWith('ws')
             ? url
             : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}${url}`;
 
         try {
+            // Prevent multiple connections
+            if (wsRef.current?.readyState === WebSocket.OPEN || wsRef.current?.readyState === WebSocket.CONNECTING) {
+                return;
+            }
+
             setStatus('connecting');
             const ws = new WebSocket(fullUrl);
 
@@ -43,21 +43,24 @@ export function useWebSocket({ url, onMessage, autoConnect = true }: UseWebSocke
             ws.onclose = () => {
                 setStatus('disconnected');
                 console.log('WS Disconnected');
+                wsRef.current = null;
                 // Auto reconnect
-                reconnectTimeoutRef.current = window.setTimeout(() => {
-                    connect();
-                }, 3000);
+                if (autoConnect) {
+                    reconnectTimeoutRef.current = window.setTimeout(() => {
+                        connect();
+                    }, 3000);
+                }
             };
 
             ws.onerror = (error) => {
-                setStatus('error');
                 console.error('WS Error:', error);
+                setStatus('error');
             };
 
             ws.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
-                    onMessage?.(data);
+                    onMessageRef.current?.(data);
                 } catch (e) {
                     console.error('Failed to parse WS message:', e);
                 }
@@ -68,7 +71,7 @@ export function useWebSocket({ url, onMessage, autoConnect = true }: UseWebSocke
             console.error('WS Connection failed:', e);
             setStatus('error');
         }
-    }, [url, onMessage]);
+    }, [url, autoConnect]); // Removed onMessage from dependencies
 
     const disconnect = useCallback(() => {
         if (reconnectTimeoutRef.current) {

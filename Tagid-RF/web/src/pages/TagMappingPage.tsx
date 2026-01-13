@@ -4,6 +4,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Layout } from '@/components/Layout';
 import { theme } from '@/styles/theme';
 import { useWebSocket } from '@/hooks/useWebSocket';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Types
 interface TagMapping {
@@ -209,16 +210,6 @@ const SmallButton = styled.button`
     background: ${theme.colors.error}20;
     color: ${theme.colors.error};
   }
-  &.connect {
-    background: ${theme.colors.success + '20'};
-    color: ${theme.colors.success};
-    border: 1px solid ${theme.colors.success};
-  }
-  &.disconnect {
-    background: ${theme.colors.error + '20'};
-    color: ${theme.colors.error};
-    border: 1px solid ${theme.colors.error};
-  }
   
   &:hover {
     opacity: 0.8;
@@ -276,51 +267,6 @@ const LiveParams = styled.div`
   border-radius: 12px;
 `;
 
-const ToggleSwitch = styled.label`
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 24px;
-  
-  input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-  
-  span {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: .4s;
-    border-radius: 34px;
-    
-    &:before {
-      position: absolute;
-      content: "";
-      height: 16px;
-      width: 16px;
-      left: 4px;
-      bottom: 4px;
-      background-color: white;
-      transition: .4s;
-      border-radius: 50%;
-    }
-  }
-  
-  input:checked + span {
-    background-color: ${theme.colors.primary};
-  }
-  
-  input:checked + span:before {
-    transform: translateX(26px);
-  }
-`;
-
 const LiveTagRow = styled.div<{ newItem: boolean }>`
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
@@ -341,14 +287,36 @@ const LiveTagRow = styled.div<{ newItem: boolean }>`
 `;
 
 export function TagMappingPage() {
+    const { token } = useAuth();
     const [mappings, setMappings] = useState<TagMapping[]>([]);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
     // Live Scan State
     const [liveTags, setLiveTags] = useState<ScannedTag[]>([]);
-    const [autoGenerate, setAutoGenerate] = useState(false);
+    const [isScanning, setIsScanning] = useState(false);
     const [isWsConnected, setIsWsConnected] = useState(false);
+    const [scanDuration, setScanDuration] = useState(0);
+
+    // Timer effect
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isScanning) {
+            interval = setInterval(() => {
+                setScanDuration(prev => prev + 1);
+            }, 1000);
+        } else {
+            setScanDuration(0);
+        }
+        return () => clearInterval(interval);
+    }, [isScanning]);
+
+    // Format time helper
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
 
     // Create form state
     const [newEpc, setNewEpc] = useState('');
@@ -385,8 +353,6 @@ export function TagMappingPage() {
             // Keep last 10 tags, update if exists, push if new
             const exists = prev.find(t => t.epc === tag.epc);
             if (exists) {
-                // Return new array with updated timestamp/rssi but move to top?
-                // Or just update in place. Let's move to top.
                 const filtered = prev.filter(t => t.epc !== tag.epc);
                 return [tag, ...filtered].slice(0, 10);
             }
@@ -394,7 +360,7 @@ export function TagMappingPage() {
         });
 
         // Auto Generate Logic
-        if (autoGenerate && !tag.is_mapped) {
+        if (isScanning && !tag.is_mapped) {
             // Check if we are already creating this one to avoid race conditions
             // Simple approach: trigger creation
             await createMappingForTag(tag.epc);
@@ -402,14 +368,22 @@ export function TagMappingPage() {
     };
 
     const createMappingForTag = async (epc: string) => {
+        if (!token) {
+            console.warn("No auth token, skipping auto-create");
+            return;
+        }
+
         try {
             console.log('Auto-generating mapping for:', epc);
             const response = await fetch(`${API_BASE}/create`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     epc: epc,
-                    product_id: 'auto-gen-' + Date.now() // Optional: remove if you want null
+                    product_id: 'auto-gen-' + Date.now()
                 })
             });
 
@@ -420,6 +394,16 @@ export function TagMappingPage() {
                 setLiveTags(prev => prev.map(t =>
                     t.epc === epc
                         ? { ...t, is_mapped: true, target_qr: newMapping.encrypted_qr }
+                        : t
+                ));
+            } else if (response.status === 400) {
+                // Already Mapped!
+                console.log("Tag already mapped:", epc);
+                // We should try to fetch the mapping to show the QR, 
+                // but for now just mark it green so it stops trying.
+                setLiveTags(prev => prev.map(t =>
+                    t.epc === epc
+                        ? { ...t, is_mapped: true }
                         : t
                 ));
             }
@@ -447,11 +431,19 @@ export function TagMappingPage() {
         e.preventDefault();
         if (!newEpc.trim()) return;
 
+        if (!token) {
+            setMessage({ type: 'error', text: 'אנא התחבר מחדש (חסר טוקן)' });
+            return;
+        }
+
         try {
             setCreating(true);
             const response = await fetch(`${API_BASE}/create`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     epc: newEpc.trim(),
                     product_id: productId.trim() || null
@@ -504,10 +496,14 @@ export function TagMappingPage() {
 
     const handleDelete = async (mappingId: string) => {
         if (!confirm('האם למחוק את המיפוי?')) return;
+        if (!token) return;
 
         try {
             const response = await fetch(`${API_BASE}/${mappingId}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
 
             if (response.ok) {
@@ -531,8 +527,9 @@ export function TagMappingPage() {
             <Container>
                 <Header>
                     <Title>🔐 סנכרון QR ↔ UHF Tags</Title>
-                    <div>
-                        Status: <StatusBadge active={isWsConnected}>{isWsConnected ? 'Connected' : 'Disconnected'}</StatusBadge>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ fontSize: '0.85rem', color: '#888' }}>WebSocket:</span>
+                        <StatusBadge active={isWsConnected}>{isWsConnected ? '🟢 פעיל' : '🔴 מנותק'}</StatusBadge>
                     </div>
                 </Header>
 
@@ -542,22 +539,53 @@ export function TagMappingPage() {
 
                 {/* Live Scan & Auto Generate */}
                 <Card>
-                    <CardTitle>📡 סריקה חיה & יצירה אוטומטית</CardTitle>
+                    <CardTitle>📡 סריקה חיה & שמירה אוטומטית</CardTitle>
                     <LiveParams>
                         <div style={{ flex: 1 }}>
-                            <strong>יצירה אוטומטית של QR:</strong>
+                            <strong>מצב סריקה אוטומטית:</strong>
                             <div style={{ fontSize: '0.85rem', color: theme.colors.textSecondary }}>
-                                אם מופעל, כל תג חדש שנסרק יקבל מיפוי אוטומטית
+                                כשהמצב פעיל, כל תג חדש שנסרק יישמר אוטומטית ב-DB.
                             </div>
                         </div>
-                        <ToggleSwitch>
-                            <input
-                                type="checkbox"
-                                checked={autoGenerate}
-                                onChange={(e) => setAutoGenerate(e.target.checked)}
-                            />
-                            <span></span>
-                        </ToggleSwitch>
+                        <Button
+                            variant={isScanning ? 'danger' : 'primary'}
+                            onClick={async () => {
+                                if (!token) {
+                                    setMessage({ type: 'error', text: 'נא להתחבר מחדש' });
+                                    return;
+                                }
+                                try {
+                                    const endpoint = isScanning ? '/api/v1/rfid-scan/stop' : '/api/v1/rfid-scan/start';
+                                    const response = await fetch(endpoint, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Authorization': `Bearer ${token}`
+                                        }
+                                    });
+                                    if (response.ok) {
+                                        setIsScanning(!isScanning);
+                                        setMessage({
+                                            type: 'success',
+                                            text: isScanning ? '⏹ סריקה הופסקה' : '▶ סריקה החלה'
+                                        });
+                                        setTimeout(() => setMessage(null), 2000);
+                                    } else {
+                                        const err = await response.json();
+                                        setMessage({ type: 'error', text: err.detail || 'שגיאה בסריקה' });
+                                    }
+                                } catch (e) {
+                                    setMessage({ type: 'error', text: 'שגיאת חיבור לקורא' });
+                                }
+                            }}
+                        >
+                            {isScanning ? '⏹ עצור סריקה' : '▶ התחל סריקה'}
+                        </Button>
+                        {isScanning && (
+                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: theme.colors.primary, minWidth: '80px' }}>
+                                ⏱ {formatTime(scanDuration)}
+                            </div>
+                        )}
                     </LiveParams>
 
                     {liveTags.length === 0 ? (
