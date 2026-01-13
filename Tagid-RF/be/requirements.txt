@@ -21,9 +21,8 @@ google-api-python-client==2.166.0
 firebase-admin==6.5.0
 stripe==11.3.0
 
-# RFID Tracking System dependencies
 sqlalchemy==2.0.36
-psycopg[binary]==3.2.1
+psycopg[binary]
 psycopg2-binary==2.9.11
 alembic==1.12.1
 websockets==12.0
