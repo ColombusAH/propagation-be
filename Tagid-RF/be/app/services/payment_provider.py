@@ -46,7 +46,6 @@ class PaymentProvider(ABC):
                 - client_secret: Secret for client-side confirmation (if applicable)
                 - status: Payment status
         """
-        pass
 
     @abstractmethod
     async def confirm_payment(
@@ -65,7 +64,6 @@ class PaymentProvider(ABC):
                 - external_id: Provider's transaction ID
                 - metadata: Additional provider data
         """
-        pass
 
     @abstractmethod
     async def refund_payment(self, payment_id: str, amount: Optional[int] = None) -> Dict[str, Any]:
@@ -81,7 +79,6 @@ class PaymentProvider(ABC):
                 - status: Refund status
                 - refund_id: Provider's refund ID
         """
-        pass
 
     @abstractmethod
     async def get_payment_status(self, payment_id: str) -> PaymentStatus:
@@ -94,7 +91,6 @@ class PaymentProvider(ABC):
         Returns:
             PaymentStatus enum value
         """
-        pass
 
     @abstractmethod
     async def cancel_payment(self, payment_id: str) -> Dict[str, Any]:
@@ -107,4 +103,3 @@ class PaymentProvider(ABC):
         Returns:
             Dict containing cancellation status
         """
-        pass

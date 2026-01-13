@@ -60,26 +60,21 @@ class PaymentGateway(ABC):
     @abstractmethod
     def provider(self) -> PaymentProvider:
         """Return the provider type."""
-        pass
 
     @abstractmethod
     async def create_payment(self, request: PaymentRequest) -> PaymentResult:
         """Create a new payment intent/session."""
-        pass
 
     @abstractmethod
     async def confirm_payment(
         self, payment_id: str, payment_method: Optional[str] = None
     ) -> PaymentResult:
         """Confirm a pending payment."""
-        pass
 
     @abstractmethod
     async def get_payment_status(self, payment_id: str) -> PaymentResult:
         """Get the status of a payment."""
-        pass
 
     @abstractmethod
     async def refund_payment(self, payment_id: str, amount: Optional[int] = None) -> RefundResult:
         """Refund a payment (full or partial)."""
-        pass

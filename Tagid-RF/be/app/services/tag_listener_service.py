@@ -24,8 +24,6 @@ logger = logging.getLogger(__name__)
 # Import from standalone listener (if run as module)
 try:
     from tag_listener_server import (
-        get_recent_tags,
-        get_tag_stats,
         set_tag_callback,
         start_inventory,
         start_server,

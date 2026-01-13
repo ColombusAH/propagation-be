@@ -159,8 +159,6 @@ class RFIDTagCreate(RFIDTagBase):
         ```
     """
 
-    pass
-
 
 class RFIDTagUpdate(BaseModel):
     """

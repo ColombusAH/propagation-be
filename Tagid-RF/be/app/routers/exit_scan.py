@@ -5,7 +5,7 @@ Exit gate scanning API - triggers security alerts for unpaid items.
 import logging
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
