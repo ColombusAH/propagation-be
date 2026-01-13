@@ -78,9 +78,6 @@ async def lifespan(app: FastAPI):
     # except Exception as e:
     #     logger.error(f"Error connecting to RFID reader: {e}")
 
-<<<<<<< Updated upstream
-=======
-    
     # Auto-connect to RFID reader on startup
     try:
         connected = await rfid_reader_service.connect()
@@ -92,15 +89,12 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Error initializing RFID reader: {e}")
     
->>>>>>> origin/main:be/app/main.py
-=======
+    # Start tag listener service
     try:
         tag_listener_service.start()
         logger.info("Tag listener service started")
     except Exception as e:
         logger.error(f"Failed to start tag listener: {e}")
-
->>>>>>> Stashed changes
     yield
     # Shutdown
     logger.info("Shutting down application...")
