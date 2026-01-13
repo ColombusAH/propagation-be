@@ -72,6 +72,25 @@ class RFIDReaderService:
         self._socket: Optional[socket.socket] = None
         self._scan_task: Optional[asyncio.Task] = None
         self._device_info: Optional[Dict[str, Any]] = None
+    
+    def get_status(self) -> Dict[str, Any]:
+        """Get current service status."""
+        return {
+            "is_connected": self.is_connected,
+            "is_scanning": self.is_scanning,
+            "reader_ip": self.reader_ip,
+            "reader_port": self.reader_port,
+            "device_info": self._device_info,
+        }
+
+    # Aliases for compatibility with tests and API usage
+    async def get_all_config(self) -> Dict[str, Any]:
+        """Alias for get_all_params."""
+        return await self.get_all_params()
+
+    async def set_network(self, ip: str, subnet: str, gateway: str, port: int) -> bool:
+        """Alias for set_network_config."""
+        return await self.set_network_config(ip, subnet, gateway, port)
 
     async def connect(self) -> bool:
         """
