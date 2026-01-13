@@ -163,6 +163,9 @@ app.include_router(users.router, prefix=f"{settings.API_V1_STR}", tags=["Users"]
 app.include_router(notifications.router, prefix=f"{settings.API_V1_STR}", tags=["Notifications"])
 app.include_router(exit_scan.router, prefix=f"{settings.API_V1_STR}", tags=["Exit Scan"])
 
+from app.routers import inventory
+app.include_router(inventory.router, prefix=f"{settings.API_V1_STR}/inventory", tags=["Inventory"])
+
 
 @app.get("/health")
 async def health_check():
