@@ -8,9 +8,9 @@ from pydantic import BaseModel, EmailStr, Field
 class UserRegister(BaseModel):
     """
     Schema for user registration.
-    
+
     Used when creating a new user account in the system.
-    
+
     Example:
         ```python
         user = UserRegister(
@@ -32,17 +32,16 @@ class UserRegister(BaseModel):
     address: str = Field(description="Physical address")
     businessId: str = Field(description="Business/Tax ID number")
     role: str = Field(
-        default="CUSTOMER",
-        description="User role: CUSTOMER, CASHIER, MANAGER, or ADMIN"
+        default="CUSTOMER", description="User role: CUSTOMER, CASHIER, MANAGER, or ADMIN"
     )
 
 
 class UserLogin(BaseModel):
     """
     Schema for user login.
-    
+
     Used for authenticating existing users.
-    
+
     Example:
         ```python
         login = UserLogin(
@@ -59,10 +58,10 @@ class UserLogin(BaseModel):
 class UserResponse(BaseModel):
     """
     Schema for user response (without password).
-    
+
     Returned after successful registration, login, or when fetching user data.
     Password is never included in responses for security.
-    
+
     Example Response:
         ```json
         {
@@ -93,10 +92,10 @@ class UserResponse(BaseModel):
 class TokenResponse(BaseModel):
     """
     Schema for authentication token response.
-    
+
     Returned after successful login. The token should be included in
     subsequent API requests in the Authorization header.
-    
+
     Example Response:
         ```json
         {
@@ -106,7 +105,7 @@ class TokenResponse(BaseModel):
             "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
         }
         ```
-        
+
     Usage:
         ```javascript
         // Include token in API requests

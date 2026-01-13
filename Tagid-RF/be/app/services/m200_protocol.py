@@ -197,7 +197,7 @@ class M200Commands:
 
     # Module Custom Directives
     RFM_MODULE_INT = 0x0050
-    RFM_REBOOT = 0x0052        # Was confused with Get All Param!
+    RFM_REBOOT = 0x0052  # Was confused with Get All Param!
     RFM_SET_PWR = 0x0053
     RFM_SET_GET_RFID_PRO = 0x0059
     RFM_SET_GET_NETPARA = 0x005F
@@ -217,13 +217,13 @@ class M200Commands:
     RFM_GET_G_PIO_LEVEL = 0x0081
 
     # Gate Access Control
-    RFM_GET_GATE_STATUS = 0x0082      # Also used for active tag reporting
+    RFM_GET_GATE_STATUS = 0x0082  # Also used for active tag reporting
     RFM_SET_GET_GATE_PARAM = 0x0083
     RFM_SET_GET_EAS_MASK = 0x0084
 
     # Legacy/Standard aliases (kept for compatibility logic if needed)
-    RFM_INVENTORYISO_CONTINUE = 0x0001 # Standard Chafon inventory
-    RFM_INVENTORY_STOP = 0x0028        # Standard Chafon stop
+    RFM_INVENTORYISO_CONTINUE = 0x0001  # Standard Chafon inventory
+    RFM_INVENTORY_STOP = 0x0028  # Standard Chafon stop
 
 
 # Status Codes (from manual Appendix C - Table A-8)
@@ -473,7 +473,7 @@ def build_module_init_command() -> M200Command:
 def build_set_rf_protocol_command(protocol: int = 0x04) -> M200Command:
     """
     Build set RF protocol command (Section 2.2.4).
-    
+
     Args:
         protocol: 0x04 = ISO18000-6C (EPC Gen2), default
     """
@@ -497,7 +497,7 @@ def build_set_network_command(
 ) -> M200Command:
     """
     Build set network parameters command (Section 2.2.5).
-    
+
     Args:
         ip: Device IP address (e.g., "192.168.1.100")
         subnet: Subnet mask
@@ -508,7 +508,7 @@ def build_set_network_command(
     subnet_bytes = bytes(map(int, subnet.split(".")))
     gateway_bytes = bytes(map(int, gateway.split(".")))
     port_bytes = struct.pack(">H", port)
-    
+
     data = struct.pack("B", 0x01) + ip_bytes + subnet_bytes + gateway_bytes + port_bytes
     return M200Command(M200Commands.RFM_SET_GET_NETPARA, data, addr=BROADCAST_ADDR)
 
@@ -523,7 +523,7 @@ def parse_network_response(data: bytes) -> Dict[str, Any]:
     """Parse network parameters response."""
     if len(data) < 14:
         return {"error": "Response too short"}
-    
+
     return {
         "ip": f"{data[0]}.{data[1]}.{data[2]}.{data[3]}",
         "subnet": f"{data[4]}.{data[5]}.{data[6]}.{data[7]}",
@@ -535,7 +535,7 @@ def parse_network_response(data: bytes) -> Dict[str, Any]:
 def build_set_rssi_filter_command(antenna: int, rssi_threshold: int) -> M200Command:
     """
     Build RSSI filter command (Section 2.2.15).
-    
+
     Args:
         antenna: Antenna number (1-4)
         rssi_threshold: Minimum RSSI value (0-255, typically 30-80)
@@ -553,17 +553,17 @@ def build_get_rssi_filter_command(antenna: int) -> M200Command:
 def build_set_all_params_command(config: Dict[str, Any]) -> M200Command:
     """
     Build set all parameters command (Section 2.2.8).
-    
+
     Args:
         config: Dictionary with configuration values
     """
     # Build config bytes based on manual structure
     power = config.get("power", 26)
     antenna = config.get("antenna", 0x0F)  # All antennas
-    
+
     data = struct.pack("BB", power, antenna)
     # Add more config bytes as needed
-    
+
     return M200Command(M200Commands.RFM_SET_ALL_PARAM, data, addr=BROADCAST_ADDR)
 
 
@@ -573,15 +573,12 @@ def build_set_all_params_command(config: Dict[str, Any]) -> M200Command:
 
 
 def build_select_tag_command(
-    epc_mask: str, 
-    mask_length: int = None,
-    target: int = 0x00,
-    action: int = 0x00
+    epc_mask: str, mask_length: int = None, target: int = 0x00, action: int = 0x00
 ) -> M200Command:
     """
     Build select tag command (Section 2.3.4).
     Used to target specific tag(s) for subsequent operations.
-    
+
     Args:
         epc_mask: Hex string of EPC to match
         mask_length: Number of bits to match (default: full EPC)
@@ -591,19 +588,17 @@ def build_select_tag_command(
     mask_bytes = bytes.fromhex(epc_mask)
     if mask_length is None:
         mask_length = len(mask_bytes) * 8
-    
+
     data = struct.pack("BBB", target, action, mask_length) + mask_bytes
     return M200Command(M200Commands.RFM_SETISO_SELECTMASK, data, addr=BROADCAST_ADDR)
 
 
 def build_set_query_param_command(
-    q_value: int = 4,
-    session: int = 0,
-    target: int = 0
+    q_value: int = 4, session: int = 0, target: int = 0
 ) -> M200Command:
     """
     Build set Query parameters command (Section 2.3.7).
-    
+
     Args:
         q_value: Q value (0-15), affects number of slots
         session: Session (0-3)
@@ -618,10 +613,7 @@ def build_get_query_param_command() -> M200Command:
     return M200Command(M200Commands.RFM_GET_QUERY_PARAM, addr=BROADCAST_ADDR)
 
 
-def build_set_select_param_command(
-    select_flag: int = 0x00,
-    truncate: int = 0x00
-) -> M200Command:
+def build_set_select_param_command(select_flag: int = 0x00, truncate: int = 0x00) -> M200Command:
     """Build set Select parameters command (Section 2.3.5)."""
     data = struct.pack("BB", select_flag, truncate)
     return M200Command(M200Commands.RFM_SET_SELPRM, data, addr=BROADCAST_ADDR)
@@ -638,13 +630,11 @@ def build_get_select_param_command() -> M200Command:
 
 
 def build_set_gpio_param_command(
-    pin: int,
-    direction: int,  # 0x00 = Input, 0x01 = Output
-    level: int = 0x00
+    pin: int, direction: int, level: int = 0x00  # 0x00 = Input, 0x01 = Output
 ) -> M200Command:
     """
     Build GPIO configuration command (Section 2.4.1).
-    
+
     Args:
         pin: GPIO pin number (1-4)
         direction: 0x00 = Input, 0x01 = Output
@@ -685,7 +675,7 @@ def parse_gpio_levels(data: bytes) -> Dict[str, int]:
 def build_relay1_command(close: bool = True) -> M200Command:
     """
     Build relay 1 control command (Section 2.2.13).
-    
+
     Args:
         close: True = close relay, False = open relay
     """
@@ -696,7 +686,7 @@ def build_relay1_command(close: bool = True) -> M200Command:
 def build_relay2_command(close: bool = True) -> M200Command:
     """
     Build relay 2 control command (Section 2.2.14).
-    
+
     Args:
         close: True = close relay, False = open relay
     """
@@ -718,7 +708,7 @@ def parse_gate_status(data: bytes) -> Dict[str, Any]:
     """Parse gate status response."""
     if len(data) < 2:
         return {"error": "Response too short"}
-    
+
     return {
         "mode": data[0],  # 0x00 = idle, 0x01 = detecting
         "direction": data[1] if len(data) > 1 else None,  # 0x01 = entry, 0x02 = exit
@@ -726,13 +716,11 @@ def parse_gate_status(data: bytes) -> Dict[str, Any]:
 
 
 def build_set_gate_param_command(
-    mode: int = 0x01,
-    sensitivity: int = 0x50,
-    direction_detect: bool = True
+    mode: int = 0x01, sensitivity: int = 0x50, direction_detect: bool = True
 ) -> M200Command:
     """
     Build set gate parameters command (Section 2.5.2).
-    
+
     Args:
         mode: 0x00 = disabled, 0x01 = enabled
         sensitivity: Detection sensitivity (0-255)
@@ -752,7 +740,7 @@ def build_get_gate_param_command() -> M200Command:
 def build_set_eas_mask_command(eas_data: bytes) -> M200Command:
     """
     Build set EAS mask command (Section 2.5.3).
-    
+
     Args:
         eas_data: EAS matching data bytes
     """
@@ -771,15 +759,11 @@ def build_get_eas_mask_command() -> M200Command:
 # =============================================================================
 
 
-def build_set_remote_server_command(
-    ip: str,
-    port: int = 4001,
-    enable: bool = True
-) -> M200Command:
+def build_set_remote_server_command(ip: str, port: int = 4001, enable: bool = True) -> M200Command:
     """
     Build set remote server command (Section 2.2.6).
     Device will forward tag data to this server.
-    
+
     Args:
         ip: Remote server IP
         port: Remote server port
@@ -799,14 +783,10 @@ def build_get_remote_server_command() -> M200Command:
     return M200Command(M200Commands.RFM_SET_GET_REMOTE_NETPARA, data, addr=BROADCAST_ADDR)
 
 
-def build_set_wifi_command(
-    ssid: str,
-    password: str,
-    security: int = 0x03  # WPA2
-) -> M200Command:
+def build_set_wifi_command(ssid: str, password: str, security: int = 0x03) -> M200Command:  # WPA2
     """
     Build set WiFi parameters command (Section 2.2.10).
-    
+
     Args:
         ssid: WiFi network name (max 32 chars)
         password: WiFi password (max 32 chars)
@@ -814,7 +794,7 @@ def build_set_wifi_command(
     """
     ssid_bytes = ssid.encode("utf-8")[:32].ljust(32, b"\x00")
     pass_bytes = password.encode("utf-8")[:32].ljust(32, b"\x00")
-    
+
     data = struct.pack("B", 0x01) + ssid_bytes + pass_bytes + struct.pack("B", security)
     return M200Command(M200Commands.RFM_SET_GET_WiFi_PARAM, data, addr=BROADCAST_ADDR)
 
@@ -835,7 +815,7 @@ def build_set_io_param_command(config: Dict[str, int]) -> M200Command:
     # Pack I/O configuration
     trigger_mode = config.get("trigger_mode", 0x00)
     output_mode = config.get("output_mode", 0x00)
-    
+
     data = struct.pack("BBB", 0x01, trigger_mode, output_mode)
     return M200Command(M200Commands.RFM_SET_GET_IOPUT_PARAM, data, addr=BROADCAST_ADDR)
 
@@ -857,4 +837,3 @@ def build_get_permission_command() -> M200Command:
     """Build get permission status command."""
     data = struct.pack("B", 0x02)
     return M200Command(M200Commands.RFM_SET_GET_PERMISSION_PARAM, data, addr=BROADCAST_ADDR)
-

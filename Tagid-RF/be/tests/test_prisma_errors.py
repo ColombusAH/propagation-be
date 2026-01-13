@@ -1,7 +1,10 @@
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
 from prisma.errors import PrismaError
+
 from app.db.prisma import PrismaClient
+
 
 @pytest.mark.asyncio
 async def test_prisma_connect_error():
@@ -10,9 +13,10 @@ async def test_prisma_connect_error():
     pc = PrismaClient.__new__(PrismaClient)
     pc._client = MagicMock()
     pc._client.connect = AsyncMock(side_effect=PrismaError("Connection failed"))
-    
+
     with pytest.raises(PrismaError):
         await pc.connect()
+
 
 @pytest.mark.asyncio
 async def test_prisma_disconnect_when_no_client():

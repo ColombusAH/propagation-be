@@ -1,6 +1,7 @@
 import pytest
 from httpx import AsyncClient
 
+
 @pytest.mark.asyncio
 async def test_list_tags_basic(client: AsyncClient):
     """Test listing tags basic endpoint."""

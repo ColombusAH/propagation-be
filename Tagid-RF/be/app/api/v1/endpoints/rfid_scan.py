@@ -25,6 +25,7 @@ router = APIRouter(prefix="/rfid-scan", tags=["rfid-scan"])
 
 class TagResponse(BaseModel):
     """Tag data from inventory scan."""
+
     epc: str
     rssi: Optional[float] = None
     antenna_port: Optional[int] = None
@@ -36,6 +37,7 @@ class TagResponse(BaseModel):
 
 class ScanStatusResponse(BaseModel):
     """Scan status response."""
+
     is_connected: bool
     is_scanning: bool
     reader_ip: str
@@ -44,6 +46,7 @@ class ScanStatusResponse(BaseModel):
 
 class InventoryResponse(BaseModel):
     """Inventory scan response."""
+
     success: bool
     tag_count: int
     tags: List[TagResponse]
@@ -69,7 +72,7 @@ async def connect_reader(
     """Connect to the RFID reader."""
     if rfid_reader_service.is_connected:
         return {"status": "already_connected", "message": "Already connected to reader"}
-    
+
     success = await rfid_reader_service.connect()
     if success:
         return {"status": "connected", "message": "Successfully connected to RFID reader"}
@@ -97,21 +100,21 @@ async def start_scanning(
     if tag_listener_service._running:
         logger.info("Passive listener running - sending Start Inventory command")
         success = tag_listener_service.start_scan()
-        msg = "Started continuous scanning (Answer Mode)" if success else "Passive listener active (Command failed or no reader connected)"
-        
-        return {
-            "status": "scanning", 
-            "mode": "passive_active_control",
-            "message": msg
-        }
-    
+        msg = (
+            "Started continuous scanning (Answer Mode)"
+            if success
+            else "Passive listener active (Command failed or no reader connected)"
+        )
+
+        return {"status": "scanning", "mode": "passive_active_control", "message": msg}
+
     # Fall back to active mode
     if not rfid_reader_service.is_connected:
         # Try to connect first
         success = await rfid_reader_service.connect()
         if not success:
             raise HTTPException(status_code=503, detail="Cannot connect to RFID reader")
-    
+
     await rfid_reader_service.start_scanning()
     return {"status": "scanning", "mode": "active", "message": "Started continuous scanning"}
 
@@ -124,8 +127,8 @@ async def stop_scanning(
     """Stop continuous RFID scanning."""
     # Try stopping passive listener command too
     if tag_listener_service._running:
-         tag_listener_service.stop_scan()
-         
+        tag_listener_service.stop_scan()
+
     await rfid_reader_service.stop_scanning()
     return {"status": "stopped", "message": "Stopped scanning"}
 
@@ -137,7 +140,7 @@ async def perform_inventory(
 ):
     """
     Perform a single inventory scan and return all tags in range.
-    
+
     This sends the Inventory command to the reader and waits for the response
     containing all detected tags.
     """
@@ -146,19 +149,19 @@ async def perform_inventory(
         success = await rfid_reader_service.connect()
         if not success:
             raise HTTPException(status_code=503, detail="Cannot connect to RFID reader")
-    
+
     try:
         tags = await rfid_reader_service.read_single_tag()
-        
+
         # Check mapping status for each tag
         from app.db.prisma import prisma_client
-        
+
         tag_responses = []
         for tag in tags:
             epc = tag.get("epc", "")
             is_mapped = False
             target_qr = None
-            
+
             try:
                 mapping = await prisma_client.client.tagmapping.find_unique(where={"epc": epc})
                 if mapping:
@@ -166,24 +169,26 @@ async def perform_inventory(
                     target_qr = mapping.encryptedQr
             except Exception as e:
                 logger.warning(f"Error checking mapping for {epc}: {e}")
-            
-            tag_responses.append(TagResponse(
-                epc=epc,
-                rssi=tag.get("rssi"),
-                antenna_port=tag.get("antenna_port"),
-                pc=tag.get("pc"),
-                timestamp=tag.get("timestamp"),
-                is_mapped=is_mapped,
-                target_qr=target_qr,
-            ))
-        
+
+            tag_responses.append(
+                TagResponse(
+                    epc=epc,
+                    rssi=tag.get("rssi"),
+                    antenna_port=tag.get("antenna_port"),
+                    pc=tag.get("pc"),
+                    timestamp=tag.get("timestamp"),
+                    is_mapped=is_mapped,
+                    target_qr=target_qr,
+                )
+            )
+
         return InventoryResponse(
             success=True,
             tag_count=len(tag_responses),
             tags=tag_responses,
             message=f"Found {len(tag_responses)} tag(s)" if tag_responses else "No tags found",
         )
-        
+
     except Exception as e:
         logger.error(f"Inventory failed: {e}")
         raise HTTPException(status_code=500, detail=f"Inventory failed: {str(e)}")
@@ -225,7 +230,7 @@ async def set_power(
     """Set RF output power (0-30 dBm)."""
     if not 0 <= request.power_dbm <= 30:
         raise HTTPException(status_code=400, detail="Power must be 0-30 dBm")
-    
+
     success = await rfid_reader_service.set_power(request.power_dbm)
     if success:
         return {"status": "success", "power_dbm": request.power_dbm}
@@ -365,7 +370,7 @@ async def control_relay(
     """Control relay 1 or 2."""
     if relay_num not in [1, 2]:
         raise HTTPException(status_code=400, detail="Relay must be 1 or 2")
-    
+
     success = await rfid_reader_service.control_relay(relay_num, request.close)
     if success:
         return {"status": "success", "relay": relay_num, "closed": request.close}

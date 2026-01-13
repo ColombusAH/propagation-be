@@ -1,6 +1,9 @@
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
+
 from app.db.prisma import init_db, shutdown_db
+
 
 @pytest.mark.asyncio
 async def test_init_db_success():
@@ -10,6 +13,7 @@ async def test_init_db_success():
         mock_client.connect = AsyncMock()
         await init_db(mock_app)
         mock_client.connect.assert_called_once()
+
 
 @pytest.mark.asyncio
 async def test_shutdown_db_success():

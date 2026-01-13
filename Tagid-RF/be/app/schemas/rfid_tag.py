@@ -11,10 +11,10 @@ from pydantic import BaseModel, ConfigDict, Field
 class RFIDTagBase(BaseModel):
     """
     Base schema with common RFID tag fields.
-    
+
     This schema contains all the core fields that can be read from an RFID tag
     or associated with it during scanning operations.
-    
+
     Example:
         ```python
         tag = RFIDTagBase(
@@ -31,122 +31,122 @@ class RFIDTagBase(BaseModel):
         ...,
         max_length=128,
         description="Electronic Product Code - unique identifier for the RFID tag. "
-                    "Typically 24 hexadecimal characters (96-bit EPC). "
-                    "Example: 'E2806810000000001234ABCD'",
-        examples=["E2806810000000001234ABCD", "E28011700000020123456789"]
+        "Typically 24 hexadecimal characters (96-bit EPC). "
+        "Example: 'E2806810000000001234ABCD'",
+        examples=["E2806810000000001234ABCD", "E28011700000020123456789"],
     )
-    
+
     tid: Optional[str] = Field(
         None,
         max_length=128,
         description="Tag Identifier - unique chip serial number burned into the tag at manufacturing. "
-                    "Cannot be changed. Useful for authentication and anti-counterfeiting. "
-                    "Example: 'E200001234567890'",
-        examples=["E200001234567890", "E280116070000123456789AB"]
+        "Cannot be changed. Useful for authentication and anti-counterfeiting. "
+        "Example: 'E200001234567890'",
+        examples=["E200001234567890", "E280116070000123456789AB"],
     )
-    
+
     user_memory: Optional[str] = Field(
         None,
         description="User-defined data stored in the tag's user memory bank. "
-                    "Can contain custom application data, product info, or serialization. "
-                    "Format and encoding depends on your application.",
-        examples=["SKU-12345", "LOT:2024-01-15|BATCH:A123"]
+        "Can contain custom application data, product info, or serialization. "
+        "Format and encoding depends on your application.",
+        examples=["SKU-12345", "LOT:2024-01-15|BATCH:A123"],
     )
-    
+
     rssi: Optional[float] = Field(
         None,
         description="Received Signal Strength Indicator in dBm. "
-                    "Indicates how strong the tag's signal is. "
-                    "Range: typically -30 (very close) to -80 (far away). "
-                    "Lower (more negative) = weaker signal = farther away.",
+        "Indicates how strong the tag's signal is. "
+        "Range: typically -30 (very close) to -80 (far away). "
+        "Lower (more negative) = weaker signal = farther away.",
         examples=[-45, -52.5, -68],
         ge=-100,
-        le=0
+        le=0,
     )
-    
+
     antenna_port: Optional[int] = Field(
         None,
         ge=1,
         le=4,
         description="Reader antenna port number that detected the tag (1-4). "
-                    "Useful for determining tag location based on antenna placement. "
-                    "Most readers have 1-4 antenna ports.",
-        examples=[1, 2, 3, 4]
+        "Useful for determining tag location based on antenna placement. "
+        "Most readers have 1-4 antenna ports.",
+        examples=[1, 2, 3, 4],
     )
-    
+
     frequency: Optional[float] = Field(
         None,
         description="Read frequency in MHz. "
-                    "UHF RFID typically operates at 860-960 MHz depending on region. "
-                    "US: 902-928 MHz, EU: 865-868 MHz, China: 920-925 MHz.",
+        "UHF RFID typically operates at 860-960 MHz depending on region. "
+        "US: 902-928 MHz, EU: 865-868 MHz, China: 920-925 MHz.",
         examples=[915.25, 866.5, 922.75],
         ge=800,
-        le=1000
+        le=1000,
     )
-    
+
     pc: Optional[str] = Field(
         None,
         max_length=16,
         description="Protocol Control bits - contains tag configuration info like EPC length. "
-                    "Usually 4 hex characters. Automatically read from tag.",
-        examples=["3000", "3400", "2800"]
+        "Usually 4 hex characters. Automatically read from tag.",
+        examples=["3000", "3400", "2800"],
     )
-    
+
     crc: Optional[str] = Field(
         None,
         max_length=16,
         description="Cyclic Redundancy Check - error detection code for data integrity. "
-                    "Automatically calculated and verified by the reader.",
-        examples=["A5B3", "1F2E", "C4D7"]
+        "Automatically calculated and verified by the reader.",
+        examples=["A5B3", "1F2E", "C4D7"],
     )
-    
+
     metadata: Optional[Dict[str, Any]] = Field(
         None,
         description="Additional custom metadata as JSON object. "
-                    "Use this for application-specific data that doesn't fit other fields.",
+        "Use this for application-specific data that doesn't fit other fields.",
         examples=[
             {"product_id": "SKU-123", "batch": "2024-01"},
-            {"zone": "A", "shelf": "3", "bin": "12"}
-        ]
+            {"zone": "A", "shelf": "3", "bin": "12"},
+        ],
     )
-    
+
     location: Optional[str] = Field(
         None,
         max_length=100,
         description="Physical location where the tag was scanned or is stored. "
-                    "Free-form text field for human-readable location description.",
-        examples=["Warehouse A - Section 3", "Store Floor - Aisle 5", "Loading Dock"]
+        "Free-form text field for human-readable location description.",
+        examples=["Warehouse A - Section 3", "Store Floor - Aisle 5", "Loading Dock"],
     )
-    
+
     notes: Optional[str] = Field(
         None,
         max_length=500,
         description="Administrative notes or comments about the tag. "
-                    "Use for tracking issues, special handling, or other observations.",
+        "Use for tracking issues, special handling, or other observations.",
         examples=[
             "Assigned to Product SKU-12345",
             "Tag damaged - replace soon",
-            "VIP customer item - handle with care"
-        ]
+            "VIP customer item - handle with care",
+        ],
     )
 
 
 class RFIDTagCreate(RFIDTagBase):
     """
     Schema for creating a new RFID tag or recording a scan event.
-    
+
     Inherits all fields from RFIDTagBase. Use this when:
     - Recording a new tag scan
     - Manually registering a tag
     - Importing tags from external systems
-    
+
     Only the `epc` field is required. All other fields are optional.
-    
+
     Example:
         ```python
         # Minimal tag creation
         tag = RFIDTagCreate(epc="E2806810000000001234ABCD")
-        
+
         # Full tag data from scan
         tag = RFIDTagCreate(
             epc="E2806810000000001234ABCD",
@@ -165,67 +165,52 @@ class RFIDTagCreate(RFIDTagBase):
 class RFIDTagUpdate(BaseModel):
     """
     Schema for updating RFID tag metadata.
-    
+
     Use this for administrative updates to tag information.
     All fields are optional - only provide fields you want to update.
-    
+
     Note:
         This does NOT update scan-related data (rssi, read_count, etc.).
         Use POST /api/v1/tags/ for recording scans.
-    
+
     Example:
         ```python
         # Update location only
         update = RFIDTagUpdate(location="Warehouse B - Section 5")
-        
+
         # Update multiple fields
         update = RFIDTagUpdate(
             location="Store Floor",
             notes="Moved to retail display",
             is_active=True
         )
-        
+
         # Soft delete (deactivate)
         update = RFIDTagUpdate(is_active=False)
         ```
     """
 
     location: Optional[str] = Field(
-        None,
-        max_length=100,
-        description="Update the physical location"
+        None, max_length=100, description="Update the physical location"
     )
-    notes: Optional[str] = Field(
-        None,
-        max_length=500,
-        description="Update administrative notes"
-    )
-    user_memory: Optional[str] = Field(
-        None,
-        description="Update user-defined data"
-    )
-    metadata: Optional[Dict[str, Any]] = Field(
-        None,
-        description="Update custom metadata"
-    )
-    is_active: Optional[bool] = Field(
-        None,
-        description="Set to false to soft-delete the tag"
-    )
+    notes: Optional[str] = Field(None, max_length=500, description="Update administrative notes")
+    user_memory: Optional[str] = Field(None, description="Update user-defined data")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Update custom metadata")
+    is_active: Optional[bool] = Field(None, description="Set to false to soft-delete the tag")
 
 
 class RFIDTagResponse(RFIDTagBase):
     """
     Schema for RFID tag API responses.
-    
+
     Includes all base fields plus database-generated fields like ID,
     timestamps, and read statistics.
-    
+
     This is what you receive when:
     - Creating/updating a tag (POST /api/v1/tags/)
     - Retrieving tags (GET /api/v1/tags/)
     - Getting a specific tag (GET /api/v1/tags/{id})
-    
+
     Example Response:
         ```json
         {
@@ -259,16 +244,16 @@ class RFIDTagResponse(RFIDTagBase):
 class RFIDScanHistoryResponse(BaseModel):
     """
     Schema for RFID scan history records.
-    
+
     Represents a single scan event in the history. Each scan creates
     a new history entry, even for the same tag.
-    
+
     Use this to:
     - Track scan patterns over time
     - Analyze tag movement
     - Monitor reader performance
     - Audit tag activity
-    
+
     Example Response:
         ```json
         {
@@ -303,12 +288,12 @@ class RFIDScanHistoryResponse(BaseModel):
 class RFIDTagStatsResponse(BaseModel):
     """
     Schema for RFID tag statistics response.
-    
+
     Provides aggregated statistics about tags and scanning activity.
     All statistics are calculated in real-time.
-    
+
     Returned by: GET /api/v1/tags/stats/summary
-    
+
     Example Response:
         ```json
         {

@@ -18,61 +18,52 @@ from app.core.config import get_settings
 from app.models.rfid_tag import RFIDScanHistory, RFIDTag
 from app.routers.websocket import manager
 from app.services.database import SessionLocal
-from app.services.m200_protocol import (
+from app.services.m200_protocol import (  # Core commands; High priority; Medium priority; Tag commands; GPIO; Relays; Gate; WiFi & Remote; I/O & Permission
     HEAD,
     M200Command,
     M200Commands,
     M200ResponseParser,
     M200Status,
-    # Core commands
-    build_get_device_info_command,
-    build_inventory_command,
-    build_stop_inventory_command,
-    parse_device_info,
-    parse_inventory_response,
-    # High priority
-    build_module_init_command,
-    build_set_power_command,
-    build_read_tag_command,
-    # Medium priority
-    build_set_rf_protocol_command,
-    build_get_rf_protocol_command,
-    build_set_network_command,
-    build_get_network_command,
-    parse_network_response,
-    build_set_rssi_filter_command,
-    build_get_rssi_filter_command,
-    build_set_all_params_command,
     build_get_all_params_command,
-    # Tag commands
-    build_select_tag_command,
-    build_set_query_param_command,
-    build_get_query_param_command,
-    # GPIO
-    build_set_gpio_param_command,
-    build_get_gpio_param_command,
+    build_get_device_info_command,
+    build_get_eas_mask_command,
+    build_get_gate_param_command,
+    build_get_gate_status_command,
     build_get_gpio_levels_command,
-    parse_gpio_levels,
-    # Relays
+    build_get_gpio_param_command,
+    build_get_io_param_command,
+    build_get_network_command,
+    build_get_permission_command,
+    build_get_query_param_command,
+    build_get_remote_server_command,
+    build_get_rf_protocol_command,
+    build_get_rssi_filter_command,
+    build_get_wifi_command,
+    build_inventory_command,
+    build_module_init_command,
+    build_read_tag_command,
     build_relay1_command,
     build_relay2_command,
-    # Gate
-    build_get_gate_status_command,
-    parse_gate_status,
-    build_set_gate_param_command,
-    build_get_gate_param_command,
+    build_select_tag_command,
+    build_set_all_params_command,
     build_set_eas_mask_command,
-    build_get_eas_mask_command,
-    # WiFi & Remote
-    build_set_remote_server_command,
-    build_get_remote_server_command,
-    build_set_wifi_command,
-    build_get_wifi_command,
-    # I/O & Permission
+    build_set_gate_param_command,
+    build_set_gpio_param_command,
     build_set_io_param_command,
-    build_get_io_param_command,
+    build_set_network_command,
     build_set_permission_command,
-    build_get_permission_command,
+    build_set_power_command,
+    build_set_query_param_command,
+    build_set_remote_server_command,
+    build_set_rf_protocol_command,
+    build_set_rssi_filter_command,
+    build_set_wifi_command,
+    build_stop_inventory_command,
+    parse_device_info,
+    parse_gate_status,
+    parse_gpio_levels,
+    parse_inventory_response,
+    parse_network_response,
 )
 
 logger = logging.getLogger(__name__)
@@ -681,7 +672,7 @@ class RFIDReaderService:
     ) -> Optional[bytes]:
         """
         Read tag memory.
-        
+
         Args:
             mem_bank: 0=Reserved, 1=EPC, 2=TID, 3=User
             start_addr: Starting word address
@@ -719,8 +710,7 @@ class RFIDReaderService:
             return {"error": str(e)}
 
     async def set_network_config(
-        self, ip: str, subnet: str = "255.255.255.0", 
-        gateway: str = "192.168.1.1", port: int = 4001
+        self, ip: str, subnet: str = "255.255.255.0", gateway: str = "192.168.1.1", port: int = 4001
     ) -> bool:
         """Set network configuration."""
         if not self.is_connected:
@@ -807,7 +797,7 @@ class RFIDReaderService:
             else:
                 logger.error(f"Invalid relay number: {relay_num}")
                 return False
-            
+
             response_bytes = await asyncio.to_thread(self._send_command, cmd)
             response = M200ResponseParser.parse(response_bytes, strict_crc=False)
             if response.success:
@@ -854,9 +844,7 @@ class RFIDReaderService:
     # Query & Select Commands
     # =========================================================================
 
-    async def set_query_params(
-        self, q_value: int = 4, session: int = 0, target: int = 0
-    ) -> bool:
+    async def set_query_params(self, q_value: int = 4, session: int = 0, target: int = 0) -> bool:
         """Set Query command parameters for inventory optimization."""
         if not self.is_connected:
             return False

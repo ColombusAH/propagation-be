@@ -1,8 +1,8 @@
 from app.models.rfid_tag import RFIDScanHistory, RFIDTag
-from app.models.store import Store, User, NotificationPreference, Notification
+from app.models.store import Notification, NotificationPreference, Store, User
 
 __all__ = [
-    "RFIDTag", 
+    "RFIDTag",
     "RFIDScanHistory",
     "Store",
     "User",

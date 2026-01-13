@@ -1,10 +1,13 @@
-import pytest
 import asyncio
 from typing import AsyncGenerator
-from httpx import AsyncClient, ASGITransport
-from app.main import app
-from app.db.prisma import prisma_client
+
+import pytest
 import pytest_asyncio
+from httpx import ASGITransport, AsyncClient
+
+from app.db.prisma import prisma_client
+from app.main import app
+
 
 @pytest.fixture(scope="session")
 def event_loop():
@@ -12,6 +15,7 @@ def event_loop():
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
+
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def db_setup():
@@ -22,14 +26,15 @@ async def db_setup():
     except Exception:
         # Ignore already connected or other connection errors in setup
         pass
-    
+
     # Initialize app state if not already set (needed for dependencies)
     if not hasattr(app.state, "prisma") or app.state.prisma is None:
         app.state.prisma = prisma_client
-        
+
     yield prisma_client
     # Optionally disconnect at the very end
     # await prisma_client.disconnect()
+
 
 @pytest_asyncio.fixture()
 async def client() -> AsyncGenerator:

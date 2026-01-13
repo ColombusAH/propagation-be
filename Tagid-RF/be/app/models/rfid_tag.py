@@ -29,18 +29,21 @@ class RFIDTag(Base):
 
     location = Column(String(100), nullable=True, comment="Physical location where scanned")
     notes = Column(Text, nullable=True, comment="User notes (max 500 chars)")
-    
+
     # NEW: Payment and product info for theft prevention
     is_paid = Column(
-        Boolean, default=False, nullable=False, index=True, 
-        comment="Payment status - True if item has been paid for"
+        Boolean,
+        default=False,
+        nullable=False,
+        index=True,
+        comment="Payment status - True if item has been paid for",
     )
     product_name = Column(String(255), nullable=True, comment="Product name for display")
     product_sku = Column(String(50), nullable=True, index=True, comment="Product SKU")
     price_cents = Column(Integer, nullable=True, comment="Price in cents/agorot")
     store_id = Column(Integer, nullable=True, index=True, comment="Store ID where tag belongs")
     paid_at = Column(DateTime(timezone=True), nullable=True, comment="When payment was made")
-    
+
     is_active = Column(
         Boolean, default=True, nullable=False, index=True, comment="Soft delete flag"
     )

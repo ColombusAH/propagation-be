@@ -1,7 +1,10 @@
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
-from app.db.dependencies import get_db
-from unittest.mock import MagicMock, patch, PropertyMock
 from fastapi import HTTPException, Request
+
+from app.db.dependencies import get_db
+
 
 @pytest.mark.asyncio
 async def test_get_db_state_missing():
@@ -9,11 +12,12 @@ async def test_get_db_state_missing():
     mock_request = MagicMock(spec=Request)
     # Using a spec without 'prisma' ensures AttributeError on access
     mock_request.app = MagicMock()
-    mock_request.app.state = MagicMock(spec=[]) 
-    
+    mock_request.app.state = MagicMock(spec=[])
+
     with pytest.raises(HTTPException) as exc:
         await get_db(mock_request)
     assert exc.value.status_code == 503
+
 
 @pytest.mark.asyncio
 async def test_get_db_unexpected_error():
@@ -25,7 +29,7 @@ async def test_get_db_unexpected_error():
     type(mock_wrapper).client = PropertyMock(side_effect=Exception("Boom"))
     mock_app.state.prisma = mock_wrapper
     mock_request.app = mock_app
-    
+
     with pytest.raises(HTTPException) as exc:
         await get_db(mock_request)
     assert exc.value.status_code == 500

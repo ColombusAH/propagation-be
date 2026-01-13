@@ -1,6 +1,15 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import alerts, auth, payment, rfid_scan, schedules, shifts, tag_mapping, users
+from app.api.v1.endpoints import (
+    alerts,
+    auth,
+    payment,
+    rfid_scan,
+    schedules,
+    shifts,
+    tag_mapping,
+    users,
+)
 
 api_router = APIRouter()
 

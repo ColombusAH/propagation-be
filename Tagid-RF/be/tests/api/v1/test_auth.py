@@ -1,12 +1,14 @@
 import pytest
 from httpx import AsyncClient
 
+
 @pytest.mark.asyncio
 async def test_auth_root(client: AsyncClient):
     """Test the auth root endpoint."""
     response = await client.get("/api/v1/auth/")
     assert response.status_code == 200
     assert response.json() == {"message": "Auth endpoint"}
+
 
 @pytest.mark.asyncio
 async def test_google_login_invalid_token(client: AsyncClient):

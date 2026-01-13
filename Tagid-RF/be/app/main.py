@@ -11,7 +11,7 @@ from app.api.v1.api import api_router
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.db.prisma import init_db, shutdown_db
-from app.routers import tags, websocket, stores, users, notifications, exit_scan
+from app.routers import exit_scan, notifications, stores, tags, users, websocket
 from app.services.database import init_db as init_rfid_db
 from app.services.rfid_reader import rfid_reader_service
 from app.services.tag_listener_service import tag_listener_service
@@ -51,7 +51,7 @@ async def lifespan(app: FastAPI):
     # Startup
     setup_logging()
     logger.info("Starting up application...")
-    
+
     # Initialize Prisma Client
     # Initialize Prisma Client
     try:
@@ -88,7 +88,7 @@ async def lifespan(app: FastAPI):
             logger.warning("Failed to initialize RFID reader")
     except Exception as e:
         logger.error(f"Error initializing RFID reader: {e}")
-    
+
     # Start tag listener service
     try:
         tag_listener_service.start()

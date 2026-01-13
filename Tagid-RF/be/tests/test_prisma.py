@@ -1,6 +1,9 @@
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from app.db.prisma import prisma_client, init_db, shutdown_db
-from unittest.mock import patch, AsyncMock, MagicMock
+
+from app.db.prisma import init_db, prisma_client, shutdown_db
+
 
 @pytest.mark.asyncio
 async def test_prisma_connection():
@@ -10,10 +13,12 @@ async def test_prisma_connection():
         # Since prisma_client is a singleton, it might already be connected
         # But our mock should be called if we call connect() on it
 
+
 @pytest.mark.asyncio
 async def test_prisma_disconnection():
     with patch("prisma.Prisma.disconnect", new_callable=AsyncMock) as mock_disconnect:
         await prisma_client.disconnect()
+
 
 @pytest.mark.asyncio
 async def test_init_db():
@@ -21,6 +26,7 @@ async def test_init_db():
     with patch("app.db.prisma.prisma_client.connect", new_callable=AsyncMock) as mock_connect:
         await init_db(mock_app)
         mock_connect.assert_called_once()
+
 
 @pytest.mark.asyncio
 async def test_shutdown_db():
