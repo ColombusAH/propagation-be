@@ -1,0 +1,86 @@
+=== RFID Full Protocol Test - 2026-01-11 09:05:23.482877 ===
+Target: 192.168.1.200:2022
+
+============================================================
+CONNECTING
+============================================================
+[OK] Connected to 192.168.1.200:2022
+
+============================================================
+STEP 1: Initialize Module (CMD 0x0072)
+============================================================
+
+[MODULE_INIT] CMD=0x0072
+  TX: CF FF 00 72 00 17 A5 (7 bytes)
+  RX: CF 01 00 72 1A 00 01 00 01 20 00 00 01 03 03 61 00 64 00 C8 0F 21 01 04 00 00 0C 03 03 01 00 66 99 (33 bytes)
+  Parsed: CMD=0x0072, LEN=26, STATUS=0x00
+
+============================================================
+STEP 2: Get Device Info (CMD 0x0070)
+============================================================
+
+[DEVICE_INFO] CMD=0x0070
+  TX: CF FF 00 70 00 24 15 (7 bytes)
+  RX: CF 01 00 70 99 00 43 50 2D 32 31 34 39 31 34 5F 56 31 2E 31 32 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 55 48 46 20 47 61 74 65 20 52 65 61 64 65 72 20 56 31 2E 31 20 32 30 32 35 2E 30 34 2E 31 30 20 37 DD 33 39 39 39 0B 00 4B 39 32 34 4D 55 2D 39 31 34 5F 56 31 2E 31 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 55 48 46 20 53 65 6E 69 6F 72 20 52 65 61 64 65 72 20 56 31 2E 35 2E 31 32 2E 31 33 00 00 00 00 22 07 00 1E 8C 12 30 16 47 34 38 30 8F 3E (160 bytes)
+  Parsed: CMD=0x0070, LEN=153, STATUS=0x00
+
+============================================================
+STEP 3: Get All Parameters (CMD 0x0052)
+============================================================
+
+[GET_ALL_PARAMS] CMD=0x0052
+  TX: CF FF 00 52 00 34 96 (7 bytes)
+  RX: CF 01 00 52 01 00 16 4D (8 bytes)
+  Parsed: CMD=0x0052, LEN=1, STATUS=0x00
+
+============================================================
+STEP 4: Set Power 30dBm (CMD 0x002F)
+============================================================
+
+[SET_POWER] CMD=0x002F
+  TX: CF FF 00 2F 01 1E 6E 0B (8 bytes)
+  --> TIMEOUT (no response)
+
+============================================================
+STEP 5: Inventory Attempts
+============================================================
+
+--- Inventory 1 sec ---
+
+[Inventory 1 sec] CMD=0x0001
+  TX: CF FF 00 01 02 00 01 6E C0 (9 bytes)
+  --> ERROR: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+[STOP] CMD=0x0028
+  TX: CF FF 00 28 00 39 22 (7 bytes)
+  --> ERROR: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+--- Inventory 3 sec ---
+
+[Inventory 3 sec] CMD=0x0001
+  TX: CF FF 00 01 02 00 03 4D D2 (9 bytes)
+  --> ERROR: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+[STOP] CMD=0x0028
+  TX: CF FF 00 28 00 39 22 (7 bytes)
+  --> ERROR: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+--- Inventory 1 cycle ---
+
+[Inventory 1 cycle] CMD=0x0001
+  TX: CF FF 00 01 02 01 01 77 18 (9 bytes)
+  --> ERROR: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+[STOP] CMD=0x0028
+  TX: CF FF 00 28 00 39 22 (7 bytes)
+  --> ERROR: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+============================================================
+SUMMARY
+============================================================
+[INFO] No tags detected
+- Ensure tag is within 1-2 meters of antenna
+- Check antenna connection
+- Verify tag is UHF RFID (not HF/NFC)
+
+Full log saved to: rfid_full_log.txt

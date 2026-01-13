@@ -14,6 +14,11 @@ SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.JWT_ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
+<<<<<<< HEAD:Tagid-RF/be/app/core/security.py
+=======
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+
+>>>>>>> origin/main:be/app/core/security.py
 
 def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
     """Creates a JWT access token."""
@@ -49,6 +54,12 @@ def get_password_hash(password: str) -> str:
     hashed = bcrypt.hashpw(password.encode("utf-8"), salt)
     return hashed.decode("utf-8")
 
+<<<<<<< HEAD:Tagid-RF/be/app/core/security.py
+=======
+def get_password_hash(password: str) -> str:
+    """Hashes a plain password."""
+    return pwd_context.hash(password)
+>>>>>>> origin/main:be/app/core/security.py
 
 def verify_access_token(token: str) -> Optional[Dict[str, Any]]:
     """Verifies a JWT access token and returns its payload if valid."""

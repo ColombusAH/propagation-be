@@ -1,0 +1,10 @@
+C:\Users\eliran_ha\Desktop\Eliran\RFID\Chafon\תכנה\M100.200.300.400+SDK\M100.200.300.400 SDK\Sample\C#\source\Access_Demo\Access_Demo\bin\Debug\Access_Demo.exe.config
+C:\Users\eliran_ha\Desktop\Eliran\RFID\Chafon\תכנה\M100.200.300.400+SDK\M100.200.300.400 SDK\Sample\C#\source\Access_Demo\Access_Demo\bin\Debug\Access_Demo.exe
+C:\Users\eliran_ha\Desktop\Eliran\RFID\Chafon\תכנה\M100.200.300.400+SDK\M100.200.300.400 SDK\Sample\C#\source\Access_Demo\Access_Demo\bin\Debug\Access_Demo.pdb
+C:\Users\eliran_ha\Desktop\Eliran\RFID\Chafon\תכנה\M100.200.300.400+SDK\M100.200.300.400 SDK\Sample\C#\source\Access_Demo\Access_Demo\obj\Debug\Access_Demo.csproj.AssemblyReference.cache
+C:\Users\eliran_ha\Desktop\Eliran\RFID\Chafon\תכנה\M100.200.300.400+SDK\M100.200.300.400 SDK\Sample\C#\source\Access_Demo\Access_Demo\obj\Debug\Access_Demo.Form1.resources
+C:\Users\eliran_ha\Desktop\Eliran\RFID\Chafon\תכנה\M100.200.300.400+SDK\M100.200.300.400 SDK\Sample\C#\source\Access_Demo\Access_Demo\obj\Debug\Access_Demo.Properties.Resources.resources
+C:\Users\eliran_ha\Desktop\Eliran\RFID\Chafon\תכנה\M100.200.300.400+SDK\M100.200.300.400 SDK\Sample\C#\source\Access_Demo\Access_Demo\obj\Debug\Access_Demo.csproj.GenerateResource.cache
+C:\Users\eliran_ha\Desktop\Eliran\RFID\Chafon\תכנה\M100.200.300.400+SDK\M100.200.300.400 SDK\Sample\C#\source\Access_Demo\Access_Demo\obj\Debug\Access_Demo.csproj.CoreCompileInputs.cache
+C:\Users\eliran_ha\Desktop\Eliran\RFID\Chafon\תכנה\M100.200.300.400+SDK\M100.200.300.400 SDK\Sample\C#\source\Access_Demo\Access_Demo\obj\Debug\Access_Demo.exe
+C:\Users\eliran_ha\Desktop\Eliran\RFID\Chafon\תכנה\M100.200.300.400+SDK\M100.200.300.400 SDK\Sample\C#\source\Access_Demo\Access_Demo\obj\Debug\Access_Demo.pdb

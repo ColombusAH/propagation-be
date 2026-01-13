@@ -1,0 +1,139 @@
+M-200 Command Test Results - 2026-01-11 09:09:31.774172
+Target: 192.168.1.200:2022
+======================================================================
+
+WORKING COMMANDS:
+----------------------------------------
+0x0072 - RFM_MODULE_INT
+  TX: CF FF 00 72 00 17 A5
+  RX: CF 01 00 72 1A 00 01 00 02 20 00 00 01 01 03 86 02 EE 01 F4 31 21 01 04 00 00 0C 03 03 01 00 AC 29
+  Status: Success
+
+0x0070 - RFM_GET_DEVICE_INFO
+  TX: CF FF 00 70 00 24 15
+  RX: CF 01 00 70 99 00 43 50 2D 32 31 34 39 31 34 5F 56 31 2E 31 32 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 55 48 46 20 47 61 74 65 20 52 65 61 64 65 72 20 56 31 2E 31 20 32 30 32 35 2E 30 34 2E 31 30 20 37 DD 33 39 39 39 0B 00 4B 39 32 34 4D 55 2D 39 31 34 5F 56 31 2E 31 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 55 48 46 20 53 65 6E 69 6F 72 20 52 65 61 64 65 72 20 56 31 2E 35 2E 31 32 2E 31 33 00 00 00 00 22 07 00 1E 8C 12 30 16 47 34 38 30 8F 3E
+  Status: Success
+
+0x0052 - RFM_GET_ALL_PARAM
+  TX: CF FF 00 52 00 34 96
+  RX: CF 01 00 52 01 00 16 4D
+  Status: Success
+
+
+NOT WORKING:
+----------------------------------------
+0x002F - RFM_SET_PWR
+  TX: CF FF 00 2F 01 1E 6E 0B
+  RX: None
+  Error: TIMEOUT
+
+0x0041 - RFM_SET_GET_RFID_PRO
+  TX: CF FF 00 41 01 00 82 A2
+  RX: None
+  Error: TIMEOUT
+
+0x0042 - RFM_SET_GET_NETPARA
+  TX: CF FF 00 42 01 00 6D C6
+  RX: None
+  Error: TIMEOUT
+
+0x0043 - RFM_SET_GET_REMOTE_NETPARA
+  TX: CF FF 00 43 01 00 37 1A
+  RX: None
+  Error: TIMEOUT
+
+0x0053 - RFM_SET_GET_IOPUT_PARAM
+  TX: CF FF 00 53 01 00 B2 8F
+  RX: None
+  Error: TIMEOUT
+
+0x0044 - RFM_SET_GET_WiFi_PARAM
+  TX: CF FF 00 44 01 00 BB 1F
+  RX: None
+  Error: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+0x0054 - RFM_SET_GET_PERMISSION_PARAM
+  TX: CF FF 00 54 01 00 3E 8A
+  RX: None
+  Error: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+0x0055 - RFM_RELEASE_CLOSE_RELAY1
+  TX: CF FF 00 55 01 00 64 56
+  RX: None
+  Error: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+0x0056 - RFM_RELEASE_CLOSE_RELAY2
+  TX: CF FF 00 56 01 00 8B 32
+  RX: None
+  Error: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+0x0057 - RFM_SET_GET_AntN_RSSI_Filter
+  TX: CF FF 00 57 01 00 D1 EE
+  RX: None
+  Error: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+0x0001 - RFM_INVENTORYISO_CONTINUE
+  TX: CF FF 00 01 02 00 01 6E C0
+  RX: None
+  Error: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+0x0028 - RFM_INVENTORY_STOP
+  TX: CF FF 00 28 00 39 22
+  RX: None
+  Error: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+0x002A - RFM_READISO_TAG
+  TX: CF FF 00 2A 03 02 00 06 34 F2
+  RX: None
+  Error: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+0x002D - RFM_SETISO_SELECTMASK
+  TX: CF FF 00 2D 00 47 9A
+  RX: None
+  Error: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+0x005D - RFM_SET_SELPRM
+  TX: CF FF 00 5D 00 B7 5E
+  RX: None
+  Error: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+0x005E - RFM_GET_SELPRM
+  TX: CF FF 00 5E 00 9D 36
+  RX: None
+  Error: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+0x005B - RFM_SET_QUERY_PARAM
+  TX: CF FF 00 5B 00 E3 8E
+  RX: None
+  Error: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+0x005C - RFM_GET_QUERY_PARAM
+  TX: CF FF 00 5C 00 AE 86
+  RX: None
+  Error: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+0x0058 - RFM_SET_GET_GPIO_WORKPARAM
+  TX: CF FF 00 58 01 00 9B 29
+  RX: None
+  Error: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+0x0059 - RFM_GET_GPIO_LEVELS
+  TX: CF FF 00 59 00 D0 3E
+  RX: None
+  Error: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+0x005A - RFM_GET_GATE_STATUS
+  TX: CF FF 00 5A 00 FA 56
+  RX: None
+  Error: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+0x005F - RFM_SET_GET_GATE_WORKPARAM
+  TX: CF FF 00 5F 01 00 17 2C
+  RX: None
+  Error: [WinError 10054] An existing connection was forcibly closed by the remote host
+
+0x0060 - RFM_SET_GET_EAS_MASK
+  TX: CF FF 00 60 01 00 DB 45
+  RX: None
+  Error: [WinError 10054] An existing connection was forcibly closed by the remote host
+

@@ -1,0 +1,91 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\eliran_ha\\Desktop\\Eliran\\RFID\\Chafon\\\u05EA\u05DB\u05E0\u05D4\\M100.200.300.400\u002BSDK\\M100.200.300.400 SDK\\Sample\\C#\\source\\Access_Demo\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{9D498276-13D1-4B22-BBCA-E89CACDD058A}|Access_Demo\\Access_Demo.csproj|c:\\users\\eliran_ha\\desktop\\eliran\\rfid\\chafon\\\u05EA\u05DB\u05E0\u05D4\\m100.200.300.400\u002Bsdk\\m100.200.300.400 sdk\\sample\\c#\\source\\access_demo\\access_demo\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D498276-13D1-4B22-BBCA-E89CACDD058A}|Access_Demo\\Access_Demo.csproj|solutionrelative:access_demo\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D498276-13D1-4B22-BBCA-E89CACDD058A}|Access_Demo\\Access_Demo.csproj|c:\\users\\eliran_ha\\desktop\\eliran\\rfid\\chafon\\\u05EA\u05DB\u05E0\u05D4\\m100.200.300.400\u002Bsdk\\m100.200.300.400 sdk\\sample\\c#\\source\\access_demo\\access_demo\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{9D498276-13D1-4B22-BBCA-E89CACDD058A}|Access_Demo\\Access_Demo.csproj|solutionrelative:access_demo\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 3,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{cce594b6-0c39-4442-ba28-10c64ac7e89f}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Form1.cs",
+              "DocumentMoniker": "C:\\Users\\eliran_ha\\Desktop\\Eliran\\RFID\\Chafon\\\u05EA\u05DB\u05E0\u05D4\\M100.200.300.400\u002BSDK\\M100.200.300.400 SDK\\Sample\\C#\\source\\Access_Demo\\Access_Demo\\Form1.cs",
+              "RelativeDocumentMoniker": "Access_Demo\\Form1.cs",
+              "ToolTip": "C:\\Users\\eliran_ha\\Desktop\\Eliran\\RFID\\Chafon\\\u05EA\u05DB\u05E0\u05D4\\M100.200.300.400\u002BSDK\\M100.200.300.400 SDK\\Sample\\C#\\source\\Access_Demo\\Access_Demo\\Form1.cs",
+              "RelativeToolTip": "Access_Demo\\Form1.cs",
+              "ViewState": "AgIAADAAAAAAAAAAAAAQwEQAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-14T14:02:03.08Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Form1.cs [Design]",
+              "DocumentMoniker": "C:\\Users\\eliran_ha\\Desktop\\Eliran\\RFID\\Chafon\\\u05EA\u05DB\u05E0\u05D4\\M100.200.300.400\u002BSDK\\M100.200.300.400 SDK\\Sample\\C#\\source\\Access_Demo\\Access_Demo\\Form1.cs",
+              "RelativeDocumentMoniker": "Access_Demo\\Form1.cs",
+              "ToolTip": "C:\\Users\\eliran_ha\\Desktop\\Eliran\\RFID\\Chafon\\\u05EA\u05DB\u05E0\u05D4\\M100.200.300.400\u002BSDK\\M100.200.300.400 SDK\\Sample\\C#\\source\\Access_Demo\\Access_Demo\\Form1.cs [Design]",
+              "RelativeToolTip": "Access_Demo\\Form1.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-14T14:02:00.867Z",
+              "EditorCaption": " [Design]"
+            }
+          ]
+        },
+        {
+          "DockedWidth": 207,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{4a9b7e51-aa16-11d0-a8c5-00a0c921a4d2}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{0ad07096-bba9-4900-a651-0598d26f6d24}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:2:0:{e8034f19-ab72-4f06-83fd-f6832b41aa63}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
