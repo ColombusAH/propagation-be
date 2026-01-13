@@ -14,10 +14,11 @@ settings = get_settings()
 # Create SQLAlchemy engine
 # Note: For RFID system, we'll use a separate database URL if provided
 # Otherwise, we'll use the same database with a different schema or connection
-RFID_DATABASE_URL = getattr(settings, "RFID_DATABASE_URL", settings.DATABASE_URL)
+# Otherwise, we'll use the same database with a different schema or connection
+RFID_DATABASE_URL = settings.RFID_DATABASE_URL or settings.DATABASE_URL
 
 # Replace postgresql:// with postgresql+psycopg:// for SQLAlchemy if needed
-if RFID_DATABASE_URL.startswith("postgresql://"):
+if RFID_DATABASE_URL and RFID_DATABASE_URL.startswith("postgresql://"):
     RFID_DATABASE_URL = RFID_DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
 
 engine = create_engine(
