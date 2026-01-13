@@ -130,6 +130,13 @@ class RFIDTagBase(BaseModel):
         ],
     )
 
+    # Product & Payment Info
+    product_name: Optional[str] = Field(None, max_length=255, description="Associated product name")
+    product_sku: Optional[str] = Field(None, max_length=50, description="Product Stock Keeping Unit")
+    price_cents: Optional[int] = Field(None, description="Price in cents (e.g., 1000 = 10.00)")
+    store_id: Optional[int] = Field(None, description="Store ID this tag belongs to")
+    is_paid: bool = Field(False, description="Payment status")
+
 
 class RFIDTagCreate(RFIDTagBase):
     """
@@ -195,6 +202,13 @@ class RFIDTagUpdate(BaseModel):
     user_memory: Optional[str] = Field(None, description="Update user-defined data")
     metadata: Optional[Dict[str, Any]] = Field(None, description="Update custom metadata")
     is_active: Optional[bool] = Field(None, description="Set to false to soft-delete the tag")
+    
+    # Product updates
+    product_name: Optional[str] = Field(None, max_length=255)
+    product_sku: Optional[str] = Field(None, max_length=50)
+    price_cents: Optional[int] = Field(None)
+    store_id: Optional[int] = Field(None)
+    is_paid: Optional[bool] = Field(None)
 
 
 class RFIDTagResponse(RFIDTagBase):

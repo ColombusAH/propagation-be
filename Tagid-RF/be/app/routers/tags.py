@@ -149,6 +149,18 @@ async def create_or_update_tag(tag: RFIDTagCreate, db: Session = Depends(get_db)
         if tag.metadata:
             existing.metadata = tag.metadata
 
+        # Update product info if provided
+        if tag.product_name is not None:
+            existing.product_name = tag.product_name
+        if tag.product_sku is not None:
+            existing.product_sku = tag.product_sku
+        if tag.price_cents is not None:
+            existing.price_cents = tag.price_cents
+        if tag.store_id is not None:
+            existing.store_id = tag.store_id
+        if tag.is_paid is not None:
+            existing.is_paid = tag.is_paid
+
         db.commit()
         db.refresh(existing)
 
@@ -181,6 +193,12 @@ async def create_or_update_tag(tag: RFIDTagCreate, db: Session = Depends(get_db)
             metadata=tag.metadata,
             location=tag.location,
             notes=tag.notes,
+            # Product info
+            product_name=tag.product_name,
+            product_sku=tag.product_sku,
+            price_cents=tag.price_cents,
+            store_id=tag.store_id,
+            is_paid=tag.is_paid,
         )
         db.add(new_tag)
         db.commit()
@@ -385,6 +403,18 @@ async def update_tag(tag_id: int, tag_update: RFIDTagUpdate, db: Session = Depen
         tag.metadata = tag_update.metadata
     if tag_update.is_active is not None:
         tag.is_active = tag_update.is_active
+
+    # Update product/payment info
+    if tag_update.product_name is not None:
+        tag.product_name = tag_update.product_name
+    if tag_update.product_sku is not None:
+        tag.product_sku = tag_update.product_sku
+    if tag_update.price_cents is not None:
+        tag.price_cents = tag_update.price_cents
+    if tag_update.store_id is not None:
+        tag.store_id = tag_update.store_id
+    if tag_update.is_paid is not None:
+        tag.is_paid = tag_update.is_paid
 
     db.commit()
     db.refresh(tag)
