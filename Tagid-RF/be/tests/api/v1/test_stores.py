@@ -1,17 +1,20 @@
 """
 Tests for Stores Router - store management endpoints.
 """
-import pytest
+
 from unittest.mock import MagicMock, patch
+
+import pytest
 from httpx import AsyncClient
 
 
 class TestStoresRouterStructure:
     """Tests for stores router structure."""
-    
+
     def test_import_stores_router(self):
         """Test stores router imports correctly."""
         from app.routers.stores import router
+
         assert router is not None
 
 

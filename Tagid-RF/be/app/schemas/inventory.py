@@ -1,5 +1,7 @@
 from typing import List, Optional
+
 from pydantic import BaseModel
+
 
 class ProductSummary(BaseModel):
     product_sku: Optional[str] = None
@@ -8,6 +10,7 @@ class ProductSummary(BaseModel):
     available_items: int = 0
     sold_items: int = 0
     price_cents: Optional[int] = None
+
 
 class InventoryResponse(BaseModel):
     products: List[ProductSummary]

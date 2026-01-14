@@ -2,10 +2,13 @@
 Tests for Products Router to increase coverage.
 Covers QR generation for products.
 """
+
 import pytest
-from httpx import AsyncClient, ASGITransport
 from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
+
 from app.routers.products import router
+
 
 @pytest.fixture
 def test_app():
@@ -13,10 +16,12 @@ def test_app():
     app.include_router(router, prefix="/products")
     return app
 
+
 @pytest.fixture
 async def client(test_app):
     async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
         yield ac
+
 
 @pytest.mark.asyncio
 async def test_generate_product_qr_success(client: AsyncClient):
@@ -26,10 +31,11 @@ async def test_generate_product_qr_success(client: AsyncClient):
     assert response.headers["content-type"] == "image/png"
     assert len(response.content) > 0
 
+
 @pytest.mark.asyncio
 async def test_generate_product_qr_empty_sku(client: AsyncClient):
     """
-    Test edge cases for SKU. 
+    Test edge cases for SKU.
     Note: FastAPI path parameters won't match empty strings if the route is /qr/{sku}.
     We test the logic inside if we could, but here we test a valid SKU.
     """

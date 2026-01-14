@@ -1,17 +1,20 @@
 """
 Tests for Users Router - user management endpoints.
 """
-import pytest
+
 from unittest.mock import MagicMock, patch
+
+import pytest
 from httpx import AsyncClient
 
 
 class TestUsersRouterStructure:
     """Tests for users router structure."""
-    
+
     def test_import_users_router(self):
         """Test users router imports correctly."""
         from app.routers.users import router
+
         assert router is not None
 
 
@@ -30,7 +33,7 @@ async def test_get_user_by_id(client: AsyncClient):
     assert response.status_code in [200, 404, 401, 403]
 
 
-@pytest.mark.asyncio 
+@pytest.mark.asyncio
 async def test_get_current_user(client: AsyncClient):
     """Test getting current user endpoint."""
     response = await client.get("/api/v1/users/me")

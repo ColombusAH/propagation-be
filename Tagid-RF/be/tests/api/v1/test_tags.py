@@ -1,7 +1,9 @@
 """
 Tests for Tags API - Basic CRUD operations.
 """
+
 import uuid
+
 import pytest
 from httpx import AsyncClient
 

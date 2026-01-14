@@ -11,7 +11,7 @@ from app.api.v1.api import api_router
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.db.prisma import init_db, shutdown_db
-from app.routers import exit_scan, notifications, stores, tags, users, websocket
+from app.routers import cart, exit_scan, inventory, notifications, products, stores, tags, users, websocket
 from app.services.database import init_db as init_rfid_db
 from app.services.rfid_reader import rfid_reader_service
 from app.services.tag_listener_service import tag_listener_service
@@ -163,13 +163,12 @@ app.include_router(users.router, prefix=f"{settings.API_V1_STR}", tags=["Users"]
 app.include_router(notifications.router, prefix=f"{settings.API_V1_STR}", tags=["Notifications"])
 app.include_router(exit_scan.router, prefix=f"{settings.API_V1_STR}", tags=["Exit Scan"])
 
-from app.routers import inventory
 app.include_router(inventory.router, prefix=f"{settings.API_V1_STR}/inventory", tags=["Inventory"])
 
-
-from app.routers import products, cart
 app.include_router(products.router, prefix=f"{settings.API_V1_STR}/products", tags=["Products"])
 app.include_router(cart.router, prefix=f"{settings.API_V1_STR}/cart", tags=["Cart"])
+
+
 async def health_check():
     """Root health check endpoint for Railway."""
     return {"status": "healthy"}

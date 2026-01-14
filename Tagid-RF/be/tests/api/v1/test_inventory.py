@@ -1,13 +1,15 @@
 """
 Tests for Inventory Router - Aggregation API.
 """
-import pytest
+
 from unittest.mock import MagicMock, patch
+
+import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.routers.inventory import router
-from fastapi import FastAPI
 
 app = FastAPI()
 app.include_router(router)
@@ -30,10 +32,10 @@ def test_inventory_summary(mock_db_tags):
     """Test inventory summary aggregation."""
     # This test requires mocking the database query which is complex due to SQLAlchemy structure
     # For now, we test the endpoint exists and returns proper structure
-    
+
     with patch("app.routers.inventory.get_db") as mock_get_db:
         mock_session = MagicMock(spec=Session)
-        
+
         # Mock the complex query chain
         mock_query = MagicMock()
         mock_query.group_by.return_value = mock_query
@@ -43,8 +45,8 @@ def test_inventory_summary(mock_db_tags):
         ]
         mock_session.query.return_value = mock_query
         mock_get_db.return_value = mock_session
-        
+
         response = client.get("/summary")
-        
+
         # Just verify it doesn't crash - actual aggregation logic is tested by data
         assert response.status_code in [200, 500]  # May fail under mock, that's fine

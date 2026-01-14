@@ -203,7 +203,9 @@ class RFIDTagUpdate(BaseModel):
     )
     notes: Optional[str] = Field(None, max_length=500, description="Update administrative notes")
     user_memory: Optional[str] = Field(None, description="Update user-defined data")
-    meta: Optional[Dict[str, Any]] = Field(None, serialization_alias="metadata", description="Update custom metadata")
+    meta: Optional[Dict[str, Any]] = Field(
+        None, serialization_alias="metadata", description="Update custom metadata"
+    )
     is_active: Optional[bool] = Field(None, description="Set to false to soft-delete the tag")
 
     # Product updates
@@ -294,7 +296,9 @@ class RFIDScanHistoryResponse(BaseModel):
     frequency: Optional[float] = Field(description="Frequency used for this scan")
     location: Optional[str] = Field(description="Location at time of scan")
     reader_id: Optional[str] = Field(description="Identifier of the reader device")
-    meta: Optional[Dict[str, Any]] = Field(alias="metadata", serialization_alias="metadata", description="Additional scan metadata")
+    meta: Optional[Dict[str, Any]] = Field(
+        alias="metadata", serialization_alias="metadata", description="Additional scan metadata"
+    )
     scanned_at: datetime = Field(description="Exact timestamp when tag was scanned")
 
     model_config = ConfigDict(from_attributes=True)

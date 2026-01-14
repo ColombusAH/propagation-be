@@ -1,16 +1,18 @@
 """
 Tests for Notifications Router - notification management endpoints.
 """
+
 import pytest
 from httpx import AsyncClient
 
 
 class TestNotificationsRouterStructure:
     """Tests for notifications router structure."""
-    
+
     def test_import_notifications_router(self):
         """Test notifications router imports correctly."""
         from app.routers.notifications import router
+
         assert router is not None
 
 
