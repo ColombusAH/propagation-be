@@ -149,7 +149,7 @@ class TagListenerService:
             from app.db.prisma import prisma_client
             from app.models.rfid_tag import RFIDTag
             from app.services.database import SessionLocal
-            from app.services.encryption import decrypt_qr_code
+            from app.services.tag_encryption import get_encryption_service
 
             epc = tag_data.get("epc")
             tag_id = tag_data.get("tag_id")
@@ -165,7 +165,8 @@ class TagListenerService:
                         if mapping and mapping.encryptedQr:
                             encryption_status["is_encrypted"] = True
                             try:
-                                encryption_status["decrypted_qr"] = decrypt_qr_code(
+                                encrypt_svc = get_encryption_service()
+                                encryption_status["decrypted_qr"] = encrypt_svc.decrypt_qr(
                                     mapping.encryptedQr
                                 )
                             except Exception as e:

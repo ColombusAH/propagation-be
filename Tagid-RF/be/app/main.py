@@ -167,7 +167,9 @@ from app.routers import inventory
 app.include_router(inventory.router, prefix=f"{settings.API_V1_STR}/inventory", tags=["Inventory"])
 
 
-@app.get("/health")
+from app.routers import products, cart
+app.include_router(products.router, prefix=f"{settings.API_V1_STR}/products", tags=["Products"])
+app.include_router(cart.router, prefix=f"{settings.API_V1_STR}/cart", tags=["Cart"])
 async def health_check():
     """Root health check endpoint for Railway."""
     return {"status": "healthy"}

@@ -641,18 +641,18 @@ def build_set_gpio_param_command(
         level: Initial output level (0x00 = Low, 0x01 = High)
     """
     data = struct.pack("BBBB", 0x01, pin, direction, level)  # 0x01 = Set
-    return M200Command(M200Commands.RFM_SET_GET_GPIO_WORKPARAM, data, addr=BROADCAST_ADDR)
+    return M200Command(M200Commands.RFM_SET_GET_G_PIO_WORKPARAM, data, addr=BROADCAST_ADDR)
 
 
 def build_get_gpio_param_command(pin: int) -> M200Command:
     """Build get GPIO parameters command."""
     data = struct.pack("BB", 0x02, pin)  # 0x02 = Get
-    return M200Command(M200Commands.RFM_SET_GET_GPIO_WORKPARAM, data, addr=BROADCAST_ADDR)
+    return M200Command(M200Commands.RFM_SET_GET_G_PIO_WORKPARAM, data, addr=BROADCAST_ADDR)
 
 
 def build_get_gpio_levels_command() -> M200Command:
     """Build get GPIO levels command (Section 2.4.2)."""
-    return M200Command(M200Commands.RFM_GET_GPIO_LEVELS, addr=BROADCAST_ADDR)
+    return M200Command(M200Commands.RFM_GET_G_PIO_LEVEL, addr=BROADCAST_ADDR)
 
 
 def parse_gpio_levels(data: bytes) -> Dict[str, int]:
@@ -728,13 +728,13 @@ def build_set_gate_param_command(
     """
     data = struct.pack("BBB", 0x01, mode, sensitivity)  # 0x01 = Set
     data += struct.pack("B", 0x01 if direction_detect else 0x00)
-    return M200Command(M200Commands.RFM_SET_GET_GATE_WORKPARAM, data, addr=BROADCAST_ADDR)
+    return M200Command(M200Commands.RFM_SET_GET_GATE_PARAM, data, addr=BROADCAST_ADDR)
 
 
 def build_get_gate_param_command() -> M200Command:
     """Build get gate parameters command."""
     data = struct.pack("B", 0x02)  # 0x02 = Get
-    return M200Command(M200Commands.RFM_SET_GET_GATE_WORKPARAM, data, addr=BROADCAST_ADDR)
+    return M200Command(M200Commands.RFM_SET_GET_GATE_PARAM, data, addr=BROADCAST_ADDR)
 
 
 def build_set_eas_mask_command(eas_data: bytes) -> M200Command:

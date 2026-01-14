@@ -92,6 +92,10 @@ class RFIDReaderService:
         """Alias for set_network_config."""
         return await self.set_network_config(ip, subnet, gateway, port)
 
+    def send_command(self, command: M200Command) -> bytes:
+        """Alias for _send_command (for tests)."""
+        return self._send_command(command)
+
     async def connect(self) -> bool:
         """
         Connect to M-200 via TCP/IP.
