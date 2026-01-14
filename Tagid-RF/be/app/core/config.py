@@ -76,7 +76,7 @@ class Settings(BaseSettings):
     ENABLE_THEFT_DETECTION: bool = True
     ALERT_STAKEHOLDER_ROLES: List[str] = ["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"]
 
-    model_config = {"env_file": ".env", "case_sensitive": True}
+    model_config = {"env_file": ".env", "case_sensitive": True, "extra": "ignore"}
 
 
 @lru_cache()

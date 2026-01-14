@@ -37,6 +37,8 @@ async def get_db(request: Request) -> Prisma:
                     detail="Could not connect to the database.",
                 )
         return db
+    except HTTPException:
+        raise
     except AttributeError:
         logger.error(
             "State attribute missing, Prisma client likely not initialized.", exc_info=True
