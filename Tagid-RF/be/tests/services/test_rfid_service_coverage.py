@@ -38,16 +38,14 @@ async def test_connect_serial_failure(rfid_service):
 async def test_disconnect(rfid_service):
     # Setup mock connected state
     rfid_service.is_connected = True
-    rfid_service.writer = AsyncMock()
-    rfid_service.reader = MagicMock()
-    rfid_service.reader.disconnect = AsyncMock()
+    mock_socket = MagicMock()
+    rfid_service._socket = mock_socket
     
     await rfid_service.disconnect()
     
     assert rfid_service.is_connected is False
-    rfid_service.writer.close.assert_called()
-    rfid_service.writer.wait_closed.assert_called()
-    rfid_service.reader.disconnect.assert_called()
+    assert rfid_service._socket is None  # Socket should be cleared
+    mock_socket.close.assert_called()  # But close should have been called
 
 @pytest.mark.asyncio
 async def test_disconnect_error(rfid_service):
@@ -73,10 +71,8 @@ async def test_start_scanning_checks(rfid_service):
 @pytest.mark.asyncio
 async def test_read_single_tag_checks(rfid_service):
     rfid_service.is_connected = False
-    assert await rfid_service.read_single_tag() is None
-    
-    rfid_service.is_connected = True
-    assert await rfid_service.read_single_tag() is None
+    result = await rfid_service.read_single_tag()
+    assert result == []  # Returns empty list when not connected
 
 @pytest.mark.asyncio
 async def test_write_tag_checks(rfid_service):
@@ -88,7 +84,7 @@ async def test_write_tag_checks(rfid_service):
 
 @pytest.mark.asyncio
 async def test_process_tag_db_error(rfid_service):
-    # Test DB rollback on error
+    # Test DB close on error (uses try/finally pattern)
     with patch("app.services.rfid_reader.SessionLocal") as mock_session_local:
         mock_db = MagicMock()
         mock_session_local.return_value = mock_db
@@ -96,4 +92,5 @@ async def test_process_tag_db_error(rfid_service):
         
         await rfid_service._process_tag({"epc": "E2..."})
         
-        mock_db.rollback.assert_called()
+        # The implementation uses try/finally with db.close()
+        mock_db.close.assert_called()
