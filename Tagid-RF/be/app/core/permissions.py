@@ -69,7 +69,7 @@ def requires_any_role(allowed_roles: List[str]):
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Access denied. Required roles: {', '.join(allowed_roles)}",
             )
-        return None
+        return current_user
 
     return check_role
 

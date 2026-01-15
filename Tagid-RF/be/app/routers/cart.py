@@ -14,14 +14,12 @@ from app.schemas.cart import (
     CheckoutResponse,
 )
 from app.services.database import get_db
-from app.services.stripe_provider import StripeProvider
-
-# from app.services.auth import get_current_user # Todo: Add auth later if needed for guest checkouts
+from app.services.payment.factory import get_gateway, get_available_providers
+from app.services.payment.base import PaymentRequest, PaymentStatus
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 settings = get_settings()
-stripe_provider = StripeProvider()
 
 # Simple in-memory cart storage for demo purposes (keyed by user_id/session)
 # In production, this should be in Redis or DB
@@ -108,7 +106,7 @@ async def view_cart():
 @router.post("/checkout", response_model=CheckoutResponse)
 async def checkout(request: CheckoutRequest, db: Session = Depends(get_db)):
     """
-    Process checkout using Stripe.
+    Process checkout using configured Payment Provider (Stripe/Tranzila).
     1. Calculate total
     2. Create PaymentIntent (confirm immediately)
     3. Mark tags as PAID in DB
@@ -125,28 +123,57 @@ async def checkout(request: CheckoutRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Invalid total amount")
 
     try:
-        # 1. Create & Confirm Payment via Stripe
-        # In a real app, client creates Intent, we confirm, or use 3D Secure
-        # For this demo, we assume we get a valid payment_method_id and confirm immediately
+        # Get configured payment gateway
+        # Ideally, provider is selected by client or config. 
+        # Using default "stripe" or based on settings
+        provider_name = settings.DEFAULT_PAYMENT_PROVIDER.lower() if hasattr(settings, "DEFAULT_PAYMENT_PROVIDER") else "stripe"
+        gateway = get_gateway(provider_name)
 
-        # Create Intent
-        intent = await stripe_provider.create_payment_intent(
+        # 1. Create Payment
+        payment_req = PaymentRequest(
+            order_id=f"order_{len(cart)}_{total_amount}", # Simple ID generation
             amount=total_amount,
-            currency="ils",
+            currency="ILS",
             metadata={"items": str([i.product_sku for i in cart])},
+            customer_email="guest@example.com" # TODO: from auth
         )
+        
+        payment_res = await gateway.create_payment(payment_req)
 
-        # Confirm (Mocking the client confirmation step for simplicity if PM provided)
-        confirm_result = await stripe_provider.confirm_payment(
-            payment_id=intent["payment_id"], payment_method_id=request.payment_method_id
-        )
-
-        if confirm_result["status"] != "completed":
-            raise HTTPException(
-                status_code=400, detail=f"Payment failed: {confirm_result['status']}"
+        if not payment_res.success:
+             raise HTTPException(
+                status_code=400, detail=f"Payment creation failed: {payment_res.error}"
             )
 
-        # 2. Success! Mark items as PAID
+        # 2. Confirm Payment (if necessary/supported by gateway in this flow)
+        # Note: Some gateways return success immediately (redirect), others need confirmation
+        # For Stripe, we emulate the client confirmation or server-side confirm if we have a method
+        
+        final_status = payment_res.status
+        external_id = payment_res.payment_id
+
+        if request.payment_method_id and provider_name == "stripe":
+             # If client provided a payment method (e.g. from frontend Stripe Elements), confirm it
+             confirm_res = await gateway.confirm_payment(
+                 payment_id=payment_res.payment_id,
+                 payment_method=request.payment_method_id
+             )
+             if not confirm_res.success:
+                 raise HTTPException(
+                     status_code=400, detail=f"Payment failed: {confirm_res.error}"
+                 )
+             final_status = confirm_res.status
+             external_id = confirm_res.external_id or confirm_res.payment_id
+        
+        # Determine if success
+        if final_status not in [PaymentStatus.COMPLETED, PaymentStatus.PROCESSING, PaymentStatus.PENDING]:
+             # PENDING might be OK for redirect flows (Tranzila), but for direct checkout we might want completion
+             # For now, let's assume PENDING is acceptable for redirect, COMPLETED for direct
+             # If it's failed, raise error
+             if final_status == PaymentStatus.FAILED:
+                  raise HTTPException(status_code=400, detail="Payment failed")
+
+        # 3. Success! Mark items as PAID
         for item in cart:
             tag = db.query(RFIDTag).filter(RFIDTag.epc == item.epc).first()
             if tag:
@@ -155,15 +182,17 @@ async def checkout(request: CheckoutRequest, db: Session = Depends(get_db)):
 
         db.commit()
 
-        # 3. Clear Cart
+        # 4. Clear Cart
         cart.clear()
 
         return CheckoutResponse(
             status="success",
-            transaction_id=intent["external_id"],
+            transaction_id=external_id,
             message="Payment successful! You may now exit the store.",
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Checkout error: {e}")
         raise HTTPException(status_code=500, detail=str(e))

@@ -7,10 +7,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-# Mock stripe before importing cart
-with patch("app.services.stripe_provider.StripeProvider") as mock_stripe:
-    from app.routers.cart import router, FAKE_CART_DB, _calculate_summary
-    from app.schemas.cart import CartItem
+from app.routers.cart import router, FAKE_CART_DB, _calculate_summary
+from app.schemas.cart import CartItem
 
 from fastapi import FastAPI
 

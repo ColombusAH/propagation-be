@@ -81,8 +81,7 @@ class TestCartRouterLogic:
         response = client.post(f"{API_V1}/cart/add", json={"qr_data": "tagid://product/INVALID"})
         assert response.status_code == 404
 
-    @patch("app.routers.cart.stripe_provider")
-    def test_checkout_success(self, mock_stripe, override_get_db, mock_db_session):
+    def test_checkout_success(self, override_get_db, mock_db_session):
         """Test successful checkout."""
         # Setup cart
         from app.routers.cart import FAKE_CART_DB, CartItem
@@ -91,28 +90,42 @@ class TestCartRouterLogic:
             CartItem(epc="E1", product_name="P1", product_sku="S1", price_cents=1000)
         ]
 
-        # Mock Stripe
-        mock_stripe.create_payment_intent = AsyncMock(
-            return_value={"payment_id": "pi_123", "external_id": "txn_123"}
-        )
-        mock_stripe.confirm_payment = AsyncMock(return_value={"status": "completed"})
+        # Mock settings and gateway
+        with patch("app.routers.cart.settings") as mock_settings:
+            mock_settings.DEFAULT_PAYMENT_PROVIDER = "stripe"
+            
+            with patch("app.routers.cart.get_gateway") as mock_get_gateway:
+                mock_gateway = MagicMock()
+                mock_get_gateway.return_value = mock_gateway
 
-        # Mock DB tag for marking paid
-        mock_tag = MagicMock()
-        mock_db_session.query.return_value.filter.return_value.first.return_value = mock_tag
+                # Mock gateway responses
+                mock_create_res = MagicMock()
+                mock_create_res.success = True
+                mock_create_res.payment_id = "pi_123"
+                mock_create_res.status = "pending"
+                mock_gateway.create_payment = AsyncMock(return_value=mock_create_res)
 
-        response = client.post(f"{API_V1}/cart/checkout", json={"payment_method_id": "pm_card"})
+                mock_confirm_res = MagicMock()
+                mock_confirm_res.success = True
+                mock_confirm_res.status = "completed"
+                mock_confirm_res.external_id = "txn_123"
+                mock_gateway.confirm_payment = AsyncMock(return_value=mock_confirm_res)
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "success"
+                # Mock DB tag for marking paid
+                mock_tag = MagicMock()
+                mock_db_session.query.return_value.filter.return_value.first.return_value = mock_tag
 
-        # Check DB update
-        assert mock_tag.is_paid is True
-        mock_db_session.commit.assert_called()
+                response = client.post(f"{API_V1}/cart/checkout", json={"payment_method_id": "pm_card"})
 
-    @patch("app.routers.cart.stripe_provider")
-    def test_checkout_empty_cart(self, mock_stripe, override_get_db):
+                assert response.status_code == 200
+                data = response.json()
+                assert data["status"] == "success"
+
+                # Check DB update
+                assert mock_tag.is_paid is True
+                mock_db_session.commit.assert_called()
+
+    def test_checkout_empty_cart(self, override_get_db):
         """Test checkout with empty cart."""
         from app.routers.cart import FAKE_CART_DB
 

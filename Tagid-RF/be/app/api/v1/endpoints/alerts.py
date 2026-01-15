@@ -88,6 +88,53 @@ async def list_theft_alerts(
         )
 
 
+@router.get("/my-alerts", response_model=List[TheftAlertResponse])
+async def get_my_alerts(
+    unread_only: bool = Query(False),
+    limit: int = Query(50, le=100),
+    current_user=Depends(get_current_user),
+):
+    """
+    Get alerts sent to current user.
+
+    - **unread_only**: Show only unread alerts
+    - **limit**: Maximum number of results
+    """
+    try:
+        where_clause = {"userId": current_user.id}
+        if unread_only:
+            where_clause["read"] = False
+
+        recipients = await prisma_client.client.alertrecipient.find_many(
+            where=where_clause,
+            include={"theftAlert": True},
+            order_by={"sentAt": "desc"},
+            take=limit,
+        )
+
+        return [
+            TheftAlertResponse(
+                id=recipient.theftAlert.id,
+                epc=recipient.theftAlert.epc,
+                productDescription=recipient.theftAlert.productDescription,
+                detectedAt=recipient.theftAlert.detectedAt,
+                location=recipient.theftAlert.location,
+                resolved=recipient.theftAlert.resolved,
+                resolvedAt=recipient.theftAlert.resolvedAt,
+                resolvedBy=recipient.theftAlert.resolvedBy,
+                notes=recipient.theftAlert.notes,
+            )
+            for recipient in recipients
+        ]
+
+    except Exception as e:
+        logger.error(f"Error getting user alerts: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get user alerts: {str(e)}",
+        )
+
+
 @router.get("/{alert_id}", response_model=TheftAlertResponse)
 async def get_alert_details(
     alert_id: str,
@@ -150,53 +197,6 @@ async def resolve_alert(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to resolve alert: {str(e)}",
-        )
-
-
-@router.get("/my-alerts", response_model=List[TheftAlertResponse])
-async def get_my_alerts(
-    unread_only: bool = Query(False),
-    limit: int = Query(50, le=100),
-    current_user=Depends(get_current_user),
-):
-    """
-    Get alerts sent to current user.
-
-    - **unread_only**: Show only unread alerts
-    - **limit**: Maximum number of results
-    """
-    try:
-        where_clause = {"userId": current_user.id}
-        if unread_only:
-            where_clause["read"] = False
-
-        recipients = await prisma_client.client.alertrecipient.find_many(
-            where=where_clause,
-            include={"theftAlert": True},
-            order_by={"sentAt": "desc"},
-            take=limit,
-        )
-
-        return [
-            TheftAlertResponse(
-                id=recipient.theftAlert.id,
-                epc=recipient.theftAlert.epc,
-                productDescription=recipient.theftAlert.productDescription,
-                detectedAt=recipient.theftAlert.detectedAt,
-                location=recipient.theftAlert.location,
-                resolved=recipient.theftAlert.resolved,
-                resolvedAt=recipient.theftAlert.resolvedAt,
-                resolvedBy=recipient.theftAlert.resolvedBy,
-                notes=recipient.theftAlert.notes,
-            )
-            for recipient in recipients
-        ]
-
-    except Exception as e:
-        logger.error(f"Error getting user alerts: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get user alerts: {str(e)}",
         )
 
 

@@ -233,3 +233,252 @@ async def test_stripe_gateway_create_payment_error():
 
             assert result.success is False
             assert "API Error" in result.error
+
+
+# --- Additional Stripe Tests ---
+@pytest.mark.asyncio
+async def test_stripe_gateway_confirm_payment():
+    """Test StripeGateway.confirm_payment."""
+    mock_intent = MagicMock()
+    mock_intent.id = "pi_CONFIRM"
+    mock_intent.status = "succeeded"
+    
+    with patch("app.services.payment.stripe_gateway.STRIPE_AVAILABLE", True):
+        with patch("app.services.payment.stripe_gateway.stripe") as mock_stripe:
+            mock_stripe.PaymentIntent.confirm.return_value = mock_intent
+            from app.services.payment.stripe_gateway import StripeGateway
+            from app.services.payment.base import PaymentStatus
+            
+            gateway = StripeGateway(api_key="sk_test")
+            result = await gateway.confirm_payment("pi_CONFIRM")
+            
+            assert result.success is True
+            assert result.status == PaymentStatus.COMPLETED
+
+@pytest.mark.asyncio
+async def test_stripe_gateway_get_status():
+    """Test StripeGateway.get_payment_status."""
+    mock_intent = MagicMock()
+    mock_intent.id = "pi_STATUS"
+    mock_intent.status = "processing"
+    
+    with patch("app.services.payment.stripe_gateway.STRIPE_AVAILABLE", True):
+        with patch("app.services.payment.stripe_gateway.stripe") as mock_stripe:
+            mock_stripe.PaymentIntent.retrieve.return_value = mock_intent
+            from app.services.payment.stripe_gateway import StripeGateway
+            from app.services.payment.base import PaymentStatus
+            
+            gateway = StripeGateway(api_key="sk_test")
+            result = await gateway.get_payment_status("pi_STATUS")
+            
+            assert result.success is True
+            assert result.status == PaymentStatus.PROCESSING
+
+@pytest.mark.asyncio
+async def test_stripe_gateway_refund():
+    """Test StripeGateway.refund_payment."""
+    mock_refund = MagicMock()
+    mock_refund.id = "re_123"
+    
+    with patch("app.services.payment.stripe_gateway.STRIPE_AVAILABLE", True):
+        with patch("app.services.payment.stripe_gateway.stripe") as mock_stripe:
+            mock_stripe.Refund.create.return_value = mock_refund
+            from app.services.payment.stripe_gateway import StripeGateway
+            
+            gateway = StripeGateway(api_key="sk_test")
+            # Test full refund
+            result = await gateway.refund_payment("pi_REFUND")
+            assert result.success is True
+            assert result.refund_id == "re_123"
+            
+            # Test partial refund
+            await gateway.refund_payment("pi_REFUND", amount=500)
+            mock_stripe.Refund.create.assert_called_with(payment_intent="pi_REFUND", amount=500)
+
+def test_stripe_gateway_verify_webhook():
+    """Test StripeGateway.verify_webhook."""
+    with patch("app.services.payment.stripe_gateway.STRIPE_AVAILABLE", True):
+        with patch("app.services.payment.stripe_gateway.stripe") as mock_stripe:
+            mock_stripe.Webhook.construct_event.return_value = {"type": "payment_intent.succeeded"}
+            from app.services.payment.stripe_gateway import StripeGateway
+            
+            # Fail without secret
+            gateway_no_secret = StripeGateway(api_key="sk")
+            with pytest.raises(ValueError):
+                gateway_no_secret.verify_webhook(b"payload", "sig")
+                
+            # Success with secret
+            gateway = StripeGateway(api_key="sk", webhook_secret="whsec_123")
+            event = gateway.verify_webhook(b"payload", "sig")
+            assert event["type"] == "payment_intent.succeeded"
+
+
+# --- Tests for tranzila.py ---
+def test_tranzila_gateway_provider():
+    """Test TranzilaGateway provider type."""
+    from app.services.payment.tranzila import TranzilaGateway
+    from app.services.payment.base import PaymentProvider
+    
+    gateway = TranzilaGateway(terminal_name="test_term")
+    assert gateway.provider == PaymentProvider.TRANZILA
+
+@pytest.mark.asyncio
+async def test_tranzila_create_redirect():
+    """Test creating a redirect payment URL."""
+    from app.services.payment.tranzila import TranzilaGateway
+    from app.services.payment.base import PaymentRequest, PaymentStatus
+    
+    gateway = TranzilaGateway(terminal_name="test_term", terminal_password="pass")
+    request = PaymentRequest(order_id="order_tz", amount=12300, currency="ILS", return_url="http://ret")
+    
+    result = await gateway.create_payment(request)
+    
+    assert result.success is True
+    assert result.status == PaymentStatus.PENDING
+    assert "https://secure5.tranzila.com" in result.redirect_url
+    assert "sum=123.0" in result.redirect_url
+    assert "supplier=test_term" in result.redirect_url
+
+@pytest.mark.asyncio
+async def test_tranzila_create_direct_fails():
+    """Test direct payment returns specific failure."""
+    from app.services.payment.tranzila import TranzilaGateway
+    from app.services.payment.base import PaymentRequest
+    
+    gateway = TranzilaGateway(terminal_name="term", use_redirect=False)
+    request = PaymentRequest(order_id="ord", amount=100)
+    
+    result = await gateway.create_payment(request)
+    assert result.success is False
+    assert "tokenized card" in result.error
+
+@pytest.mark.asyncio
+async def test_tranzila_refund_success():
+    """Test successful refund via HTTP."""
+    from app.services.payment.tranzila import TranzilaGateway
+    
+    gateway = TranzilaGateway(terminal_name="term", terminal_password="pass")
+    
+    # Mock httpx response
+    mock_resp = MagicMock()
+    # Response=000 indicates success
+    mock_resp.text = "Response=000&ConfirmationCode=98765"
+    
+    with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
+        mock_post.return_value = mock_resp
+        
+        result = await gateway.refund_payment("pay_123", amount=500)
+        
+        assert result.success is True
+        assert result.refund_id == "98765"
+        mock_post.assert_awaited()
+
+@pytest.mark.asyncio
+async def test_tranzila_refund_failure():
+    """Test failed refund."""
+    from app.services.payment.tranzila import TranzilaGateway
+    
+    gateway = TranzilaGateway(terminal_name="term")
+    mock_resp = MagicMock()
+    mock_resp.text = "Response=001&error=Failed"
+    
+    with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
+        mock_post.return_value = mock_resp
+        result = await gateway.refund_payment("pay_123")
+        assert result.success is False
+
+def test_tranzila_verify_callback():
+    """Test callback verification logic."""
+    from app.services.payment.tranzila import TranzilaGateway
+    
+    gateway = TranzilaGateway("term")
+    
+    # Valid
+    assert gateway.verify_callback({"Response": "000", "ConfirmationCode": "123"}) is True
+    # Invalid response
+    assert gateway.verify_callback({"Response": "001", "ConfirmationCode": "123"}) is False
+    # Missing confirmation
+    assert gateway.verify_callback({"Response": "000"}) is False
+
+def test_tranzila_parse_callback():
+    """Test callback parsing."""
+    from app.services.payment.tranzila import TranzilaGateway
+    from app.services.payment.base import PaymentStatus
+    
+    gateway = TranzilaGateway("term")
+    
+    # Success case
+    params = {"Response": "000", "ConfirmationCode": "CONF123", "orderId": "ORDER1"}
+    res = gateway.parse_callback(params)
+    assert res.success is True
+    assert res.payment_id == "ORDER1"
+    assert res.external_id == "CONF123"
+    assert res.status == PaymentStatus.COMPLETED
+    
+    
+    # Failure case
+    fail_params = {"Response": "005", "orderId": "ORDER2"}
+    res_fail = gateway.parse_callback(fail_params)
+    assert res_fail.success is False
+    assert res_fail.status == PaymentStatus.FAILED
+
+# --- Error Path Tests ---
+def test_stripe_gateway_import_error():
+    """Test behavior when Stripe is not installed."""
+    with patch("app.services.payment.stripe_gateway.STRIPE_AVAILABLE", False):
+        from app.services.payment.stripe_gateway import StripeGateway
+        with pytest.raises(RuntimeError):
+            StripeGateway("key")
+
+@pytest.mark.asyncio
+async def test_stripe_gateway_confirm_error():
+    """Test Stripe gateway confirm error handling."""
+    with patch("app.services.payment.stripe_gateway.STRIPE_AVAILABLE", True):
+        with patch("app.services.payment.stripe_gateway.stripe") as mock_stripe:
+            mock_stripe.error.StripeError = Exception
+            mock_stripe.PaymentIntent.confirm.side_effect = Exception("Confirm Error")
+            from app.services.payment.stripe_gateway import StripeGateway
+            
+            gateway = StripeGateway("key")
+            result = await gateway.confirm_payment("pi_123")
+            assert result.success is False
+            assert "Confirm Error" in result.error
+
+@pytest.mark.asyncio
+async def test_stripe_gateway_status_error():
+    """Test Stripe gateway status error handling."""
+    with patch("app.services.payment.stripe_gateway.STRIPE_AVAILABLE", True):
+        with patch("app.services.payment.stripe_gateway.stripe") as mock_stripe:
+            mock_stripe.error.StripeError = Exception
+            mock_stripe.PaymentIntent.retrieve.side_effect = Exception("Status Error")
+            from app.services.payment.stripe_gateway import StripeGateway
+            
+            gateway = StripeGateway("key")
+            result = await gateway.get_payment_status("pi_123")
+            assert result.success is False
+            assert "Status Error" in result.error
+
+@pytest.mark.asyncio
+async def test_stripe_gateway_refund_exception():
+    """Test Stripe gateway refund error handling."""
+    with patch("app.services.payment.stripe_gateway.STRIPE_AVAILABLE", True):
+        with patch("app.services.payment.stripe_gateway.stripe") as mock_stripe:
+            mock_stripe.error.StripeError = Exception
+            mock_stripe.Refund.create.side_effect = Exception("Refund Error")
+            from app.services.payment.stripe_gateway import StripeGateway
+            
+            gateway = StripeGateway("key")
+            result = await gateway.refund_payment("pi_123")
+            assert result.success is False
+            assert "Refund Error" in result.error
+
+@pytest.mark.asyncio
+async def test_tranzila_refund_exception_handling():
+    """Test Tranzila refund generic exception."""
+    from app.services.payment.tranzila import TranzilaGateway
+    
+    gateway = TranzilaGateway("term")
+    with patch("httpx.AsyncClient.post", side_effect=Exception("Network Error")):
+        result = await gateway.refund_payment("pay_123")
+        assert result.success is False
+        assert "Network Error" in result.error

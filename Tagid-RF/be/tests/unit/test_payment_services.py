@@ -32,7 +32,11 @@ class TestPaymentFactory:
         # Clear cache
         factory._gateways = {}
 
-        with patch.dict(os.environ, {"STRIPE_SECRET_KEY": "sk_test_123"}):
+        # Patch the settings in the factory module
+        with patch("app.services.payment.factory.settings") as mock_settings:
+            mock_settings.STRIPE_SECRET_KEY = "sk_test_123"
+            mock_settings.STRIPE_WEBHOOK_SECRET = "whsec_123"
+            
             with patch("app.services.payment.stripe_gateway.stripe"):  # Mock stripe lib
                 g1 = factory.get_gateway("stripe")
                 g2 = factory.get_gateway("stripe")
@@ -42,7 +46,10 @@ class TestPaymentFactory:
     def test_get_gateway_tranzila(self):
         """Test creating Tranzila gateway."""
         factory._gateways = {}
-        with patch.dict(os.environ, {"TRANZILA_TERMINAL": "term1", "TRANZILA_PASSWORD": "pass"}):
+        with patch("app.services.payment.factory.settings") as mock_settings:
+            mock_settings.TRANZILA_TERMINAL_NAME = "term1"
+            mock_settings.TRANZILA_API_KEY = "pass"
+            
             g = factory.get_gateway("tranzila")
             assert g.provider == PaymentProvider.TRANZILA
 
@@ -73,7 +80,15 @@ class TestPaymentFactory:
                 factory._create_tranzila_gateway()
 
     def test_get_available_providers(self):
-        with patch.dict(os.environ, {"STRIPE_SECRET_KEY": "sk", "TRANZILA_TERMINAL": "term"}):
+        with patch("app.services.payment.factory.os.getenv") as mock_getenv:
+            def side_effect(key):
+                if key == "STRIPE_SECRET_KEY": return "sk"
+                if key == "TRANZILA_TERMINAL": return "term"
+                return None
+            mock_getenv.side_effect = side_effect
+            
+            # Re-import to ensure we're testing the logic that uses os.getenv directly if any
+            # The factory implementation of get_available_providers uses os.getenv
             providers = factory.get_available_providers()
             assert "stripe" in providers
             assert "tranzila" in providers

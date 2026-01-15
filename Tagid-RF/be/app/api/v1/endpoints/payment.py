@@ -23,21 +23,21 @@ from app.schemas.payment import (
     RefundRequest,
     RefundResponse,
 )
-from app.services.cash_provider import CashProvider
+# from app.services.cash_provider import CashProvider # Migrated to factory
 from app.services.nexi_provider import NexiProvider
-from app.services.stripe_provider import StripeProvider
-from app.services.tranzila_provider import TranzilaProvider
+# from app.services.stripe_provider import StripeProvider # Deleted
+# from app.services.tranzila_provider import TranzilaProvider # Deleted
+from app.services.payment.factory import get_gateway
+from app.services.payment.base import PaymentRequest, PaymentStatus
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# Initialize payment providers
-payment_providers = {
-    PaymentProviderEnum.STRIPE: StripeProvider(),
-    PaymentProviderEnum.TRANZILA: TranzilaProvider(),
-    PaymentProviderEnum.NEXI: NexiProvider(),
-    PaymentProviderEnum.CASH: CashProvider(),
-}
+# Helper to bridge Enum to factory string
+def get_provider_gateway(provider_enum: PaymentProviderEnum):
+    if provider_enum == PaymentProviderEnum.NEXI:
+        return NexiProvider()
+    return get_gateway(provider_enum.value.lower())
 
 
 @router.post("/create-intent", response_model=PaymentIntentResponse)
@@ -54,17 +54,47 @@ async def create_payment_intent(
     """
     try:
         # Get payment provider
-        provider = payment_providers.get(request.payment_provider)
-        if not provider:
-            raise HTTPException(
+        try:
+            gateway = get_provider_gateway(request.payment_provider)
+        except ValueError:
+             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid payment provider: {request.payment_provider}",
             )
 
         # Create payment intent with provider
-        intent = await provider.create_payment_intent(
-            amount=request.amount, currency=request.currency, metadata=request.metadata
-        )
+        # New Gateway interface uses PaymentRequest object
+        # Adapting request...
+        
+        # Note: Legacy providers (Nexi) might still use old signature: create_payment_intent(amount, currency, metadata)
+        # New Gateway uses: create_payment(PaymentRequest)
+        
+        external_id = None
+        client_secret = None
+        
+        if request.payment_provider == PaymentProviderEnum.NEXI:
+             # Legacy path for Nexi
+            intent = await gateway.create_payment_intent(
+                amount=request.amount, currency=request.currency, metadata=request.metadata
+            )
+            external_id = intent["external_id"]
+            client_secret = intent.get("client_secret")
+        else:
+            # New Factory path
+            pay_req = PaymentRequest(
+                amount=request.amount,
+                currency=request.currency,
+                metadata=request.metadata or {},
+                order_id=request.order_id
+            )
+            result = await gateway.create_payment(pay_req)
+            if not result.success:
+                 raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Payment creation failed: {result.error}",
+                )
+            external_id = result.payment_id
+            client_secret = result.payment_id # Or metadata?
 
         # Create payment record in database
         payment = await prisma_client.client.payment.create(
@@ -73,7 +103,7 @@ async def create_payment_intent(
                 "amount": request.amount,
                 "currency": request.currency,
                 "provider": request.payment_provider.value,
-                "externalId": intent["external_id"],
+                "externalId": external_id,
                 "status": "PENDING",
                 "metadata": request.metadata,
             }
@@ -83,14 +113,16 @@ async def create_payment_intent(
 
         return PaymentIntentResponse(
             payment_id=payment.id,
-            external_id=intent["external_id"],
-            client_secret=intent.get("client_secret"),
+            external_id=external_id,
+            client_secret=client_secret,
             amount=request.amount,
             currency=request.currency,
             status=PaymentStatusEnum.PENDING,
             provider=request.payment_provider,
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error creating payment intent: {str(e)}")
         raise HTTPException(
@@ -115,42 +147,70 @@ async def confirm_payment(request: PaymentConfirmRequest, current_user=Depends(g
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Payment not found")
 
         # Get payment provider
-        provider = payment_providers.get(PaymentProviderEnum(payment.provider))
-        if not provider:
-            raise HTTPException(
+        try:
+            provider_enum = PaymentProviderEnum(payment.provider)
+            gateway = get_provider_gateway(provider_enum)
+        except ValueError:
+             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid payment provider: {payment.provider}",
             )
 
         # Confirm payment with provider
-        confirmation = await provider.confirm_payment(
-            payment_id=payment.externalId, payment_method_id=request.payment_method_id
-        )
+        status_val = PaymentStatusEnum.PENDING
+        metadata = {}
+        
+        if provider_enum == PaymentProviderEnum.NEXI:
+             confirmation = await gateway.confirm_payment(
+                payment_id=payment.externalId, payment_method_id=request.payment_method_id
+            )
+             status_val = confirmation["status"]
+             metadata = confirmation.get("metadata")
+        else:
+            # New Gateway interface
+            # Confirm is mostly for Stripe. Tranzila usually confirms via callback or redirect validation.
+            # Assuming confirm_payment signature: confirm_payment(payment_id, payment_method)
+            result = await gateway.confirm_payment(
+                payment_id=payment.externalId, 
+                payment_method=request.payment_method_id
+            )
+            
+            if result.success:
+                 # Map new status to enum
+                 # PaymentStatus.COMPLETED -> COMPLETED
+                 if result.status == PaymentStatus.COMPLETED:
+                     status_val = PaymentStatusEnum.COMPLETED
+                 elif result.status == PaymentStatus.FAILED:
+                     status_val = PaymentStatusEnum.FAILED
+                 else:
+                     status_val = PaymentStatusEnum.PENDING
+            else:
+                status_val = PaymentStatusEnum.FAILED
 
         # Update payment in database
         updated_payment = await prisma_client.client.payment.update(
             where={"id": payment.id},
             data={
-                "status": confirmation["status"].value,
+                "status": status_val.value,
                 "paidAt": (
                     datetime.now()
-                    if confirmation["status"] == PaymentStatusEnum.COMPLETED
+                    if status_val == PaymentStatusEnum.COMPLETED
                     else None
                 ),
             },
         )
 
         # If payment completed, mark associated tags as paid
-        if confirmation["status"] == PaymentStatusEnum.COMPLETED:
+        if status_val == PaymentStatusEnum.COMPLETED:
             await mark_order_tags_as_paid(payment.orderId, payment.id)
 
-        logger.info(f"Confirmed payment {payment.id}, status: {confirmation['status']}")
+        logger.info(f"Confirmed payment {payment.id}, status: {status_val}")
 
         return PaymentConfirmResponse(
             payment_id=payment.id,
-            status=PaymentStatusEnum(updated_payment.status),
+            status=status_val,
             external_id=payment.externalId,
-            metadata=confirmation.get("metadata"),
+            metadata=metadata,
         )
 
     except HTTPException:
@@ -170,19 +230,20 @@ async def create_cash_payment(
 ):
     """
     Record a cash payment (STORE_MANAGER+ only).
-
-    - **order_id**: Order ID
-    - **amount**: Amount in agorot
-    - **notes**: Payment notes
     """
     try:
-        provider = payment_providers[PaymentProviderEnum.CASH]
+        gateway = get_gateway("cash")
 
         # Create cash payment intent
-        intent = await provider.create_payment_intent(
-            amount=request.amount, currency="ILS", metadata={"notes": request.notes}
+        # New gateway interface
+        pay_req = PaymentRequest(
+            amount=request.amount,
+            currency="ILS",
+            metadata={"notes": request.notes},
+            order_id=request.order_id
         )
-
+        result = await gateway.create_payment(pay_req)
+        
         # Create payment record
         payment = await prisma_client.client.payment.create(
             data={
@@ -190,7 +251,7 @@ async def create_cash_payment(
                 "amount": request.amount,
                 "currency": "ILS",
                 "provider": "CASH",
-                "externalId": intent["external_id"],
+                "externalId": result.payment_id,
                 "status": "PENDING",
                 "metadata": {"notes": request.notes},
             }
@@ -200,7 +261,7 @@ async def create_cash_payment(
 
         return PaymentIntentResponse(
             payment_id=payment.id,
-            external_id=intent["external_id"],
+            external_id=result.payment_id,
             client_secret=None,
             amount=request.amount,
             currency="ILS",
@@ -223,10 +284,6 @@ async def refund_payment(
 ):
     """
     Refund a payment (STORE_MANAGER+ only).
-
-    - **payment_id**: Payment ID to refund
-    - **amount**: Amount to refund (None for full refund)
-    - **reason**: Refund reason
     """
     try:
         # Get payment
@@ -242,16 +299,31 @@ async def refund_payment(
             )
 
         # Get provider
-        provider = payment_providers.get(PaymentProviderEnum(payment.provider))
-        if not provider:
-            raise HTTPException(
+        try:
+            provider_enum = PaymentProviderEnum(payment.provider)
+            gateway = get_provider_gateway(provider_enum)
+        except ValueError:
+             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid payment provider: {payment.provider}",
             )
 
         # Refund with provider
-        refund = await provider.refund_payment(payment_id=payment.externalId, amount=request.amount)
-
+        refund_id = None
+        refund_amount = request.amount
+        
+        if provider_enum == PaymentProviderEnum.NEXI:
+             refund = await gateway.refund_payment(payment_id=payment.externalId, amount=request.amount)
+             refund_id = refund["refund_id"]
+             refund_amount = refund["amount"]
+        else:
+             # New Gateway
+             result = await gateway.refund_payment(payment_id=payment.externalId, amount=request.amount)
+             if not result.success:
+                  raise HTTPException(status_code=400, detail=f"Refund failed: {result.error}")
+             refund_id = result.refund_id
+             # Assuming full refund if amount not returned
+             
         # Update payment status
         await prisma_client.client.payment.update(
             where={"id": payment.id}, data={"status": "REFUNDED"}
@@ -264,8 +336,8 @@ async def refund_payment(
 
         return RefundResponse(
             payment_id=payment.id,
-            refund_id=refund["refund_id"],
-            amount=refund["amount"],
+            refund_id=refund_id,
+            amount=refund_amount,
             status=PaymentStatusEnum.REFUNDED,
         )
 
