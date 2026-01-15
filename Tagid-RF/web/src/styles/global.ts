@@ -11,16 +11,33 @@ export const GlobalStyles = createGlobalStyle`
   html, body {
     height: 100%;
     width: 100%;
+    direction: rtl;
   }
 
   body {
-    font-family: ${theme.typography.fontFamily};
+    font-family: 'Heebo', ${theme.typography.fontFamily.base};
     font-size: ${theme.typography.fontSize.base};
     color: ${theme.colors.text};
-    background-color: ${theme.colors.background};
-    line-height: 1.5;
+    background-color: ${theme.colors.backgroundAlt};
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+  
+  .material-symbols-outlined {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
   }
 
   #root {

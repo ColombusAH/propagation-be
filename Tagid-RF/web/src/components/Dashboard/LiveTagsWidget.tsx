@@ -131,7 +131,7 @@ const TagItem = styled.div`
 
 const TagEPC = styled.span`
   font-family: monospace;
-  font-size: ${theme.typography.fontSize.md};
+  font-size: ${theme.typography.fontSize.base};
   font-weight: ${theme.typography.fontWeight.medium};
   color: ${theme.colors.text};
 `;

@@ -32,6 +32,10 @@ const TypeSelector = styled.div`
 `;
 
 const TypeButton = styled.button<{ $active: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   padding: ${theme.spacing.sm} ${theme.spacing.lg};
   border: 2px solid ${props => props.$active ? theme.colors.primary : theme.colors.border};
   border-radius: ${theme.borderRadius.md};

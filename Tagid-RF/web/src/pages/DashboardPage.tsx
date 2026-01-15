@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { LiveTagsWidget } from '@/components/Dashboard/LiveTagsWidget';
 import { useAuth } from '@/contexts/AuthContext';
-import { theme } from '@/styles/theme';
 
 // Professional color palette
 const colors = {
@@ -74,6 +73,10 @@ const RoleBadge = styled.span`
 `;
 
 const LogoutButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
   padding: 0.4rem 0.75rem;
   background: white;
   color: ${colors.slate};
@@ -181,15 +184,6 @@ const StatValue = styled.div`
   color: ${colors.dark};
 `;
 
-const StatTrend = styled.span<{ $positive: boolean }>`
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: ${props => props.$positive ? colors.success : colors.danger};
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  margin-top: 0.5rem;
-`;
 
 // Content Grid
 const ContentGrid = styled.div`
@@ -304,19 +298,26 @@ const ReaderTitle = styled.h3`
 const StatusIndicator = styled.div<{ $active: boolean }>`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   padding: 0.25rem 0.75rem;
   background: ${props => props.$active ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'};
   border-radius: 20px;
   font-size: 0.8rem;
+  line-height: 1;
   color: ${props => props.$active ? '#34d399' : '#f87171'};
 `;
 
 const StatusDot = styled.span<{ $active: boolean }>`
   width: 8px;
   height: 8px;
+  min-width: 8px;
+  min-height: 8px;
   border-radius: 50%;
   background: ${props => props.$active ? '#34d399' : '#f87171'};
+  display: block;
+  flex-shrink: 0;
+  align-self: center;
 `;
 
 const ReaderInfo = styled.div`
@@ -377,29 +378,26 @@ export function DashboardPage() {
   const [readerStatus, setReaderStatus] = useState({
     is_connected: false,
     is_scanning: false,
-    reader_ip: '192.168.1.200',
-    reader_port: 2023,
+    reader_ip: '',
+    reader_port: 0,
   });
 
   const [stats] = useState({
-    revenue: 15420,
-    sales: 48,
-    items: 156,
-    avgTransaction: 321,
+    revenue: 0,
+    sales: 0,
+    items: 0,
+    avgTransaction: 0,
   });
 
-  const [recentTransactions] = useState([
-    { id: 'TXN-001', amount: 450, time: '10:30' },
-    { id: 'TXN-002', amount: 280, time: '11:15' },
-    { id: 'TXN-003', amount: 620, time: '12:00' },
-    { id: 'TXN-004', amount: 150, time: '13:45' },
-  ]);
+  const [recentTransactions] = useState<{ id: string; amount: number; time: string }[]>([]);
 
   const getRoleName = (role: string) => {
     switch (role) {
-      case 'ADMIN': return 'מנהל מערכת';
-      case 'MANAGER': return 'מנהל';
-      case 'CASHIER': return 'קופאי';
+      case 'SUPER_ADMIN': return 'מנהל על';
+      case 'NETWORK_ADMIN': return 'מנהל רשת';
+      case 'STORE_MANAGER': return 'מנהל חנות';
+      case 'SELLER': return 'מוכר';
+      case 'CUSTOMER': return 'לקוח';
       default: return 'משתמש';
     }
   };
@@ -439,28 +437,28 @@ export function DashboardPage() {
 
   const quickActions = [
     {
-      icon: '🏷️',
+      icon: 'sell',
       label: 'סריקת תגים',
       desc: 'סנכרון QR ↔ UHF',
       color: colors.primary,
       onClick: () => navigate('/tag-mapping')
     },
     {
-      icon: '📡',
+      icon: 'sensors',
       label: 'הגדרות קורא',
       desc: 'עוצמה, רשת, ממסרים',
       color: colors.secondary,
       onClick: () => navigate('/reader-settings')
     },
     {
-      icon: '📊',
+      icon: 'analytics',
       label: 'דוחות עסקאות',
       desc: 'צפייה ויצוא',
       color: colors.accent,
       onClick: () => navigate('/transactions')
     },
     {
-      icon: '👥',
+      icon: 'group',
       label: 'ניהול משתמשים',
       desc: 'הרשאות ותפקידים',
       color: colors.warning,
@@ -491,7 +489,9 @@ export function DashboardPage() {
               $color={action.color}
               onClick={action.onClick}
             >
-              <ActionIcon $color={action.color}>{action.icon}</ActionIcon>
+              <ActionIcon $color={action.color}>
+                <span className="material-symbols-outlined" style={{ fontSize: 24 }}>{action.icon}</span>
+              </ActionIcon>
               <ActionText>
                 <ActionLabel>{action.label}</ActionLabel>
                 <ActionDesc>{action.desc}</ActionDesc>
@@ -505,22 +505,18 @@ export function DashboardPage() {
           <StatCard>
             <StatLabel>הכנסות היום</StatLabel>
             <StatValue>₪{stats.revenue.toLocaleString()}</StatValue>
-            <StatTrend $positive={true}>↑ 12% מאתמול</StatTrend>
           </StatCard>
           <StatCard>
             <StatLabel>מכירות</StatLabel>
             <StatValue>{stats.sales}</StatValue>
-            <StatTrend $positive={true}>↑ 8% מאתמול</StatTrend>
           </StatCard>
           <StatCard>
             <StatLabel>פריטים נמכרו</StatLabel>
             <StatValue>{stats.items}</StatValue>
-            <StatTrend $positive={false}>↓ 5% מאתמול</StatTrend>
           </StatCard>
           <StatCard>
             <StatLabel>ממוצע עסקה</StatLabel>
             <StatValue>₪{stats.avgTransaction}</StatValue>
-            <StatTrend $positive={true}>↑ 15% מאתמול</StatTrend>
           </StatCard>
         </StatsGrid>
 
@@ -529,28 +525,41 @@ export function DashboardPage() {
           {/* Transactions */}
           <Card>
             <CardHeader>
-              <CardTitle>💰 עסקאות אחרונות</CardTitle>
+              <CardTitle>
+                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>receipt_long</span>
+                עסקאות אחרונות
+              </CardTitle>
               <ViewAllLink onClick={() => navigate('/transactions')}>
-                צפה בכל →
+                ← צפה בכל
               </ViewAllLink>
             </CardHeader>
             <TransactionList>
-              {recentTransactions.map(txn => (
-                <TransactionItem key={txn.id}>
-                  <TransactionInfo>
-                    <TransactionId>{txn.id}</TransactionId>
-                    <TransactionTime>היום, {txn.time}</TransactionTime>
-                  </TransactionInfo>
-                  <TransactionAmount>+₪{txn.amount}</TransactionAmount>
-                </TransactionItem>
-              ))}
+              {recentTransactions.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: colors.slate }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 48, opacity: 0.3, display: 'block', marginBottom: '0.5rem' }}>receipt_long</span>
+                  אין עסקאות אחרונות
+                </div>
+              ) : (
+                recentTransactions.map(txn => (
+                  <TransactionItem key={txn.id}>
+                    <TransactionInfo>
+                      <TransactionId>{txn.id}</TransactionId>
+                      <TransactionTime>היום, {txn.time}</TransactionTime>
+                    </TransactionInfo>
+                    <TransactionAmount>+₪{txn.amount}</TransactionAmount>
+                  </TransactionItem>
+                ))
+              )}
             </TransactionList>
           </Card>
 
           {/* Reader Status */}
           <ReaderCard>
             <ReaderHeader>
-              <ReaderTitle>📡 קורא RFID</ReaderTitle>
+              <ReaderTitle>
+                <span className="material-symbols-outlined" style={{ fontSize: 20, marginLeft: 8 }}>sensors</span>
+                קורא RFID
+              </ReaderTitle>
               <StatusIndicator $active={readerStatus.is_connected}>
                 <StatusDot $active={readerStatus.is_connected} />
                 {readerStatus.is_connected ? 'מחובר' : 'לא מחובר'}
@@ -569,12 +578,18 @@ export function DashboardPage() {
             </ReaderInfo>
 
             <ReaderButton $variant="primary" onClick={handleStartScan}>
+              <span className="material-symbols-outlined" style={{ fontSize: 18, marginLeft: 8, verticalAlign: 'middle' }}>
+                {readerStatus.is_connected
+                  ? (readerStatus.is_scanning ? 'stop' : 'play_arrow')
+                  : 'power'}
+              </span>
               {readerStatus.is_connected
-                ? (readerStatus.is_scanning ? '⏹ עצור סריקה' : '▶ התחל סריקה')
-                : '🔌 התחבר לקורא'}
+                ? (readerStatus.is_scanning ? 'עצור סריקה' : 'התחל סריקה')
+                : 'התחבר לקורא'}
             </ReaderButton>
             <ReaderButton onClick={() => navigate('/reader-settings')}>
-              ⚙️ הגדרות מתקדמות
+              <span className="material-symbols-outlined" style={{ fontSize: 18, marginLeft: 8, verticalAlign: 'middle' }}>settings</span>
+              הגדרות מתקדמות
             </ReaderButton>
           </ReaderCard>
         </ContentGrid>

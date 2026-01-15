@@ -8,10 +8,24 @@ const Container = styled.div`
   padding: ${theme.spacing.xl};
   max-width: 1000px;
   margin: 0 auto;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: calc(100vh - 64px);
+  animation: ${theme.animations.fadeIn};
 `;
 
 const Header = styled.div`
   margin-bottom: ${theme.spacing.xl};
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  padding: ${theme.spacing.lg} ${theme.spacing.xl};
+  border-radius: ${theme.borderRadius.xl};
+  box-shadow: ${theme.shadows.lg};
+  border-right: 10px solid #1E3A8A;
+  color: white;
+  animation: ${theme.animations.slideUp};
+
+  h1, p {
+    color: white;
+  }
 `;
 
 const Title = styled.h1`
@@ -27,11 +41,13 @@ const Subtitle = styled.p`
 `;
 
 const Section = styled.section`
-  background: ${theme.colors.surface};
+  background: white;
   border: 1px solid ${theme.colors.border};
   border-radius: ${theme.borderRadius.lg};
   padding: ${theme.spacing.lg};
   margin-bottom: ${theme.spacing.lg};
+  box-shadow: ${theme.shadows.sm};
+  animation: ${theme.animations.slideUp};
 `;
 
 const SectionTitle = styled.h2`
@@ -57,17 +73,30 @@ const Label = styled.label`
 
 const Select = styled.select`
   width: 100%;
-  max-width: 300px;
+  max-width: 220px;
   padding: ${theme.spacing.sm} ${theme.spacing.md};
-  border: 1px solid ${theme.colors.border};
+  padding-left: 2.5rem;
+  border: 1px solid ${theme.colors.primary};
   border-radius: ${theme.borderRadius.md};
   font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: ${theme.colors.primary};
   background: white;
   cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='%232563EB'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 0.75rem center;
+  transition: all ${theme.transitions.fast};
+
+  &:hover {
+    box-shadow: 0 0 0 3px ${theme.colors.primary}15;
+  }
 
   &:focus {
     outline: none;
     border-color: ${theme.colors.primary};
+    box-shadow: 0 0 0 3px ${theme.colors.primary}25;
   }
 `;
 
@@ -80,9 +109,9 @@ const Th = styled.th`
   text-align: right;
   padding: ${theme.spacing.md};
   font-size: ${theme.typography.fontSize.sm};
-  font-weight: ${theme.typography.fontWeight.medium};
+  font-weight: ${theme.typography.fontWeight.semibold};
   color: ${theme.colors.textSecondary};
-  border-bottom: 1px solid ${theme.colors.border};
+  border-bottom: 2px solid ${theme.colors.border};
 
   &:not(:first-child) {
     text-align: center;
@@ -92,7 +121,7 @@ const Th = styled.th`
 
 const Td = styled.td`
   padding: ${theme.spacing.md};
-  border-bottom: 1px solid ${theme.colors.border};
+  border-bottom: 1px solid ${theme.colors.borderLight};
   
   &:not(:first-child) {
     text-align: center;
@@ -130,6 +159,7 @@ const ToggleInput = styled.input`
 
   &:checked + span {
     background-color: ${theme.colors.primary};
+    box-shadow: 0 0 10px ${theme.colors.primary}40;
   }
 
   &:checked + span:before {
@@ -143,9 +173,10 @@ const ToggleSlider = styled.span`
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
+  background-color: ${theme.colors.gray[300]};
   border-radius: 24px;
   transition: 0.3s;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
 
   &:before {
     position: absolute;
@@ -157,6 +188,7 @@ const ToggleSlider = styled.span`
     background-color: white;
     border-radius: 50%;
     transition: 0.3s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }
 `;
 
@@ -166,24 +198,34 @@ const Button = styled.button`
   border: none;
   border-radius: ${theme.borderRadius.md};
   padding: ${theme.spacing.md} ${theme.spacing.xl};
-  font-weight: ${theme.typography.fontWeight.medium};
+  font-weight: ${theme.typography.fontWeight.semibold};
   font-size: ${theme.typography.fontSize.base};
   cursor: pointer;
-  transition: background-color ${theme.transitions.fast};
+  transition: all ${theme.transitions.base};
+  box-shadow: ${theme.shadows.sm};
 
   &:hover {
     background-color: ${theme.colors.primaryDark};
+    transform: translateY(-2px);
+    box-shadow: ${theme.shadows.md};
+  }
+  
+  &:active {
+    transform: translateY(0);
   }
 `;
 
 const InfoBox = styled.div`
-  background: ${theme.colors.backgroundAlt};
+  background: white;
   border: 1px solid ${theme.colors.border};
+  border-right: 4px solid ${theme.colors.info};
   border-radius: ${theme.borderRadius.md};
   padding: ${theme.spacing.md};
   margin-bottom: ${theme.spacing.lg};
   font-size: ${theme.typography.fontSize.sm};
   color: ${theme.colors.textSecondary};
+  box-shadow: ${theme.shadows.sm};
+  animation: ${theme.animations.slideUp};
 `;
 
 interface NotificationPreference {
@@ -195,12 +237,8 @@ interface NotificationPreference {
   email: boolean;
 }
 
-// Mock stores for CHAIN_ADMIN
-const mockStores = [
+const storesList = [
   { id: 'all', name: 'כל החנויות' },
-  { id: '1', name: 'סניף תל אביב' },
-  { id: '2', name: 'סניף ירושלים' },
-  { id: '3', name: 'סניף חיפה' },
 ];
 
 // Default notification preferences
@@ -272,8 +310,8 @@ export function NotificationSettingsPage() {
   const [selectedStore, setSelectedStore] = useState('all');
   const [preferences, setPreferences] = useState<NotificationPreference[]>(defaultPreferences);
 
-  const isChainAdmin = userRole === 'ADMIN'; // CHAIN_ADMIN in new system
-  const isStaff = userRole && ['CASHIER', 'MANAGER', 'ADMIN'].includes(userRole);
+  const isChainAdmin = userRole === 'SUPER_ADMIN' || userRole === 'NETWORK_ADMIN';
+  const isStaff = userRole && ['SUPER_ADMIN', 'NETWORK_ADMIN', 'STORE_MANAGER', 'SELLER'].includes(userRole);
 
   if (!isStaff) {
     return (
@@ -324,7 +362,7 @@ export function NotificationSettingsPage() {
                 value={selectedStore}
                 onChange={(e) => setSelectedStore(e.target.value)}
               >
-                {mockStores.map(store => (
+                {storesList.map(store => (
                   <option key={store.id} value={store.id}>{store.name}</option>
                 ))}
               </Select>

@@ -1,30 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { Layout } from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { theme } from '@/styles/theme';
-
-// Professional color palette
-const colors = {
-    primary: '#1e40af',
-    success: '#059669',
-    warning: '#d97706',
-    danger: '#dc2626',
-    dark: '#1e293b',
-    slate: '#475569',
-};
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 `;
 
-// Styled Components
 const Container = styled.div`
-  padding: 2rem;
+  padding: ${theme.spacing.xl};
   max-width: 1400px;
   margin: 0 auto;
-  background: #f8fafc;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
   min-height: 100vh;
 `;
 
@@ -32,27 +21,32 @@ const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: ${theme.spacing.xl};
   animation: ${fadeIn} 0.4s ease-out;
+  background: white;
+  padding: ${theme.spacing.lg} ${theme.spacing.xl};
+  border-radius: ${theme.borderRadius.xl};
+  box-shadow: ${theme.shadows.sm};
+  border-right: 6px solid ${theme.colors.primary};
 `;
 
 const Title = styled.h1`
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: ${colors.dark};
+  font-size: ${theme.typography.fontSize['2xl']};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: ${theme.colors.text};
 `;
 
 const Subtitle = styled.p`
-  font-size: 0.95rem;
-  color: ${colors.slate};
-  margin: 0.25rem 0 0 0;
+  font-size: ${theme.typography.fontSize.sm};
+  color: ${theme.colors.textSecondary};
+  margin: ${theme.spacing.xs} 0 0 0;
 `;
 
 const Grid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  gap: ${theme.spacing.lg};
+  margin-bottom: ${theme.spacing.xl};
   animation: ${fadeIn} 0.5s ease-out;
   
   @media (max-width: 1024px) {
@@ -61,10 +55,11 @@ const Grid = styled.div`
 `;
 
 const Card = styled.div`
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 1.5rem;
+  background: ${theme.colors.surface};
+  border: 1px solid ${theme.colors.border};
+  border-radius: ${theme.borderRadius.lg};
+  padding: ${theme.spacing.lg};
+  box-shadow: ${theme.shadows.sm};
 `;
 
 const CardHeader = styled.div`
@@ -73,13 +68,13 @@ const CardHeader = styled.div`
   align-items: center;
   margin-bottom: 1.25rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid ${theme.colors.borderLight};
 `;
 
 const CardTitle = styled.h2`
   font-size: 1rem;
   font-weight: 600;
-  color: ${colors.dark};
+  color: ${theme.colors.text};
   margin: 0;
   display: flex;
   align-items: center;
@@ -87,6 +82,10 @@ const CardTitle = styled.h2`
 `;
 
 const Button = styled.button<{ $variant?: 'primary' | 'success' | 'danger' }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   padding: 0.6rem 1.25rem;
   border: none;
   border-radius: 8px;
@@ -96,9 +95,9 @@ const Button = styled.button<{ $variant?: 'primary' | 'success' | 'danger' }>`
   transition: all 0.2s;
   background: ${props => {
         switch (props.$variant) {
-            case 'success': return colors.success;
-            case 'danger': return colors.danger;
-            default: return colors.primary;
+            case 'success': return theme.colors.success;
+            case 'danger': return theme.colors.error;
+            default: return theme.colors.primary;
         }
     }};
   color: white;
@@ -114,12 +113,16 @@ const Button = styled.button<{ $variant?: 'primary' | 'success' | 'danger' }>`
 `;
 
 const SmallButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
   padding: 0.4rem 0.75rem;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
   font-size: 0.8rem;
   background: white;
-  color: ${colors.slate};
+  color: ${theme.colors.textSecondary};
   cursor: pointer;
   
   &:hover {
@@ -144,24 +147,36 @@ const StatCard = styled.div`
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 1.25rem;
+  box-shadow: ${theme.shadows.sm};
+  transition: all ${theme.transitions.base};
+  border-top: 4px solid ${theme.colors.primary};
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: ${theme.shadows.md};
+  }
 `;
 
 const StatLabel = styled.div`
-  font-size: 0.85rem;
-  color: ${colors.slate};
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: ${theme.colors.textSecondary};
   margin-bottom: 0.5rem;
 `;
 
 const StatValue = styled.div`
   font-size: 1.75rem;
   font-weight: 700;
-  color: ${colors.dark};
+  color: ${theme.colors.text};
+  letter-spacing: -0.02em;
 `;
 
 const StatTrend = styled.span<{ $positive: boolean }>`
   font-size: 0.8rem;
   font-weight: 500;
-  color: ${props => props.$positive ? colors.success : colors.danger};
+  color: ${props => props.$positive ? theme.colors.success : theme.colors.error};
   margin-top: 0.5rem;
   display: block;
 `;
@@ -187,19 +202,19 @@ const AccountInfo = styled.div``;
 
 const AccountName = styled.div`
   font-weight: 600;
-  color: ${colors.dark};
+  color: ${theme.colors.text};
 `;
 
 const AccountNumber = styled.div`
   font-size: 0.85rem;
-  color: ${colors.slate};
+  color: ${theme.colors.textSecondary};
   font-family: monospace;
 `;
 
 const AccountBalance = styled.div<{ $positive: boolean }>`
   font-size: 1.1rem;
   font-weight: 700;
-  color: ${props => props.$positive ? colors.success : colors.danger};
+  color: ${props => props.$positive ? theme.colors.success : theme.colors.error};
 `;
 
 // Transaction List
@@ -229,17 +244,17 @@ const TransactionInfo = styled.div``;
 const TransactionDesc = styled.div`
   font-weight: 500;
   font-size: 0.9rem;
-  color: ${colors.dark};
+  color: ${theme.colors.text};
 `;
 
 const TransactionMeta = styled.div`
   font-size: 0.8rem;
-  color: ${colors.slate};
+  color: ${theme.colors.textSecondary};
 `;
 
 const TransactionAmount = styled.div<{ $type: 'income' | 'expense' }>`
   font-weight: 700;
-  color: ${props => props.$type === 'income' ? colors.success : colors.danger};
+  color: ${props => props.$type === 'income' ? theme.colors.success : theme.colors.error};
 `;
 
 const StatusBadge = styled.span<{ $status: string }>`
@@ -260,7 +275,7 @@ const StatusBadge = styled.span<{ $status: string }>`
             case 'verified': return '#166534';
             case 'pending': return '#92400e';
             case 'failed': return '#991b1b';
-            default: return colors.slate;
+            default: return theme.colors.textSecondary;
         }
     }};
   margin-right: 0.5rem;
@@ -291,7 +306,7 @@ const ModalContent = styled.div`
 const ModalTitle = styled.h3`
   font-size: 1.25rem;
   font-weight: 600;
-  color: ${colors.dark};
+  color: ${theme.colors.text};
   margin: 0 0 1.5rem 0;
 `;
 
@@ -303,7 +318,7 @@ const Label = styled.label`
   display: block;
   font-size: 0.85rem;
   font-weight: 500;
-  color: ${colors.slate};
+  color: ${theme.colors.textSecondary};
   margin-bottom: 0.5rem;
 `;
 
@@ -316,7 +331,7 @@ const Input = styled.input`
   
   &:focus {
     outline: none;
-    border-color: ${colors.primary};
+    border-color: ${theme.colors.primary};
   }
 `;
 
@@ -359,36 +374,11 @@ interface Transaction {
 }
 
 export function PaymentsPage() {
-    const { userRole, token } = useAuth();
+    const { userRole } = useAuth();
     const [showAddAccount, setShowAddAccount] = useState(false);
-    const [accounts, setAccounts] = useState<BankAccount[]>([
-        {
-            id: '1',
-            name: 'חשבון ראשי',
-            bankName: 'בנק לאומי',
-            accountNumber: '12-345-678901',
-            branch: '123',
-            balance: 45680,
-            isDefault: true,
-        },
-        {
-            id: '2',
-            name: 'חשבון משני',
-            bankName: 'בנק הפועלים',
-            accountNumber: '45-678-901234',
-            branch: '456',
-            balance: 12340,
-            isDefault: false,
-        },
-    ]);
+    const [accounts, setAccounts] = useState<BankAccount[]>([]);
 
-    const [transactions] = useState<Transaction[]>([
-        { id: '1', description: 'עסקה #TXN-001', amount: 450, type: 'income', date: '2026-01-11', time: '10:30', status: 'verified', paymentMethod: 'אשראי' },
-        { id: '2', description: 'עסקה #TXN-002', amount: 280, type: 'income', date: '2026-01-11', time: '11:15', status: 'verified', paymentMethod: 'מזומן' },
-        { id: '3', description: 'עסקה #TXN-003', amount: 620, type: 'income', date: '2026-01-11', time: '12:00', status: 'pending', paymentMethod: 'אשראי' },
-        { id: '4', description: 'תשלום לספק', amount: 1200, type: 'expense', date: '2026-01-10', time: '09:00', status: 'verified', paymentMethod: 'העברה' },
-        { id: '5', description: 'עסקה #TXN-004', amount: 150, type: 'income', date: '2026-01-10', time: '14:20', status: 'failed', paymentMethod: 'אשראי' },
-    ]);
+    const [transactions] = useState<Transaction[]>([]);
 
     const [newAccount, setNewAccount] = useState({
         name: '',
@@ -399,8 +389,8 @@ export function PaymentsPage() {
 
     const stats = {
         totalBalance: accounts.reduce((sum, a) => sum + a.balance, 0),
-        monthlyIncome: 28450,
-        monthlyExpense: 8200,
+        monthlyIncome: 0,
+        monthlyExpense: 0,
         pendingVerification: transactions.filter(t => t.status === 'pending').length,
     };
 
@@ -419,17 +409,17 @@ export function PaymentsPage() {
     const handleVerifyTransaction = async (transactionId: string) => {
         // In a real app, this would call the backend API
         console.log('Verifying transaction:', transactionId);
-        alert(`עסקה ${transactionId} אומתה בהצלחה ✅`);
+        alert(`עסקה ${transactionId} אומתה בהצלחה`);
     };
 
-    const canManage = userRole === 'ADMIN' || userRole === 'MANAGER';
+    const canManage = userRole === 'SUPER_ADMIN' || userRole === 'NETWORK_ADMIN' || userRole === 'STORE_MANAGER';
 
     if (!canManage) {
         return (
             <Layout>
                 <Container>
                     <div style={{ textAlign: 'center', padding: '4rem' }}>
-                        <h2>🔒 אין הרשאה</h2>
+                        <h2>אין הרשאה</h2>
                         <p>רק מנהלים יכולים לגשת לדף זה</p>
                     </div>
                 </Container>
@@ -442,11 +432,12 @@ export function PaymentsPage() {
             <Container>
                 <Header>
                     <div>
-                        <Title>💰 ניהול תשלומים</Title>
+                        <Title>ניהול תשלומים</Title>
                         <Subtitle>חשבונות בנק, אימות עסקאות, ומעקב פיננסי</Subtitle>
                     </div>
                     <Button onClick={() => setShowAddAccount(true)}>
-                        ➕ הוסף חשבון
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
+                        הוסף חשבון
                     </Button>
                 </Header>
 
@@ -455,19 +446,19 @@ export function PaymentsPage() {
                     <StatCard>
                         <StatLabel>סה"כ יתרה</StatLabel>
                         <StatValue>₪{stats.totalBalance.toLocaleString()}</StatValue>
-                        <StatTrend $positive={true}>↑ 8% מהחודש שעבר</StatTrend>
+                        <StatTrend $positive={true}>אין נתונים להשוואה</StatTrend>
                     </StatCard>
                     <StatCard>
                         <StatLabel>הכנסות החודש</StatLabel>
-                        <StatValue style={{ color: colors.success }}>₪{stats.monthlyIncome.toLocaleString()}</StatValue>
+                        <StatValue style={{ color: theme.colors.success }}>₪{stats.monthlyIncome.toLocaleString()}</StatValue>
                     </StatCard>
                     <StatCard>
                         <StatLabel>הוצאות החודש</StatLabel>
-                        <StatValue style={{ color: colors.danger }}>₪{stats.monthlyExpense.toLocaleString()}</StatValue>
+                        <StatValue style={{ color: theme.colors.error }}>₪{stats.monthlyExpense.toLocaleString()}</StatValue>
                     </StatCard>
                     <StatCard>
                         <StatLabel>ממתינות לאימות</StatLabel>
-                        <StatValue style={{ color: colors.warning }}>{stats.pendingVerification}</StatValue>
+                        <StatValue style={{ color: theme.colors.warning }}>{stats.pendingVerification}</StatValue>
                     </StatCard>
                 </StatsGrid>
 
@@ -476,7 +467,10 @@ export function PaymentsPage() {
                     {/* Bank Accounts */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>🏦 חשבונות בנק</CardTitle>
+                            <CardTitle>
+                                <span className="material-symbols-outlined">account_balance</span>
+                                חשבונות בנק
+                            </CardTitle>
                         </CardHeader>
                         <AccountList>
                             {accounts.map(account => (
@@ -534,7 +528,7 @@ export function PaymentsPage() {
                 {showAddAccount && (
                     <Modal onClick={() => setShowAddAccount(false)}>
                         <ModalContent onClick={e => e.stopPropagation()}>
-                            <ModalTitle>➕ הוסף חשבון בנק</ModalTitle>
+                            <ModalTitle>הוסף חשבון בנק</ModalTitle>
                             <FormGroup>
                                 <Label>שם החשבון</Label>
                                 <Input

@@ -9,21 +9,31 @@ import { theme } from '@/styles/theme';
 import { useTranslation } from '@/hooks/useTranslation';
 
 const Container = styled.div`
-  padding: ${theme.spacing.lg};
   max-width: 800px;
   margin: 0 auto;
   width: 100%;
 `;
 
+const TitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: ${theme.spacing.md};
+  margin-bottom: ${theme.spacing.xl};
+`;
+
 const Title = styled.h1`
-  text-align: center;
-  margin-bottom: ${theme.spacing.lg};
+  font-size: ${theme.typography.fontSize['2xl']};
+  font-weight: ${theme.typography.fontWeight.semibold};
   color: ${theme.colors.text};
-  font-size: ${theme.typography.fontSize['3xl']};
+  margin: 0;
 `;
 
 const CameraContainer = styled.div`
   margin-bottom: ${theme.spacing.lg};
+  border-radius: ${theme.borderRadius.lg};
+  overflow: hidden;
+  border: 1px solid ${theme.colors.border};
 `;
 
 const FallbackSection = styled.div`
@@ -35,9 +45,13 @@ const FallbackSection = styled.div`
 `;
 
 const FallbackTitle = styled.h3`
-  font-size: ${theme.typography.fontSize.lg};
-  margin-bottom: ${theme.spacing.md};
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.medium};
+  margin: 0 0 ${theme.spacing.md} 0;
   color: ${theme.colors.text};
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.sm};
 `;
 
 const InputGroup = styled.div`
@@ -47,33 +61,46 @@ const InputGroup = styled.div`
 
 const Input = styled.input`
   flex: 1;
-  padding: ${theme.spacing.sm} ${theme.spacing.md};
+  padding: ${theme.spacing.md};
   border: 1px solid ${theme.colors.border};
   border-radius: ${theme.borderRadius.md};
   font-size: ${theme.typography.fontSize.base};
+  background: ${theme.colors.surface};
+  color: ${theme.colors.text};
+  transition: all ${theme.transitions.fast};
+
+  &::placeholder {
+    color: ${theme.colors.textMuted};
+  }
 
   &:focus {
     outline: none;
     border-color: ${theme.colors.primary};
+    box-shadow: ${theme.shadows.focus};
   }
 `;
 
 const Button = styled.button`
   background-color: ${theme.colors.primary};
-  color: white;
-  border: none;
-  border-radius: ${theme.borderRadius.md};
+  color: ${theme.colors.textInverse};
+  border: 1px solid ${theme.colors.primary};
+  border-radius: ${theme.borderRadius.lg};
   padding: ${theme.spacing.sm} ${theme.spacing.lg};
   font-weight: ${theme.typography.fontWeight.medium};
+  font-size: ${theme.typography.fontSize.sm};
   cursor: pointer;
-  transition: background-color ${theme.transitions.fast};
+  transition: all ${theme.transitions.fast};
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.xs};
 
   &:hover {
     background-color: ${theme.colors.primaryDark};
+    border-color: ${theme.colors.primaryDark};
   }
 
   &:disabled {
-    background-color: ${theme.colors.gray[300]};
+    opacity: 0.5;
     cursor: not-allowed;
   }
 `;
@@ -94,15 +121,16 @@ const ScanResult = styled.div<{ $type: 'product' | 'container' }>`
   bottom: ${theme.spacing.xl};
   left: 50%;
   transform: translateX(-50%);
-  background: ${props => props.$type === 'container' ? theme.colors.info : theme.colors.success};
-  color: white;
+  background: ${theme.colors.surface};
+  color: ${theme.colors.text};
   padding: ${theme.spacing.lg} ${theme.spacing.xl};
-  border-radius: ${theme.borderRadius.xl};
+  border-radius: ${theme.borderRadius.lg};
   box-shadow: ${theme.shadows.xl};
   z-index: ${theme.zIndex.modal};
   animation: ${slideUp} 0.3s ease;
-  min-width: 300px;
-  max-width: 500px;
+  min-width: 280px;
+  max-width: 450px;
+  border: 2px solid ${props => props.$type === 'container' ? theme.colors.info : theme.colors.success};
 `;
 
 const ResultHeader = styled.div`
@@ -113,31 +141,29 @@ const ResultHeader = styled.div`
 `;
 
 const ResultIcon = styled.div`
-  width: 40px;
-  height: 40px;
-  border-radius: ${theme.borderRadius.full};
-  background: rgba(255, 255, 255, 0.2);
+  width: 36px;
+  height: 36px;
+  border-radius: ${theme.borderRadius.md};
+  background: rgba(255, 255, 255, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: ${theme.typography.fontSize.xl};
-  font-weight: ${theme.typography.fontWeight.bold};
 `;
 
 const ResultTitle = styled.div`
-  font-size: ${theme.typography.fontSize.lg};
+  font-size: ${theme.typography.fontSize.base};
   font-weight: ${theme.typography.fontWeight.semibold};
 `;
 
 const ResultMessage = styled.div`
-  font-size: ${theme.typography.fontSize.base};
-  opacity: 0.95;
+  font-size: ${theme.typography.fontSize.sm};
+  opacity: 0.9;
   line-height: ${theme.typography.lineHeight.relaxed};
 `;
 
 const ProductList = styled.ul`
   margin: ${theme.spacing.sm} 0 0 0;
-  padding-left: ${theme.spacing.lg};
+  padding-right: ${theme.spacing.lg};
   list-style: disc;
 `;
 
@@ -152,6 +178,10 @@ interface ScanResultData {
   products?: string[];
 }
 
+const MaterialIcon = ({ name, size = 18 }: { name: string; size?: number }) => (
+  <span className="material-symbols-outlined" style={{ fontSize: size }}>{name}</span>
+);
+
 export function ScanPage() {
   const navigate = useNavigate();
   const {
@@ -162,7 +192,7 @@ export function ScanPage() {
     addByProductId,
     getProductById
   } = useStore();
-  const { t } = useTranslation();
+  useTranslation();
   const [manualBarcode, setManualBarcode] = useState('');
   const [scanResult, setScanResult] = useState<ScanResultData | null>(null);
   const [cameraError, setCameraError] = useState<Error | null>(null);
@@ -175,11 +205,9 @@ export function ScanPage() {
   };
 
   const handleScan = (barcode: string) => {
-    // Check if it's a container first
     if (isContainer(barcode)) {
       const container = getContainerByBarcode(barcode);
       if (container && container.products.length > 0) {
-        // Add all products from container to cart
         const productNames: string[] = [];
         container.products.forEach(({ productId, qty }) => {
           const product = getProductById(productId);
@@ -207,7 +235,6 @@ export function ScanPage() {
       return;
     }
 
-    // Regular product scan
     const success = addByBarcode(barcode);
     if (success) {
       const product = getProductByBarcode(barcode);
@@ -234,7 +261,6 @@ export function ScanPage() {
   };
 
   const handleCameraError = (error: Error) => {
-    // NotFoundException is expected when no barcode is in view - ignore it
     if (error.name === 'NotFoundException' || error.message.includes('No MultiFormat Readers')) {
       return;
     }
@@ -245,12 +271,15 @@ export function ScanPage() {
   return (
     <Layout>
       <Container>
-        <Title>סריקת ברקוד או QR</Title>
+        <TitleRow>
+          <MaterialIcon name="qr_code_scanner" size={24} />
+          <Title>סריקת ברקוד או QR</Title>
+        </TitleRow>
 
         {cameraError ? (
           <ErrorContainer>
             <EmptyState
-              icon="📷"
+              icon="photo_camera"
               title="מצלמה לא זמינה"
               message={`${cameraError.message}. אנא השתמש בהזנה ידנית או בדוק הרשאות מצלמה.`}
             />
@@ -262,7 +291,9 @@ export function ScanPage() {
         )}
 
         <FallbackSection>
-          <FallbackTitle>הזנה ידנית</FallbackTitle>
+          <FallbackTitle>
+            <MaterialIcon name="keyboard" /> הזנה ידנית
+          </FallbackTitle>
           <form onSubmit={handleManualSubmit}>
             <InputGroup>
               <Input
@@ -272,15 +303,15 @@ export function ScanPage() {
                 onChange={(e) => setManualBarcode(e.target.value)}
               />
               <Button type="submit" disabled={!manualBarcode.trim()}>
-                הוסף
+                <MaterialIcon name="add" /> הוסף
               </Button>
             </InputGroup>
           </form>
         </FallbackSection>
 
         <FallbackSection>
-          <Button onClick={() => navigate('/catalog')}>
-            עבור לקטלוג →
+          <Button onClick={() => navigate('/catalog')} style={{ width: '100%', justifyContent: 'center' }}>
+            <MaterialIcon name="inventory_2" /> עבור לקטלוג
           </Button>
         </FallbackSection>
       </Container>
@@ -288,7 +319,9 @@ export function ScanPage() {
       {scanResult && (
         <ScanResult $type={scanResult.type} role="alert" aria-live="polite">
           <ResultHeader>
-            <ResultIcon>{scanResult.type === 'container' ? 'C' : 'P'}</ResultIcon>
+            <ResultIcon>
+              <MaterialIcon name={scanResult.type === 'container' ? 'inventory' : 'check'} size={20} />
+            </ResultIcon>
             <ResultTitle>{scanResult.title}</ResultTitle>
           </ResultHeader>
           <ResultMessage>

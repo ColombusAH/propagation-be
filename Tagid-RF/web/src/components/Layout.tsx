@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import styled from 'styled-components';
 import { TopBar } from './TopBar';
+import { Sidebar } from './Sidebar';
 import { theme } from '@/styles/theme';
 
 interface LayoutProps {
@@ -15,19 +16,32 @@ const LayoutContainer = styled.div`
   background-color: ${theme.colors.background};
 `;
 
+const ContentWrapper = styled.div`
+  display: flex;
+  flex: 1;
+`;
+
 const Main = styled.main`
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding-bottom: ${theme.spacing.md};
+  padding: ${theme.spacing.lg};
+  max-width: calc(100% - 240px);
+  
+  @media (max-width: ${theme.breakpoints.tablet}) {
+    max-width: 100%;
+    padding: ${theme.spacing.md};
+  }
 `;
 
 export function Layout({ children, showNav = true }: LayoutProps) {
   return (
     <LayoutContainer>
       {showNav && <TopBar />}
-      <Main>{children}</Main>
+      <ContentWrapper>
+        {showNav && <Sidebar />}
+        <Main>{children}</Main>
+      </ContentWrapper>
     </LayoutContainer>
   );
 }
-

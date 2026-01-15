@@ -8,10 +8,17 @@ const Container = styled.div`
   padding: ${theme.spacing.xl};
   max-width: 1400px;
   margin: 0 auto;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: calc(100vh - 64px);
 `;
 
 const Header = styled.div`
   margin-bottom: ${theme.spacing.xl};
+  background: white;
+  padding: ${theme.spacing.lg} ${theme.spacing.xl};
+  border-radius: ${theme.borderRadius.xl};
+  box-shadow: ${theme.shadows.sm};
+  border-right: 6px solid ${theme.colors.primary};
 `;
 
 const Title = styled.h1`
@@ -81,6 +88,10 @@ const Actions = styled.div`
 `;
 
 const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   padding: ${theme.spacing.sm} ${theme.spacing.lg};
   background: ${props => props.$variant === 'secondary' ? theme.colors.surface : theme.colors.primary};
   color: ${props => props.$variant === 'secondary' ? theme.colors.text : 'white'};
@@ -165,17 +176,22 @@ const EmptyState = styled.div`
   text-align: center;
   padding: ${theme.spacing['3xl']};
   color: ${theme.colors.textSecondary};
+  background: ${theme.colors.surface};
+  border: 1px solid ${theme.colors.border};
+  border-radius: ${theme.borderRadius.lg};
 `;
 
-const RoleInfo = styled.div`
-  background: ${theme.colors.infoLight};
-  border: 1px solid ${theme.colors.info};
-  border-radius: ${theme.borderRadius.md};
-  padding: ${theme.spacing.md};
-  margin-bottom: ${theme.spacing.lg};
-  color: ${theme.colors.infoDark};
-  font-size: ${theme.typography.fontSize.sm};
+const EmptyIcon = styled.span`
+  font-size: 48px;
+  color: ${theme.colors.gray[400]};
+  display: block;
+  margin-bottom: ${theme.spacing.md};
 `;
+
+const MaterialIcon = ({ name, size = 20 }: { name: string; size?: number }) => (
+  <span className="material-symbols-outlined" style={{ fontSize: size }}>{name}</span>
+);
+
 
 interface Transaction {
   id: string;
@@ -204,22 +220,16 @@ export function TransactionsPage() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
-  // Mock data - replace with API call
-  const [transactions] = useState<Transaction[]>([
-    { id: 'TXN-001', date: '2026-01-07', time: '10:30', customer: 'לקוח א', amount: 450, status: 'completed', items: 3, paymentMethod: 'אשראי' },
-    { id: 'TXN-002', date: '2026-01-07', time: '11:15', customer: 'לקוח ב', amount: 280, status: 'completed', items: 2, paymentMethod: 'מזומן' },
-    { id: 'TXN-003', date: '2026-01-07', time: '12:00', customer: 'לקוח ג', amount: 620, status: 'pending', items: 5, paymentMethod: 'אשראי' },
-    { id: 'TXN-004', date: '2026-01-06', time: '13:45', customer: 'לקוח ד', amount: 150, status: 'completed', items: 1, paymentMethod: 'מזומן' },
-    { id: 'TXN-005', date: '2026-01-06', time: '14:20', customer: 'לקוח ה', amount: 890, status: 'failed', items: 4, paymentMethod: 'אשראי' },
-  ]);
+  const [transactions] = useState<Transaction[]>([]);
 
   const getRolePermissions = () => {
     switch (userRole) {
-      case 'ADMIN':
+      case 'SUPER_ADMIN':
+      case 'NETWORK_ADMIN':
         return { canExport: true, canDelete: true, canViewAll: true, canFilter: true };
-      case 'MANAGER':
+      case 'STORE_MANAGER':
         return { canExport: true, canDelete: false, canViewAll: true, canFilter: true };
-      case 'CASHIER':
+      case 'SELLER':
         return { canExport: false, canDelete: false, canViewAll: false, canFilter: false };
       default: // CUSTOMER
         return { canExport: false, canDelete: false, canViewAll: false, canFilter: false };
@@ -242,33 +252,19 @@ export function TransactionsPage() {
     alert('ייצוא ל-CSV (בפיתוח)');
   };
 
-  const getRoleMessage = () => {
-    switch (userRole) {
-      case 'ADMIN':
-        return 'מנהל מערכת: גישה מלאה לכל הטרנזקציות + ייצוא + מחיקה';
-      case 'MANAGER':
-        return 'מנהל: גישה לכל הטרנזקציות + ייצוא + פילטרים';
-      case 'CASHIER':
-        return 'קופאי: גישה לטרנזקציות של היום בלבד';
-      default:
-        return 'לקוח: גישה לטרנזקציות שלך בלבד';
-    }
-  };
-
   return (
     <Layout>
       <Container>
         <Header>
-          <Title>ניהול טרנזקציות</Title>
+          <Title style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <MaterialIcon name="receipt_long" size={28} />
+            ניהול טרנזקציות
+          </Title>
           <Subtitle>צפייה וניהול של כל העסקאות במערכת</Subtitle>
         </Header>
 
-        <RoleInfo>
-          {getRoleMessage()}
-        </RoleInfo>
-
         {/* Financial Analytics Summary */}
-        {(userRole === 'ADMIN' || userRole === 'MANAGER') && (
+        {(userRole === 'SUPER_ADMIN' || userRole === 'NETWORK_ADMIN' || userRole === 'STORE_MANAGER') && (
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
@@ -278,8 +274,12 @@ export function TransactionsPage() {
             <div style={{
               background: 'white',
               border: '1px solid #e2e8f0',
-              borderRadius: '12px',
-              padding: '1.25rem'
+              borderRadius: '16px',
+              padding: '1.5rem',
+              boxShadow: theme.shadows.sm,
+              transition: 'all 0.3s ease',
+              cursor: 'default',
+              borderTop: `4px solid ${theme.colors.primary}`
             }}>
               <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.5rem' }}>
                 סה"כ הכנסות
@@ -287,15 +287,19 @@ export function TransactionsPage() {
               <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#1e293b' }}>
                 ₪{transactions.reduce((sum, t) => t.status === 'completed' ? sum + t.amount : sum, 0).toLocaleString()}
               </div>
-              <div style={{ fontSize: '0.8rem', color: '#059669', marginTop: '0.5rem' }}>
-                ↑ 12% מהשבוע שעבר
+              <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.5rem' }}>
+                אין נתונים להשוואה
               </div>
             </div>
             <div style={{
               background: 'white',
               border: '1px solid #e2e8f0',
-              borderRadius: '12px',
-              padding: '1.25rem'
+              borderRadius: '16px',
+              padding: '1.5rem',
+              boxShadow: theme.shadows.sm,
+              transition: 'all 0.3s ease',
+              cursor: 'default',
+              borderTop: `4px solid ${theme.colors.primary}`
             }}>
               <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.5rem' }}>
                 עסקאות הושלמו
@@ -310,8 +314,12 @@ export function TransactionsPage() {
             <div style={{
               background: 'white',
               border: '1px solid #e2e8f0',
-              borderRadius: '12px',
-              padding: '1.25rem'
+              borderRadius: '16px',
+              padding: '1.5rem',
+              boxShadow: theme.shadows.sm,
+              transition: 'all 0.3s ease',
+              cursor: 'default',
+              borderTop: `4px solid ${theme.colors.primary}`
             }}>
               <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.5rem' }}>
                 ממתינות לאישור
@@ -326,8 +334,12 @@ export function TransactionsPage() {
             <div style={{
               background: 'white',
               border: '1px solid #e2e8f0',
-              borderRadius: '12px',
-              padding: '1.25rem'
+              borderRadius: '16px',
+              padding: '1.5rem',
+              boxShadow: theme.shadows.sm,
+              transition: 'all 0.3s ease',
+              cursor: 'default',
+              borderTop: `4px solid ${theme.colors.primary}`
             }}>
               <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.5rem' }}>
                 עסקאות שנכשלו
@@ -435,7 +447,11 @@ export function TransactionsPage() {
             </Tbody>
           </Table>
         ) : (
-          <EmptyState>לא נמצאו טרנזקציות</EmptyState>
+          <EmptyState>
+            <EmptyIcon><MaterialIcon name="receipt" size={48} /></EmptyIcon>
+            <div style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem', color: '#1e293b' }}>אין עסקאות במערכת</div>
+            <div>עסקאות חדשות יופיעו כאן לאחר ביצוע מכירות</div>
+          </EmptyState>
         )}
       </Container>
     </Layout>

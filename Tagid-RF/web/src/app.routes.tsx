@@ -17,6 +17,7 @@ import { QRGeneratorPage } from './pages/QRGeneratorPage';
 import { ContainerPage } from './pages/ContainerPage';
 import { TagMappingPage } from './pages/TagMappingPage';
 import ReaderSettingsPage from './pages/ReaderSettingsPage';
+import { StoreBIPage } from './pages/StoreBIPage';
 
 export function AppRoutes() {
   return (
@@ -40,6 +41,7 @@ export function AppRoutes() {
       <Route path="/containers" element={<ContainerPage />} />
       <Route path="/tag-mapping" element={<TagMappingPage />} />
       <Route path="/reader-settings" element={<ReaderSettingsPage />} />
+      <Route path="/store-bi" element={<StoreBIPage />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );

@@ -52,6 +52,9 @@ const Title = styled.h1`
 `;
 
 const StatusBadge = styled.span<{ active: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   padding: 0.4rem 1rem;
   border-radius: 6px;
   font-size: 0.85rem;
@@ -127,6 +130,10 @@ const Select = styled.select`
 `;
 
 const Button = styled.button<{ variant?: 'primary' | 'danger' | 'success' }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 8px;
@@ -183,6 +190,10 @@ const Message = styled.div<{ type: 'success' | 'error' }>`
 `;
 
 const RelayButton = styled.button<{ active: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   padding: 1rem 2rem;
   border: none;
   border-radius: 12px;
@@ -217,6 +228,10 @@ const InfoValue = styled.span`
   font-weight: 600;
   color: ${theme.colors.text};
 `;
+
+const MaterialIcon = ({ name, size = 20 }: { name: string; size?: number }) => (
+  <span className="material-symbols-outlined" style={{ fontSize: size }}>{name}</span>
+);
 
 export default function ReaderSettingsPage() {
     const { token } = useAuth();
@@ -424,9 +439,13 @@ export default function ReaderSettingsPage() {
         <Layout>
             <Container>
                 <Header>
-                    <Title>⚙️ הגדרות קורא RFID</Title>
+                    <Title style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <MaterialIcon name="settings" size={28} />
+                        הגדרות קורא RFID
+                    </Title>
                     <StatusBadge active={status?.is_connected ?? false}>
-                        {status?.is_connected ? '🟢 מחובר' : '🔴 מנותק'}
+                        <MaterialIcon name={status?.is_connected ? 'check_circle' : 'cancel'} size={16} />
+                        {' '}{status?.is_connected ? 'מחובר' : 'מנותק'}
                     </StatusBadge>
                 </Header>
 
@@ -437,7 +456,7 @@ export default function ReaderSettingsPage() {
                 <Grid>
                     {/* Connection Card */}
                     <Card>
-                        <CardTitle>🔌 חיבור</CardTitle>
+                        <CardTitle><MaterialIcon name="power" size={20} /> חיבור</CardTitle>
                         {status && (
                             <>
                                 <InfoRow>
@@ -450,26 +469,29 @@ export default function ReaderSettingsPage() {
                                 </InfoRow>
                                 <InfoRow>
                                     <InfoLabel>סריקה</InfoLabel>
-                                    <InfoValue>{status.is_scanning ? '🔄 פעיל' : '⏸️ מושהה'}</InfoValue>
+                                    <InfoValue style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <MaterialIcon name={status.is_scanning ? 'sync' : 'pause'} size={16} />
+                                        {status.is_scanning ? 'פעיל' : 'מושהה'}
+                                    </InfoValue>
                                 </InfoRow>
                             </>
                         )}
                         <ButtonGroup style={{ marginTop: '1rem' }}>
                             <Button onClick={handleConnect} disabled={loading || status?.is_connected}>
-                                🔗 התחבר
+                                <MaterialIcon name="link" size={18} /> התחבר
                             </Button>
                             <Button variant="danger" onClick={handleDisconnect} disabled={loading || !status?.is_connected}>
-                                ✂️ התנתק
+                                <MaterialIcon name="link_off" size={18} /> התנתק
                             </Button>
                             <Button onClick={handleInitialize} disabled={loading}>
-                                🔄 אתחל
+                                <MaterialIcon name="refresh" size={18} /> אתחל
                             </Button>
                         </ButtonGroup>
                     </Card>
 
                     {/* Power Card */}
                     <Card>
-                        <CardTitle>⚡ עוצמת שידור RF</CardTitle>
+                        <CardTitle><MaterialIcon name="bolt" size={20} /> עוצמת שידור RF</CardTitle>
                         <FormGroup>
                             <Label>עוצמה (dBm): <SliderValue>{power}</SliderValue></Label>
                             <Slider
@@ -485,13 +507,13 @@ export default function ReaderSettingsPage() {
                             </div>
                         </FormGroup>
                         <Button onClick={handleSetPower} disabled={loading}>
-                            💾 שמור עוצמה
+                            <MaterialIcon name="save" size={18} /> שמור עוצמה
                         </Button>
                     </Card>
 
                     {/* Buzzer/Relay Card */}
                     <Card>
-                        <CardTitle>🔔 זמזם / ממסרים</CardTitle>
+                        <CardTitle><MaterialIcon name="notifications" size={20} /> זמזם / ממסרים</CardTitle>
                         <p style={{ fontSize: '0.85rem', color: theme.colors.textSecondary, marginBottom: '1rem' }}>
                             הפעל ממסרים לשליטה בזמזם או התקנים חיצוניים
                         </p>
@@ -500,20 +522,20 @@ export default function ReaderSettingsPage() {
                                 active={relay1}
                                 onClick={() => handleRelay(1, !relay1)}
                             >
-                                ממסר 1 {relay1 ? '🟢' : '⚪'}
+                                <MaterialIcon name={relay1 ? 'toggle_on' : 'toggle_off'} size={20} /> ממסר 1
                             </RelayButton>
                             <RelayButton
                                 active={relay2}
                                 onClick={() => handleRelay(2, !relay2)}
                             >
-                                ממסר 2 {relay2 ? '🟢' : '⚪'}
+                                <MaterialIcon name={relay2 ? 'toggle_on' : 'toggle_off'} size={20} /> ממסר 2
                             </RelayButton>
                         </ButtonGroup>
                     </Card>
 
                     {/* RSSI Filter Card */}
                     <Card>
-                        <CardTitle>📶 סינון RSSI</CardTitle>
+                        <CardTitle><MaterialIcon name="signal_cellular_alt" size={20} /> סינון RSSI</CardTitle>
                         <FormGroup>
                             <Label>אנטנה</Label>
                             <Select value={rssiAntenna} onChange={(e) => setRssiAntenna(Number(e.target.value))}>
@@ -534,13 +556,13 @@ export default function ReaderSettingsPage() {
                             />
                         </FormGroup>
                         <Button onClick={handleSetRssi}>
-                            💾 שמור
+                            <MaterialIcon name="save" size={18} /> שמור
                         </Button>
                     </Card>
 
                     {/* Network Card */}
                     <Card>
-                        <CardTitle>🌐 הגדרות רשת</CardTitle>
+                        <CardTitle><MaterialIcon name="language" size={20} /> הגדרות רשת</CardTitle>
                         <FormGroup>
                             <Label>כתובת IP</Label>
                             <Input
@@ -574,13 +596,13 @@ export default function ReaderSettingsPage() {
                             />
                         </FormGroup>
                         <Button onClick={handleSetNetwork} disabled={loading}>
-                            💾 שמור הגדרות
+                            <MaterialIcon name="save" size={18} /> שמור הגדרות
                         </Button>
                     </Card>
 
                     {/* Gate Card */}
                     <Card>
-                        <CardTitle>🚪 מצב שער</CardTitle>
+                        <CardTitle><MaterialIcon name="meeting_room" size={20} /> מצב שער</CardTitle>
                         <FormGroup>
                             <Label>
                                 <input
@@ -603,7 +625,7 @@ export default function ReaderSettingsPage() {
                             />
                         </FormGroup>
                         <Button onClick={handleSetGate}>
-                            💾 שמור
+                            <MaterialIcon name="save" size={18} /> שמור
                         </Button>
                     </Card>
                 </Grid>

@@ -9,14 +9,23 @@ import { formatCurrency } from '@/lib/utils/currency';
 import { theme } from '@/styles/theme';
 
 const Container = styled.div`
-  padding: ${theme.spacing.lg};
   max-width: 800px;
   margin: 0 auto;
   width: 100%;
 `;
 
+const TitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.md};
+  margin-bottom: ${theme.spacing.xl};
+`;
+
 const Title = styled.h1`
-  margin-bottom: ${theme.spacing.lg};
+  font-size: ${theme.typography.fontSize['2xl']};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  color: ${theme.colors.text};
+  margin: 0;
 `;
 
 const CartItems = styled.div`
@@ -31,15 +40,20 @@ const CartItem = styled.div`
   display: flex;
   align-items: center;
   gap: ${theme.spacing.md};
-  padding: ${theme.spacing.md};
+  padding: ${theme.spacing.md} ${theme.spacing.lg};
   border-bottom: 1px solid ${theme.colors.border};
 
   &:last-child {
     border-bottom: none;
   }
 
+  &:nth-child(even) {
+    background: ${theme.colors.backgroundAlt};
+  }
+
   @media (max-width: ${theme.breakpoints.mobile}) {
     flex-wrap: wrap;
+    padding: ${theme.spacing.md};
   }
 `;
 
@@ -51,39 +65,43 @@ const ItemInfo = styled.div`
 const ItemName = styled.h3`
   font-size: ${theme.typography.fontSize.base};
   font-weight: ${theme.typography.fontWeight.medium};
-  margin-bottom: ${theme.spacing.xs};
+  color: ${theme.colors.text};
+  margin: 0 0 ${theme.spacing.xs} 0;
 `;
 
 const ItemPrice = styled.p`
   font-size: ${theme.typography.fontSize.sm};
   color: ${theme.colors.textSecondary};
+  margin: 0;
 `;
 
 const ItemSubtotal = styled.p`
   font-size: ${theme.typography.fontSize.lg};
   font-weight: ${theme.typography.fontWeight.semibold};
-  color: ${theme.colors.primary};
+  color: ${theme.colors.text};
   min-width: 80px;
-  text-align: right;
+  text-align: left;
+  margin: 0;
 
   @media (max-width: ${theme.breakpoints.mobile}) {
     width: 100%;
-    text-align: left;
+    text-align: right;
   }
 `;
 
 const RemoveButton = styled.button`
-  color: ${theme.colors.danger};
+  color: ${theme.colors.textMuted};
   background: none;
   border: none;
   cursor: pointer;
-  font-size: ${theme.typography.fontSize.xl};
   padding: ${theme.spacing.xs};
   line-height: 1;
-  transition: opacity ${theme.transitions.fast};
+  transition: all ${theme.transitions.fast};
+  border-radius: ${theme.borderRadius.sm};
 
   &:hover {
-    opacity: 0.7;
+    color: ${theme.colors.error};
+    background: ${theme.colors.surfaceHover};
   }
 `;
 
@@ -103,19 +121,20 @@ const SummaryRow = styled.div`
   &:last-child {
     margin-bottom: 0;
     padding-top: ${theme.spacing.md};
-    border-top: 2px solid ${theme.colors.border};
+    border-top: 1px solid ${theme.colors.border};
   }
 `;
 
 const SummaryLabel = styled.span`
   font-size: ${theme.typography.fontSize.lg};
   font-weight: ${theme.typography.fontWeight.medium};
+  color: ${theme.colors.text};
 `;
 
 const SummaryValue = styled.span`
   font-size: ${theme.typography.fontSize['2xl']};
   font-weight: ${theme.typography.fontWeight.bold};
-  color: ${theme.colors.primary};
+  color: ${theme.colors.text};
 `;
 
 const Actions = styled.div`
@@ -132,29 +151,34 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
   flex: 1;
   background-color: ${(props) =>
     props.variant === 'secondary'
-      ? theme.colors.backgroundAlt
-      : theme.colors.primary};
+      ? 'transparent'
+      : theme.colors.gray[800]};
   color: ${(props) =>
-    props.variant === 'secondary' ? theme.colors.text : 'white'};
-  border: 1px solid
-    ${(props) =>
-    props.variant === 'secondary'
-      ? theme.colors.border
-      : theme.colors.primary};
+    props.variant === 'secondary' ? theme.colors.textSecondary : theme.colors.text};
+  border: 1px solid ${theme.colors.border};
   border-radius: ${theme.borderRadius.md};
   padding: ${theme.spacing.md} ${theme.spacing.lg};
   font-weight: ${theme.typography.fontWeight.medium};
-  font-size: ${theme.typography.fontSize.base};
+  font-size: ${theme.typography.fontSize.sm};
   cursor: pointer;
   transition: all ${theme.transitions.fast};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: ${theme.spacing.sm};
 
   &:hover {
     background-color: ${(props) =>
-    props.variant === 'secondary'
-      ? theme.colors.border
-      : theme.colors.primaryDark};
+      props.variant === 'secondary'
+        ? theme.colors.surfaceHover
+        : theme.colors.gray[700]};
+    border-color: ${theme.colors.borderDark};
   }
 `;
+
+const MaterialIcon = ({ name, size = 18 }: { name: string; size?: number }) => (
+  <span className="material-symbols-outlined" style={{ fontSize: size }}>{name}</span>
+);
 
 export function CartPage() {
   const navigate = useNavigate();
@@ -174,11 +198,13 @@ export function CartPage() {
       <Layout>
         <Container>
           <EmptyState
-            icon="🛒"
+            icon="shopping_cart"
             title={t('cart.empty')}
             message={t('cart.emptyMessage')}
             action={
-              <Button onClick={() => navigate('/scan')}>{t('scan.title')}</Button>
+              <Button onClick={() => navigate('/scan')}>
+                <MaterialIcon name="qr_code_scanner" /> {t('scan.title')}
+              </Button>
             }
           />
         </Container>
@@ -189,7 +215,10 @@ export function CartPage() {
   return (
     <Layout>
       <Container>
-        <Title>{t('cart.title')}</Title>
+        <TitleRow>
+          <MaterialIcon name="shopping_cart" size={24} />
+          <Title>{t('cart.title')}</Title>
+        </TitleRow>
 
         <CartItems>
           {cartItems.map(({ product, productId, qty }) => (
@@ -207,9 +236,9 @@ export function CartPage() {
               </ItemSubtotal>
               <RemoveButton
                 onClick={() => remove(productId)}
-                aria-label="Remove item"
+                aria-label="הסר פריט"
               >
-                ×
+                <MaterialIcon name="close" size={20} />
               </RemoveButton>
             </CartItem>
           ))}
@@ -222,10 +251,10 @@ export function CartPage() {
           </SummaryRow>
           <Actions>
             <Button variant="secondary" onClick={clear}>
-              {t('cart.remove')}
+              <MaterialIcon name="delete_outline" /> {t('cart.remove')}
             </Button>
             <Button onClick={() => navigate('/checkout')}>
-              {t('cart.checkout')}
+              <MaterialIcon name="payment" /> {t('cart.checkout')}
             </Button>
           </Actions>
         </Summary>
@@ -233,4 +262,3 @@ export function CartPage() {
     </Layout>
   );
 }
-

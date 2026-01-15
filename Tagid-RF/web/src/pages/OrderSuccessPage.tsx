@@ -7,28 +7,39 @@ import { formatCurrency } from '@/lib/utils/currency';
 import { theme } from '@/styles/theme';
 
 const Container = styled.div`
-  padding: ${theme.spacing.lg};
   max-width: 600px;
   margin: 0 auto;
   width: 100%;
 `;
 
-const SuccessIcon = styled.div`
-  font-size: 80px;
+const SuccessHeader = styled.div`
   text-align: center;
-  margin-bottom: ${theme.spacing.lg};
+  margin-bottom: ${theme.spacing.xl};
+`;
+
+const SuccessIcon = styled.div`
+  width: 80px;
+  height: 80px;
+  margin: 0 auto ${theme.spacing.lg};
+  background: ${theme.colors.success};
+  border-radius: ${theme.borderRadius.full};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${theme.colors.text};
 `;
 
 const Title = styled.h1`
-  text-align: center;
-  color: ${theme.colors.success};
-  margin-bottom: ${theme.spacing.md};
+  font-size: ${theme.typography.fontSize['2xl']};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  color: ${theme.colors.text};
+  margin: 0 0 ${theme.spacing.sm} 0;
 `;
 
 const Subtitle = styled.p`
-  text-align: center;
   color: ${theme.colors.textSecondary};
-  margin-bottom: ${theme.spacing.xl};
+  margin: 0;
+  font-size: ${theme.typography.fontSize.base};
 `;
 
 const Section = styled.section`
@@ -40,8 +51,13 @@ const Section = styled.section`
 `;
 
 const SectionTitle = styled.h2`
-  font-size: ${theme.typography.fontSize.lg};
-  margin-bottom: ${theme.spacing.md};
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.medium};
+  margin: 0 0 ${theme.spacing.md} 0;
+  color: ${theme.colors.text};
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.sm};
 `;
 
 const InfoRow = styled.div`
@@ -49,9 +65,10 @@ const InfoRow = styled.div`
   justify-content: space-between;
   padding: ${theme.spacing.sm} 0;
   font-size: ${theme.typography.fontSize.sm};
+  border-bottom: 1px solid ${theme.colors.border};
 
-  &:not(:last-child) {
-    border-bottom: 1px solid ${theme.colors.border};
+  &:last-child {
+    border-bottom: none;
   }
 `;
 
@@ -76,6 +93,7 @@ const OrderItem = styled.div`
   font-size: ${theme.typography.fontSize.sm};
   padding: ${theme.spacing.sm} 0;
   border-bottom: 1px solid ${theme.colors.border};
+  color: ${theme.colors.textSecondary};
 
   &:last-child {
     border-bottom: none;
@@ -87,10 +105,10 @@ const TotalRow = styled.div`
   justify-content: space-between;
   padding-top: ${theme.spacing.md};
   margin-top: ${theme.spacing.md};
-  border-top: 2px solid ${theme.colors.border};
+  border-top: 1px solid ${theme.colors.border};
   font-size: ${theme.typography.fontSize.xl};
   font-weight: ${theme.typography.fontWeight.bold};
-  color: ${theme.colors.primary};
+  color: ${theme.colors.text};
 `;
 
 const Actions = styled.div`
@@ -101,30 +119,33 @@ const Actions = styled.div`
 
 const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
   background-color: ${(props) =>
-    props.variant === 'secondary'
-      ? theme.colors.backgroundAlt
-      : theme.colors.primary};
+    props.variant === 'secondary' ? 'transparent' : theme.colors.primary};
   color: ${(props) =>
-    props.variant === 'secondary' ? theme.colors.text : 'white'};
-  border: 1px solid
-    ${(props) =>
-      props.variant === 'secondary'
-        ? theme.colors.border
-        : theme.colors.primary};
-  border-radius: ${theme.borderRadius.md};
+    props.variant === 'secondary' ? theme.colors.primary : theme.colors.textInverse};
+  border: 1px solid ${(props) =>
+    props.variant === 'secondary' ? theme.colors.border : theme.colors.primary};
+  border-radius: ${theme.borderRadius.lg};
   padding: ${theme.spacing.md} ${theme.spacing.lg};
   font-weight: ${theme.typography.fontWeight.medium};
-  font-size: ${theme.typography.fontSize.base};
+  font-size: ${theme.typography.fontSize.sm};
   cursor: pointer;
   transition: all ${theme.transitions.fast};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: ${theme.spacing.sm};
 
   &:hover {
     background-color: ${(props) =>
-      props.variant === 'secondary'
-        ? theme.colors.border
-        : theme.colors.primaryDark};
+      props.variant === 'secondary' ? theme.colors.surfaceHover : theme.colors.primaryDark};
+    border-color: ${(props) =>
+      props.variant === 'secondary' ? theme.colors.borderDark : theme.colors.primaryDark};
   }
 `;
+
+const MaterialIcon = ({ name, size = 18 }: { name: string; size?: number }) => (
+  <span className="material-symbols-outlined" style={{ fontSize: size }}>{name}</span>
+);
 
 export function OrderSuccessPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -138,12 +159,12 @@ export function OrderSuccessPage() {
       <Layout>
         <Container>
           <EmptyState
-            icon="❓"
-            title="Order not found"
-            message="The order you're looking for doesn't exist."
+            icon="help_outline"
+            title="הזמנה לא נמצאה"
+            message="ההזמנה שאתה מחפש לא קיימת."
             action={
               <Button onClick={() => navigate('/scan')}>
-                Start New Purchase
+                <MaterialIcon name="add_shopping_cart" /> התחל רכישה חדשה
               </Button>
             }
           />
@@ -157,77 +178,86 @@ export function OrderSuccessPage() {
   return (
     <Layout>
       <Container>
-        <SuccessIcon>✓</SuccessIcon>
-        <Title>Payment Successful!</Title>
-        <Subtitle>Your order has been placed successfully.</Subtitle>
+        <SuccessHeader>
+          <SuccessIcon>
+            <MaterialIcon name="check" size={40} />
+          </SuccessIcon>
+          <Title>התשלום הצליח!</Title>
+          <Subtitle>ההזמנה שלך הושלמה בהצלחה.</Subtitle>
+        </SuccessHeader>
 
         <Section>
-          <SectionTitle>Order Details</SectionTitle>
+          <SectionTitle>
+            <MaterialIcon name="receipt" /> פרטי הזמנה
+          </SectionTitle>
           <InfoRow>
-            <Label>Order ID</Label>
-            <Value>{order.id.slice(0, 8)}...</Value>
+            <Label>מספר הזמנה</Label>
+            <Value style={{ fontFamily: theme.typography.fontFamily.mono }}>
+              #{order.id.slice(0, 8)}
+            </Value>
           </InfoRow>
           <InfoRow>
-            <Label>Date</Label>
-            <Value>{orderDate.toLocaleString()}</Value>
+            <Label>תאריך</Label>
+            <Value>{orderDate.toLocaleString('he-IL')}</Value>
           </InfoRow>
           <InfoRow>
-            <Label>Status</Label>
-            <Value>{order.status}</Value>
+            <Label>סטטוס</Label>
+            <Value style={{ color: theme.colors.success }}>
+              {order.status === 'PAID' ? 'שולם' : order.status}
+            </Value>
           </InfoRow>
         </Section>
 
         <Section>
-          <SectionTitle>Customer Information</SectionTitle>
+          <SectionTitle>
+            <MaterialIcon name="person" /> פרטי לקוח
+          </SectionTitle>
           <InfoRow>
-            <Label>Name</Label>
+            <Label>שם</Label>
             <Value>{order.customer.name}</Value>
           </InfoRow>
           <InfoRow>
-            <Label>Email</Label>
+            <Label>אימייל</Label>
             <Value>{order.customer.email}</Value>
           </InfoRow>
           {order.customer.note && (
             <InfoRow>
-              <Label>Note</Label>
+              <Label>הערות</Label>
               <Value>{order.customer.note}</Value>
             </InfoRow>
           )}
         </Section>
 
         <Section>
-          <SectionTitle>Items</SectionTitle>
+          <SectionTitle>
+            <MaterialIcon name="inventory_2" /> פריטים
+          </SectionTitle>
           <OrderItems>
             {order.items.map((item) => {
               const product = getProductById(item.productId);
               return (
                 <OrderItem key={item.productId}>
-                  <span>
-                    {product?.name || 'Unknown'} × {item.qty}
-                  </span>
-                  <span>
-                    {formatCurrency(item.priceInCents * item.qty)}
-                  </span>
+                  <span>{product?.name || 'מוצר'} × {item.qty}</span>
+                  <span>{formatCurrency(item.priceInCents * item.qty)}</span>
                 </OrderItem>
               );
             })}
           </OrderItems>
           <TotalRow>
-            <span>Total</span>
+            <span>סה"כ</span>
             <span>{formatCurrency(order.totalInCents)}</span>
           </TotalRow>
         </Section>
 
         <Actions>
           <Button onClick={() => navigate('/scan')}>
-            Start New Purchase
+            <MaterialIcon name="add_shopping_cart" /> התחל רכישה חדשה
           </Button>
           <Button variant="secondary" onClick={() => navigate('/orders')}>
-            View All Orders
+            <MaterialIcon name="list" /> כל ההזמנות
           </Button>
         </Actions>
       </Container>
     </Layout>
   );
 }
-

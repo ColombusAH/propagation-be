@@ -13,7 +13,7 @@ const Container = styled.div`
   width: 100%;
   max-width: 600px;
   margin: 0 auto;
-  background-color: ${theme.colors.text};
+  background-color: ${theme.colors.gray[800]};
   border-radius: ${theme.borderRadius.lg};
   overflow: hidden;
   aspect-ratio: 4 / 3;
@@ -23,7 +23,7 @@ const Video = styled.video`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  background-color: ${theme.colors.text};
+  background-color: ${theme.colors.gray[800]};
 `;
 
 const LoadingOverlay = styled.div`
@@ -87,6 +87,10 @@ const Controls = styled.div`
 `;
 
 const Button = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   background-color: ${theme.colors.primary};
   color: white;
   border: none;

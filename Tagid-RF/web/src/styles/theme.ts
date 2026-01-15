@@ -1,196 +1,197 @@
 /**
- * Modern Design System Theme
+ * Titanium White Enterprise Design System
  * 
- * Professional color palette with excellent contrast and readability
+ * Professional light palette with Heebo typography for Hebrew-first RTL interface
+ * RFID Management System - Enterprise Grade
  */
 
-export const theme = {
-  colors: {
-    // Primary - Subtle Professional Blue
-    primary: '#4F46E5',
-    primaryDark: '#4338CA',
-    primaryLight: '#6366F1',
-    primaryGradient: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
+import { theme as themeBase } from './theme_base';
 
-    // Accent Colors - Muted and Professional
-    accent: {
-      green: '#059669',
-      greenDark: '#047857',
-      orange: '#EA580C',
-      orangeDark: '#C2410C',
-      red: '#DC2626',
-      redDark: '#B91C1C',
-      blue: '#2563EB',
-      blueDark: '#1D4ED8',
-      purple: '#7C3AED',
-      pink: '#DB2777',
+export const lightTheme = {
+  colors: {
+    // Primary - Vibrant Royal Blue
+    primary: '#2563EB',
+    primaryDark: '#1E40AF',
+    primaryLight: '#60A5FA',
+    primaryGradient: 'linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)',
+
+    // Semantic Colors - Professional Signal Palette
+    success: '#10B981',
+    successLight: '#D1FAE5',
+    successDark: '#059669',
+    error: '#EF4444',
+    errorLight: '#FEE2E2',
+    errorDark: '#DC2626',
+    warning: '#F59E0B',
+    warningLight: '#FEF3C7',
+    warningDark: '#D97706',
+    info: '#3B82F6',
+    infoLight: '#DBEAFE',
+    infoDark: '#2563EB',
+
+    // Neutrals - Slate Scale
+    gray: {
+      50: '#F8FAFD',
+      100: '#F1F5FB',
+      200: '#E1E8F0',
+      300: '#C4CFDA',
+      400: '#9AAFC2',
+      500: '#6B7A8C',
+      600: '#475569',
+      700: '#334155',
+      800: '#1E293B',
+      900: '#1C2833',
     },
 
-    // Semantic Colors
-    success: '#059669',
-    successLight: '#D1FAE5',
-    successDark: '#047857',
-    error: '#DC2626',
-    errorLight: '#FEE2E2',
-    errorDark: '#B91C1C',
-    warning: '#EA580C',
-    warningLight: '#FED7AA',
-    warningDark: '#C2410C',
-    info: '#2563EB',
-    infoLight: '#DBEAFE',
-    infoDark: '#1D4ED8',
+    // Backgrounds - Clean White with Blue Tint
+    background: '#F0F7FF',
+    backgroundAlt: '#E6F0FF',
+    backgroundDark: '#D1E5FF',
+    surface: '#FFFFFF',
+    surfaceHover: '#F0F9FF',
+    surfaceElevated: '#FFFFFF',
 
-    // Neutrals - Gray Scale with Better Contrast
+    // Text - Professional Deep Blue
+    text: '#1E293B',
+    textSecondary: '#334155',
+    textLight: '#475569',
+    textInverse: '#FFFFFF',
+    textMuted: '#64748B',
+
+    // Borders
+    border: '#DAE1E9',
+    borderLight: '#E1E8F0',
+    borderDark: '#C4CFDA',
+    borderFocus: '#1F4E79',
+
+    // Overlays
+    overlay: 'rgba(15, 23, 42, 0.35)',
+    overlayLight: 'rgba(15, 23, 42, 0.2)',
+    overlayDark: 'rgba(15, 23, 42, 0.5)',
+
+    // Glass effects
+    glass: 'rgba(255, 255, 255, 0.95)',
+    glassDark: 'rgba(255, 255, 255, 0.98)',
+
+    // Role Badge Colors
+    roles: {
+      superAdmin: '#EF4444',
+      networkAdmin: '#8B5CF6',
+      storeManager: '#3B82F6',
+      seller: '#10B981',
+      customer: '#6B7280',
+    },
+
+    // Dark panel for special sections
+    darkPanel: '#1E293B',
+    darkPanelLight: '#334155',
+  },
+  spacing: themeBase.spacing,
+  borderRadius: themeBase.borderRadius,
+  shadows: themeBase.shadows,
+  typography: themeBase.typography,
+  transitions: themeBase.transitions,
+  animations: themeBase.animations,
+  global: themeBase.global,
+  zIndex: themeBase.zIndex,
+  breakpoints: themeBase.breakpoints,
+};
+
+export const darkTheme = {
+  colors: {
+    // Primary - Vibrant Royal Blue
+    primary: '#3B82F6',
+    primaryDark: '#2563EB',
+    primaryLight: '#60A5FA',
+    primaryGradient: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+
+    // Semantic Colors
+    success: '#10B981',
+    successLight: '#064E3B',
+    successDark: '#34D399',
+    error: '#EF4444',
+    errorLight: '#7F1D1D',
+    errorDark: '#F87171',
+    warning: '#F59E0B',
+    warningLight: '#78350F',
+    warningDark: '#FBBF24',
+    info: '#3B82F6',
+    infoLight: '#1E3A8A',
+    infoDark: '#60A5FA',
+
+    // Neutrals
     gray: {
-      50: '#F9FAFB',
-      100: '#F3F4F6',
-      200: '#E5E7EB',
-      300: '#D1D5DB',
-      400: '#9CA3AF',
-      500: '#6B7280',
-      600: '#4B5563',
-      700: '#374151',
-      800: '#1F2937',
-      900: '#111827',
+      50: '#0F172A',
+      100: '#1E293B',
+      200: '#334155',
+      300: '#475569',
+      400: '#64748B',
+      500: '#94A3B8',
+      600: '#CBD5E1',
+      700: '#E2E8F0',
+      800: '#F1F5F9',
+      900: '#F8FAFC',
     },
 
     // Backgrounds
-    background: '#FFFFFF',
-    backgroundAlt: '#F9FAFB',
-    backgroundDark: '#1F2937',
-    surface: '#FFFFFF',
-    surfaceHover: '#F9FAFB',
-    surfaceElevated: '#FFFFFF',
+    background: '#0F172A',
+    backgroundAlt: '#1E293B',
+    backgroundDark: '#020617',
+    surface: '#1E293B',
+    surfaceHover: '#334155',
+    surfaceElevated: '#1E293B',
 
-    // Text - High Contrast
-    text: '#111827',
-    textSecondary: '#4B5563',
-    textLight: '#6B7280',
-    textInverse: '#FFFFFF',
-    textMuted: '#9CA3AF',
+    // Text
+    text: '#F8FAFC',
+    textSecondary: '#CBD5E1',
+    textLight: '#94A3B8',
+    textInverse: '#0F172A',
+    textMuted: '#64748B',
 
     // Borders
-    border: '#E5E7EB',
-    borderLight: '#F3F4F6',
-    borderDark: '#D1D5DB',
-    borderFocus: '#4F46E5',
+    border: '#334155',
+    borderLight: '#1E293B',
+    borderDark: '#475569',
+    borderFocus: '#3B82F6',
 
     // Overlays
-    overlay: 'rgba(17, 24, 39, 0.5)',
-    overlayLight: 'rgba(17, 24, 39, 0.25)',
-    overlayDark: 'rgba(17, 24, 39, 0.75)',
+    overlay: 'rgba(0, 0, 0, 0.7)',
+    overlayLight: 'rgba(0, 0, 0, 0.4)',
+    overlayDark: 'rgba(0, 0, 0, 0.9)',
 
-    // Glassmorphism - Subtle
-    glass: 'rgba(255, 255, 255, 0.95)',
-    glassDark: 'rgba(31, 41, 55, 0.95)',
+    // Glass effects
+    glass: 'rgba(15, 23, 42, 0.8)',
+    glassDark: 'rgba(15, 23, 42, 0.95)',
+
+    // Role Badge Colors
+    roles: {
+      superAdmin: '#F87171',
+      networkAdmin: '#A78BFA',
+      storeManager: '#60A5FA',
+      seller: '#34D399',
+      customer: '#94A3B8',
+    },
+
+    // Dark panel for special sections
+    darkPanel: '#020617',
+    darkPanelLight: '#0F172A',
   },
-
-  spacing: {
-    xs: '0.25rem',    // 4px
-    sm: '0.5rem',     // 8px
-    md: '1rem',       // 16px
-    lg: '1.5rem',     // 24px
-    xl: '2rem',       // 32px
-    '2xl': '2.5rem',  // 40px
-    '3xl': '3rem',    // 48px
-    '4xl': '4rem',    // 64px
-  },
-
-  borderRadius: {
-    none: '0',
-    sm: '0.25rem',    // 4px
-    md: '0.5rem',     // 8px
-    lg: '0.75rem',    // 12px
-    xl: '1rem',       // 16px
-    '2xl': '1.5rem',  // 24px
-    full: '9999px',
-  },
-
+  spacing: themeBase.spacing,
+  borderRadius: themeBase.borderRadius,
   shadows: {
-    none: 'none',
-    sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-    md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-    xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-    '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-    inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
-
-    // Subtle colored shadows
-    primarySm: '0 2px 8px rgba(79, 70, 229, 0.15)',
-    primaryMd: '0 4px 16px rgba(79, 70, 229, 0.2)',
-    primaryLg: '0 8px 24px rgba(79, 70, 229, 0.25)',
+    ...themeBase.shadows,
+    sm: '0 2px 6px rgba(0, 0, 0, 0.3)',
+    md: '0 6px 16px rgba(0, 0, 0, 0.4)',
+    lg: '0 10px 28px rgba(0, 0, 0, 0.5)',
   },
+  typography: themeBase.typography,
+  transitions: themeBase.transitions,
+  animations: themeBase.animations,
+  global: themeBase.global,
+  zIndex: themeBase.zIndex,
+  breakpoints: themeBase.breakpoints,
+};
 
-  typography: {
-    fontFamily: {
-      base: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-      heading: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      mono: "'Fira Code', 'Courier New', monospace",
-    },
-    fontSize: {
-      xs: '0.75rem',      // 12px
-      sm: '0.875rem',     // 14px
-      base: '1rem',       // 16px
-      lg: '1.125rem',     // 18px
-      xl: '1.25rem',      // 20px
-      '2xl': '1.5rem',    // 24px
-      '3xl': '1.875rem',  // 30px
-      '4xl': '2.25rem',   // 36px
-      '5xl': '3rem',      // 48px
-    },
-    fontWeight: {
-      light: '300',
-      normal: '400',
-      medium: '500',
-      semibold: '600',
-      bold: '700',
-      extrabold: '800',
-    },
-    lineHeight: {
-      none: '1',
-      tight: '1.25',
-      snug: '1.375',
-      normal: '1.5',
-      relaxed: '1.625',
-      loose: '2',
-    },
-  },
-
-  breakpoints: {
-    mobile: '480px',
-    tablet: '768px',
-    desktop: '1024px',
-    wide: '1280px',
-    ultrawide: '1536px',
-  },
-
-  zIndex: {
-    toast: 10000,
-    modal: 1000,
-    overlay: 900,
-    dropdown: 800,
-    sticky: 500,
-    header: 100,
-    base: 1,
-    below: -1,
-  },
-
-  transitions: {
-    fast: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-    base: '200ms cubic-bezier(0.4, 0, 0.2, 1)',
-    slow: '300ms cubic-bezier(0.4, 0, 0.2, 1)',
-    bounce: '500ms cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-  },
-
-  effects: {
-    blur: {
-      sm: 'blur(4px)',
-      md: 'blur(8px)',
-      lg: 'blur(16px)',
-      xl: 'blur(24px)',
-    },
-    backdrop: 'blur(8px) saturate(150%)',
-  },
-} as const;
+export const theme = lightTheme;
 
 export type Theme = typeof theme;

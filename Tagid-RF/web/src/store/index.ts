@@ -27,6 +27,7 @@ export const useStore = create<StoreState>()(
         locale: state.locale,
         currency: state.currency,
         containers: state.containers,
+        darkMode: state.darkMode,
       }),
       onRehydrateStorage: () => (state) => {
         // Apply RTL direction on app load

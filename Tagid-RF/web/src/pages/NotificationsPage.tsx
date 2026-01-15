@@ -1,17 +1,30 @@
 import styled from 'styled-components';
 import { Layout } from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTranslation } from '@/hooks/useTranslation';
 import { theme } from '@/styles/theme';
 
 const Container = styled.div`
   padding: ${theme.spacing.xl};
   max-width: 900px;
   margin: 0 auto;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: calc(100vh - 64px);
+  animation: ${theme.animations.fadeIn};
 `;
 
 const Header = styled.div`
   margin-bottom: ${theme.spacing.xl};
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  padding: ${theme.spacing.lg} ${theme.spacing.xl};
+  border-radius: ${theme.borderRadius.xl};
+  box-shadow: ${theme.shadows.lg};
+  border-right: 10px solid #1E3A8A;
+  color: white;
+  animation: ${theme.animations.slideUp};
+
+  h1, p {
+    color: white;
+  }
 `;
 
 const Title = styled.h1`
@@ -33,22 +46,26 @@ const NotificationsList = styled.div`
 `;
 
 const NotificationCard = styled.div<{ $type: 'info' | 'warning' | 'success' | 'error' }>`
-  background: ${theme.colors.surface};
+  background: white;
   border: 1px solid ${theme.colors.border};
-  border-left: 4px solid ${props => {
+  border-right: 6px solid ${props => {
     switch (props.$type) {
       case 'success': return theme.colors.success;
-      case 'warning': return '#F59E0B';
+      case 'warning': return theme.colors.warning;
       case 'error': return theme.colors.error;
       default: return theme.colors.primary;
     }
   }};
   border-radius: ${theme.borderRadius.lg};
   padding: ${theme.spacing.lg};
-  transition: all ${theme.transitions.fast};
+  transition: all ${theme.transitions.base};
+  box-shadow: ${theme.shadows.sm};
+  animation: ${theme.animations.slideUp};
 
   &:hover {
+    transform: translateX(-8px);
     box-shadow: ${theme.shadows.md};
+    background: ${theme.colors.surfaceHover};
   }
 `;
 
@@ -78,27 +95,44 @@ const NotificationMessage = styled.p`
 `;
 
 const Badge = styled.span<{ $type: 'info' | 'warning' | 'success' | 'error' }>`
-  display: inline-block;
-  padding: ${theme.spacing.xs} ${theme.spacing.sm};
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: ${theme.spacing.xs} ${theme.spacing.md};
   background: ${props => {
     switch (props.$type) {
-      case 'success': return theme.colors.success;
-      case 'warning': return '#F59E0B';
-      case 'error': return theme.colors.error;
-      default: return theme.colors.primary;
+      case 'success': return theme.colors.successLight;
+      case 'warning': return theme.colors.warningLight;
+      case 'error': return theme.colors.errorLight;
+      default: return theme.colors.infoLight;
     }
   }};
-  color: white;
-  border-radius: ${theme.borderRadius.sm};
+  color: ${props => {
+    switch (props.$type) {
+      case 'success': return theme.colors.successDark;
+      case 'warning': return theme.colors.warningDark;
+      case 'error': return theme.colors.errorDark;
+      default: return theme.colors.infoDark;
+    }
+  }};
+  border: 1px solid currentColor;
+  border-radius: ${theme.borderRadius.full};
   font-size: ${theme.typography.fontSize.xs};
-  font-weight: ${theme.typography.fontWeight.medium};
+  font-weight: ${theme.typography.fontWeight.bold};
   margin-top: ${theme.spacing.sm};
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;
 
 const EmptyState = styled.div`
   text-align: center;
-  padding: ${theme.spacing['2xl']};
+  padding: ${theme.spacing['4xl']} ${theme.spacing.xl};
+  background: white;
+  border: 1px solid ${theme.colors.border};
+  border-radius: ${theme.borderRadius.xl};
   color: ${theme.colors.textSecondary};
+  box-shadow: ${theme.shadows.sm};
+  animation: ${theme.animations.fadeIn};
 `;
 
 interface Notification {
@@ -110,57 +144,7 @@ interface Notification {
   badge?: string;
 }
 
-// Mock notifications data
-const mockNotifications: Notification[] = [
-  {
-    id: '0',
-    type: 'error',
-    title: '⚠️ מוצר לא שולם ביציאה',
-    message: 'תג RFID: E200-4150-8501-2340 | מוצר: חולצה כחולה XL | מחיר: ₪189 | שער יציאה: כניסה ראשית',
-    time: 'עכשיו',
-    badge: 'אבטחה',
-  },
-  {
-    id: '1',
-    type: 'success',
-    title: 'מכירה חדשה הושלמה',
-    message: 'עסקה בסך ₪450 בוצעה בהצלחה. לקוח: יוסי כהן',
-    time: 'לפני 5 דקות',
-    badge: 'מכירה',
-  },
-  {
-    id: '2',
-    type: 'warning',
-    title: 'מלאי נמוך',
-    message: 'המוצר "חלב 3%" מגיע לסף המינימום. נותרו 5 יחידות בלבד',
-    time: 'לפני 15 דקות',
-    badge: 'מלאי',
-  },
-  {
-    id: '3',
-    type: 'info',
-    title: 'עדכון מערכת',
-    message: 'גרסה חדשה של המערכת זמינה. מומלץ לעדכן בסוף יום העבודה',
-    time: 'לפני שעה',
-    badge: 'מערכת',
-  },
-  {
-    id: '4',
-    type: 'success',
-    title: 'יעד יומי הושג',
-    message: 'מזל טוב! הגעת ליעד המכירות היומי של ₪10,000',
-    time: 'לפני 2 שעות',
-    badge: 'הישג',
-  },
-  {
-    id: '5',
-    type: 'error',
-    title: 'שגיאה בסורק',
-    message: 'סורק RFID #2 לא מגיב. נא לבדוק את החיבור',
-    time: 'לפני 3 שעות',
-    badge: 'חומרה',
-  },
-];
+const notifications: Notification[] = [];
 
 /**
  * NotificationsPage - In-app notifications for staff
@@ -168,10 +152,8 @@ const mockNotifications: Notification[] = [
  */
 export function NotificationsPage() {
   const { userRole } = useAuth();
-  const { t } = useTranslation();
 
-  // Only staff should see this page
-  const isStaff = userRole && ['CASHIER', 'MANAGER', 'ADMIN'].includes(userRole);
+  const isStaff = userRole && ['SUPER_ADMIN', 'NETWORK_ADMIN', 'STORE_MANAGER', 'SELLER'].includes(userRole);
 
   if (!isStaff) {
     return (
@@ -194,14 +176,14 @@ export function NotificationsPage() {
           <Subtitle>עדכונים מהמערכת</Subtitle>
         </Header>
 
-        {mockNotifications.length === 0 ? (
+        {notifications.length === 0 ? (
           <EmptyState>
             <p style={{ fontSize: theme.typography.fontSize.lg }}>אין התראות חדשות</p>
             <p>כל העדכונים והאלרטים יופיעו כאן</p>
           </EmptyState>
         ) : (
           <NotificationsList>
-            {mockNotifications.map((notification) => (
+            {notifications.map((notification) => (
               <NotificationCard key={notification.id} $type={notification.type}>
                 <NotificationHeader>
                   <NotificationTitle>{notification.title}</NotificationTitle>

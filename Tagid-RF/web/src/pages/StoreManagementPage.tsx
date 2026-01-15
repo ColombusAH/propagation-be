@@ -8,6 +8,9 @@ const Container = styled.div`
   padding: ${theme.spacing.xl};
   max-width: 1200px;
   margin: 0 auto;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: calc(100vh - 64px);
+  animation: ${theme.animations.fadeIn};
 `;
 
 const Header = styled.div`
@@ -17,6 +20,17 @@ const Header = styled.div`
   margin-bottom: ${theme.spacing.xl};
   flex-wrap: wrap;
   gap: ${theme.spacing.md};
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  padding: ${theme.spacing.lg} ${theme.spacing.xl};
+  border-radius: ${theme.borderRadius.xl};
+  box-shadow: ${theme.shadows.lg};
+  border-right: 10px solid #1E3A8A;
+  color: white;
+  animation: ${theme.animations.slideUp};
+
+  h1, p {
+    color: white;
+  }
 `;
 
 const HeaderLeft = styled.div``;
@@ -76,14 +90,39 @@ const StoresGrid = styled.div`
 `;
 
 const StoreCard = styled.div`
-  background: ${theme.colors.surface};
+  background: white;
   border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.borderRadius.lg};
-  padding: ${theme.spacing.lg};
-  transition: all ${theme.transitions.fast};
+  border-radius: ${theme.borderRadius.xl};
+  padding: ${theme.spacing.xl};
+  transition: all ${theme.transitions.base};
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  box-shadow: ${theme.shadows.sm};
+  animation: ${theme.animations.slideUp};
+  border-top: 4px solid ${theme.colors.primary};
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: ${theme.colors.primary}05;
+    opacity: 0;
+    transition: opacity ${theme.transitions.base};
+  }
 
   &:hover {
-    box-shadow: ${theme.shadows.md};
+    box-shadow: ${theme.shadows.xl};
+    transform: translateY(-8px);
+    border-top-width: 8px;
+    
+    &::before {
+      opacity: 1;
+    }
   }
 `;
 
@@ -102,12 +141,24 @@ const StoreName = styled.h3`
 `;
 
 const StoreStatus = styled.span<{ $active: boolean }>`
-  background: ${props => props.$active ? theme.colors.success : '#9CA3AF'};
-  color: white;
+  background: ${props => props.$active ? theme.colors.successLight : theme.colors.gray[100]};
+  color: ${props => props.$active ? theme.colors.successDark : theme.colors.gray[600]};
   padding: ${theme.spacing.xs} ${theme.spacing.sm};
+  border: 1px solid ${props => props.$active ? theme.colors.success : theme.colors.gray[300]};
   border-radius: ${theme.borderRadius.sm};
   font-size: ${theme.typography.fontSize.xs};
-  font-weight: ${theme.typography.fontWeight.medium};
+  font-weight: ${theme.typography.fontWeight.bold};
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
 `;
 
 const StoreDetails = styled.div`
@@ -242,6 +293,90 @@ const AccessDenied = styled.div`
   padding: ${theme.spacing['2xl']};
 `;
 
+const NetworkSummary = styled.div`
+  background: white;
+  border: 1px solid ${theme.colors.border};
+  border-radius: ${theme.borderRadius.xl};
+  padding: ${theme.spacing.xl};
+  margin-bottom: ${theme.spacing.xl};
+  box-shadow: ${theme.shadows.sm};
+`;
+
+const NetworkSummaryHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.sm};
+  margin-bottom: ${theme.spacing.lg};
+`;
+
+const NetworkSummaryTitle = styled.h2`
+  font-size: ${theme.typography.fontSize.xl};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  color: ${theme.colors.text};
+  margin: 0;
+`;
+
+const NetworkStatsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: ${theme.spacing.lg};
+`;
+
+const NetworkStatCard = styled.div`
+  background: white;
+  border-radius: ${theme.borderRadius.lg};
+  padding: ${theme.spacing.lg};
+  text-align: center;
+  border: 1px solid ${theme.colors.border};
+  transition: all ${theme.transitions.base};
+  box-shadow: ${theme.shadows.sm};
+  animation: ${theme.animations.scaleIn};
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: ${theme.shadows.md};
+    border-color: ${theme.colors.primary};
+  }
+`;
+
+const NetworkStatValue = styled.div`
+  font-size: ${theme.typography.fontSize['2xl']};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: ${theme.colors.primary};
+  margin-bottom: ${theme.spacing.xs};
+`;
+
+const NetworkStatLabel = styled.div`
+  font-size: ${theme.typography.fontSize.sm};
+  color: ${theme.colors.textSecondary};
+`;
+
+const EmptyState = styled.div`
+  text-align: center;
+  padding: ${theme.spacing['2xl']};
+  background: ${theme.colors.surface};
+  border: 2px dashed ${theme.colors.border};
+  border-radius: ${theme.borderRadius.lg};
+`;
+
+const EmptyStateIcon = styled.div`
+  font-size: 48px;
+  color: ${theme.colors.gray[300]};
+  margin-bottom: ${theme.spacing.md};
+`;
+
+const EmptyStateTitle = styled.div`
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  color: ${theme.colors.text};
+  margin-bottom: ${theme.spacing.sm};
+`;
+
+const EmptyStateText = styled.div`
+  color: ${theme.colors.textSecondary};
+  margin-bottom: ${theme.spacing.lg};
+`;
+
 interface Store {
     id: string;
     name: string;
@@ -257,46 +392,7 @@ interface Store {
     };
 }
 
-// Mock data
-const mockStores: Store[] = [
-    {
-        id: '1',
-        name: 'סניף תל אביב',
-        address: 'דיזנגוף 100, תל אביב',
-        phone: '03-1234567',
-        manager: 'user-1',
-        managerName: 'דני לוי',
-        isActive: true,
-        stats: { sellers: 5, todaySales: 48, monthlyRevenue: 125000 },
-    },
-    {
-        id: '2',
-        name: 'סניף ירושלים',
-        address: 'יפו 50, ירושלים',
-        phone: '02-7654321',
-        manager: 'user-2',
-        managerName: 'שרה כהן',
-        isActive: true,
-        stats: { sellers: 3, todaySales: 32, monthlyRevenue: 89000 },
-    },
-    {
-        id: '3',
-        name: 'סניף חיפה',
-        address: 'הנמל 25, חיפה',
-        phone: '04-9876543',
-        manager: null,
-        managerName: null,
-        isActive: false,
-        stats: { sellers: 0, todaySales: 0, monthlyRevenue: 0 },
-    },
-];
-
-const mockManagers = [
-    { id: 'user-1', name: 'דני לוי' },
-    { id: 'user-2', name: 'שרה כהן' },
-    { id: 'user-3', name: 'יוסי אברהם' },
-    { id: 'user-4', name: 'רונית מזרחי' },
-];
+const managers: { id: string; name: string }[] = [];
 
 /**
  * StoreManagementPage - Manage stores for chain admin
@@ -304,13 +400,13 @@ const mockManagers = [
  */
 export function StoreManagementPage() {
     const { userRole } = useAuth();
-    const [stores, setStores] = useState<Store[]>(mockStores);
+    const [stores, setStores] = useState<Store[]>([]);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showAssignModal, setShowAssignModal] = useState<string | null>(null);
     const [newStore, setNewStore] = useState({ name: '', address: '', phone: '' });
     const [selectedManager, setSelectedManager] = useState('');
 
-    const isChainAdmin = userRole === 'ADMIN';
+    const isChainAdmin = userRole === 'SUPER_ADMIN' || userRole === 'NETWORK_ADMIN';
 
     if (!isChainAdmin) {
         return (
@@ -342,13 +438,13 @@ export function StoreManagementPage() {
         setStores([...stores, store]);
         setNewStore({ name: '', address: '', phone: '' });
         setShowCreateModal(false);
-        alert('חנות נוצרה בהצלחה!');
+        alert('סניף נוצר בהצלחה!');
     };
 
     const handleAssignManager = () => {
         if (!showAssignModal || !selectedManager) return;
 
-        const manager = mockManagers.find(m => m.id === selectedManager);
+        const manager = managers.find(m => m.id === selectedManager);
         setStores(stores.map(store => {
             if (store.id === showAssignModal) {
                 return { ...store, manager: selectedManager, managerName: manager?.name || null };
@@ -370,21 +466,72 @@ export function StoreManagementPage() {
         }));
     };
 
+    const networkStats = {
+        totalStores: stores.length,
+        activeStores: stores.filter(s => s.isActive).length,
+        totalSellers: stores.reduce((acc, s) => acc + s.stats.sellers, 0),
+        todaySales: stores.reduce((acc, s) => acc + s.stats.todaySales, 0),
+        monthlyRevenue: stores.reduce((acc, s) => acc + s.stats.monthlyRevenue, 0),
+    };
+
     return (
         <Layout>
             <Container>
                 <Header>
                     <HeaderLeft>
-                        <Title>ניהול חנויות</Title>
-                        <Subtitle>צור חנויות חדשות ושייך מנהלים</Subtitle>
+                        <Title>ניהול סניפים</Title>
+                        <Subtitle>צור סניפים חדשים, שייך מנהלים וצפה בנתוני הרשת</Subtitle>
                     </HeaderLeft>
                     <Button onClick={() => setShowCreateModal(true)}>
-                        + חנות חדשה
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
+                        סניף חדש
                     </Button>
                 </Header>
 
-                <StoresGrid>
-                    {stores.map(store => (
+                <NetworkSummary>
+                    <NetworkSummaryHeader>
+                        <span className="material-symbols-outlined" style={{ fontSize: '24px', color: theme.colors.primary }}>analytics</span>
+                        <NetworkSummaryTitle>סיכום הרשת</NetworkSummaryTitle>
+                    </NetworkSummaryHeader>
+                    <NetworkStatsGrid>
+                        <NetworkStatCard>
+                            <NetworkStatValue>{networkStats.totalStores}</NetworkStatValue>
+                            <NetworkStatLabel>סה"כ סניפים</NetworkStatLabel>
+                        </NetworkStatCard>
+                        <NetworkStatCard>
+                            <NetworkStatValue>{networkStats.activeStores}</NetworkStatValue>
+                            <NetworkStatLabel>סניפים פעילים</NetworkStatLabel>
+                        </NetworkStatCard>
+                        <NetworkStatCard>
+                            <NetworkStatValue>{networkStats.totalSellers}</NetworkStatValue>
+                            <NetworkStatLabel>סה"כ מוכרים</NetworkStatLabel>
+                        </NetworkStatCard>
+                        <NetworkStatCard>
+                            <NetworkStatValue>{networkStats.todaySales}</NetworkStatValue>
+                            <NetworkStatLabel>מכירות היום</NetworkStatLabel>
+                        </NetworkStatCard>
+                        <NetworkStatCard>
+                            <NetworkStatValue>₪{(networkStats.monthlyRevenue / 1000).toFixed(0)}K</NetworkStatValue>
+                            <NetworkStatLabel>הכנסות חודשיות</NetworkStatLabel>
+                        </NetworkStatCard>
+                    </NetworkStatsGrid>
+                </NetworkSummary>
+
+                {stores.length === 0 ? (
+                    <EmptyState>
+                        <EmptyStateIcon>
+                            <span className="material-symbols-outlined" style={{ fontSize: '48px' }}>store</span>
+                        </EmptyStateIcon>
+                        <EmptyStateTitle>אין סניפים עדיין</EmptyStateTitle>
+                        <EmptyStateText>צור את הסניף הראשון שלך כדי להתחיל לנהל את הרשת</EmptyStateText>
+                        <Button onClick={() => setShowCreateModal(true)}>
+                            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
+                            צור סניף ראשון
+                        </Button>
+                    </EmptyState>
+                ) : (
+                    <StoresGrid>
+                        {stores.map(store => (
                         <StoreCard key={store.id}>
                             <StoreHeader>
                                 <StoreName>{store.name}</StoreName>
@@ -440,16 +587,17 @@ export function StoreManagementPage() {
                             </StoreActions>
                         </StoreCard>
                     ))}
-                </StoresGrid>
+                    </StoresGrid>
+                )}
 
                 {/* Create Store Modal */}
                 {showCreateModal && (
                     <Modal onClick={() => setShowCreateModal(false)}>
                         <ModalContent onClick={e => e.stopPropagation()}>
-                            <ModalTitle>יצירת חנות חדשה</ModalTitle>
+                            <ModalTitle>יצירת סניף חדש</ModalTitle>
 
                             <FormGroup>
-                                <Label>שם החנות *</Label>
+                                <Label>שם הסניף *</Label>
                                 <Input
                                     type="text"
                                     value={newStore.name}
@@ -483,7 +631,7 @@ export function StoreManagementPage() {
                                     ביטול
                                 </Button>
                                 <Button onClick={handleCreateStore} disabled={!newStore.name || !newStore.address}>
-                                    צור חנות
+                                    צור סניף
                                 </Button>
                             </ModalActions>
                         </ModalContent>
@@ -494,7 +642,7 @@ export function StoreManagementPage() {
                 {showAssignModal && (
                     <Modal onClick={() => setShowAssignModal(null)}>
                         <ModalContent onClick={e => e.stopPropagation()}>
-                            <ModalTitle>שיוך מנהל לחנות</ModalTitle>
+                            <ModalTitle>שיוך מנהל לסניף</ModalTitle>
 
                             <FormGroup>
                                 <Label>בחר מנהל</Label>
@@ -503,7 +651,7 @@ export function StoreManagementPage() {
                                     onChange={e => setSelectedManager(e.target.value)}
                                 >
                                     <option value="">בחר מנהל...</option>
-                                    {mockManagers.map(manager => (
+                                    {managers.map(manager => (
                                         <option key={manager.id} value={manager.id}>
                                             {manager.name}
                                         </option>

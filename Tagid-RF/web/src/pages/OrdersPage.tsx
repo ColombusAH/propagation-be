@@ -8,14 +8,23 @@ import { formatCurrency } from '@/lib/utils/currency';
 import { theme } from '@/styles/theme';
 
 const Container = styled.div`
-  padding: ${theme.spacing.lg};
   max-width: 800px;
   margin: 0 auto;
   width: 100%;
 `;
 
+const TitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.md};
+  margin-bottom: ${theme.spacing.xl};
+`;
+
 const Title = styled.h1`
-  margin-bottom: ${theme.spacing.lg};
+  font-size: ${theme.typography.fontSize['2xl']};
+  font-weight: ${theme.typography.fontWeight.semibold};
+  color: ${theme.colors.text};
+  margin: 0;
 `;
 
 const OrdersList = styled.div`
@@ -33,8 +42,8 @@ const OrderCard = styled.div`
   transition: all ${theme.transitions.fast};
 
   &:hover {
+    border-color: ${theme.colors.borderDark};
     box-shadow: ${theme.shadows.md};
-    border-color: ${theme.colors.primary};
   }
 `;
 
@@ -55,9 +64,10 @@ const OrderInfo = styled.div`
 `;
 
 const OrderId = styled.div`
-  font-size: ${theme.typography.fontSize.sm};
-  color: ${theme.colors.textSecondary};
+  font-size: ${theme.typography.fontSize.xs};
+  color: ${theme.colors.textMuted};
   margin-bottom: ${theme.spacing.xs};
+  font-family: ${theme.typography.fontFamily.mono};
 `;
 
 const OrderDate = styled.div`
@@ -68,11 +78,11 @@ const OrderDate = styled.div`
 const OrderTotal = styled.div`
   font-size: ${theme.typography.fontSize['2xl']};
   font-weight: ${theme.typography.fontWeight.bold};
-  color: ${theme.colors.primary};
-  text-align: right;
+  color: ${theme.colors.text};
+  text-align: left;
 
   @media (max-width: ${theme.breakpoints.mobile}) {
-    text-align: left;
+    text-align: right;
   }
 `;
 
@@ -88,9 +98,11 @@ const OrderItem = styled.div`
 `;
 
 const Status = styled.span`
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: ${theme.spacing.xs};
   background-color: ${theme.colors.success};
-  color: white;
+  color: ${theme.colors.text};
   padding: ${theme.spacing.xs} ${theme.spacing.sm};
   border-radius: ${theme.borderRadius.sm};
   font-size: ${theme.typography.fontSize.xs};
@@ -100,19 +112,28 @@ const Status = styled.span`
 
 const Button = styled.button`
   background-color: ${theme.colors.primary};
-  color: white;
-  border: none;
-  border-radius: ${theme.borderRadius.md};
+  color: ${theme.colors.textInverse};
+  border: 1px solid ${theme.colors.primary};
+  border-radius: ${theme.borderRadius.lg};
   padding: ${theme.spacing.md} ${theme.spacing.lg};
   font-weight: ${theme.typography.fontWeight.medium};
-  font-size: ${theme.typography.fontSize.base};
+  font-size: ${theme.typography.fontSize.sm};
   cursor: pointer;
-  transition: background-color ${theme.transitions.fast};
+  transition: all ${theme.transitions.fast};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: ${theme.spacing.sm};
 
   &:hover {
     background-color: ${theme.colors.primaryDark};
+    border-color: ${theme.colors.primaryDark};
   }
 `;
+
+const MaterialIcon = ({ name, size = 18 }: { name: string; size?: number }) => (
+  <span className="material-symbols-outlined" style={{ fontSize: size }}>{name}</span>
+);
 
 export function OrdersPage() {
   const navigate = useNavigate();
@@ -125,11 +146,13 @@ export function OrdersPage() {
       <Layout>
         <Container>
           <EmptyState
-            icon="📋"
+            icon="receipt_long"
             title={t('orders.empty')}
             message={t('orders.emptyMessage')}
             action={
-              <Button onClick={() => navigate('/scan')}>{t('cart.continueShopping')}</Button>
+              <Button onClick={() => navigate('/scan')}>
+                <MaterialIcon name="qr_code_scanner" /> {t('cart.continueShopping')}
+              </Button>
             }
           />
         </Container>
@@ -140,7 +163,10 @@ export function OrdersPage() {
   return (
     <Layout>
       <Container>
-        <Title>{t('orders.title')}</Title>
+        <TitleRow>
+          <MaterialIcon name="receipt_long" size={24} />
+          <Title>{t('orders.title')}</Title>
+        </TitleRow>
 
         <OrdersList>
           {orders.map((order) => {
@@ -153,8 +179,11 @@ export function OrdersPage() {
                 <OrderHeader>
                   <OrderInfo>
                     <OrderId>{t('orders.orderNumber')} #{order.id.slice(0, 8)}</OrderId>
-                    <OrderDate>{orderDate.toLocaleString()}</OrderDate>
-                    <Status>{t('orders.paid')}</Status>
+                    <OrderDate>{orderDate.toLocaleString('he-IL')}</OrderDate>
+                    <Status>
+                      <MaterialIcon name="check_circle" size={14} />
+                      {t('orders.paid')}
+                    </Status>
                   </OrderInfo>
                   <OrderTotal>
                     {formatCurrency(order.totalInCents)}
@@ -166,7 +195,7 @@ export function OrdersPage() {
                     const product = getProductById(item.productId);
                     return (
                       <OrderItem key={item.productId}>
-                        {product?.name || 'Unknown'} × {item.qty}
+                        {product?.name || 'מוצר'} × {item.qty}
                       </OrderItem>
                     );
                   })}
@@ -179,4 +208,3 @@ export function OrdersPage() {
     </Layout>
   );
 }
-

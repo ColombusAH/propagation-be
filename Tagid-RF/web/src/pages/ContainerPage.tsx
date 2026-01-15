@@ -67,6 +67,10 @@ const Input = styled.input`
 `;
 
 const Button = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   padding: ${theme.spacing.sm} ${theme.spacing.lg};
   background: ${theme.colors.primary};
   color: white;
@@ -131,6 +135,9 @@ const ActionButtons = styled.div`
 `;
 
 const IconButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: ${theme.spacing.xs} ${theme.spacing.sm};
   background: transparent;
   border: 1px solid ${theme.colors.border};
@@ -186,6 +193,17 @@ const CloseButton = styled.button`
   font-size: 24px;
   cursor: pointer;
   padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: ${theme.borderRadius.sm};
+  transition: background ${theme.transitions.fast};
+  
+  &:hover {
+    background: ${theme.colors.surfaceHover};
+  }
 `;
 
 const ProductList = styled.div`

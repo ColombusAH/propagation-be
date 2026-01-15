@@ -11,8 +11,9 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    port: 5000,
     host: true,
+    allowedHosts: true,
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
@@ -30,11 +31,6 @@ export default defineConfig({
   preview: {
     port: 5173,
     host: true,
-  },
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: './src/test/setup.ts',
   },
 });
 

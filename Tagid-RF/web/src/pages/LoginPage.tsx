@@ -2,6 +2,7 @@ import { useState } from 'react';
 import styled from 'styled-components';
 import { theme } from '@/styles/theme';
 import { slideInUp, fadeIn } from '@/styles/animations';
+import { UserRole } from '@/contexts/AuthContext';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -24,19 +25,25 @@ const LoginCard = styled.div`
 `;
 
 const Logo = styled.div`
-  text-align: center;
   width: 64px;
   height: 64px;
   margin: 0 auto ${theme.spacing.lg};
-  background: ${theme.colors.primaryGradient};
-  border-radius: ${theme.borderRadius.xl};
+  background: ${theme.colors.primary};
+  border-radius: ${theme.borderRadius.lg};
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: ${theme.typography.fontSize['3xl']};
-  font-weight: ${theme.typography.fontWeight.bold};
   color: white;
   animation: ${fadeIn} 0.8s ease-out;
+  box-shadow: ${theme.shadows.primaryMd};
+  
+  .material-symbols-outlined {
+    font-size: 32px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 `;
 
 const Title = styled.h1`
@@ -59,34 +66,41 @@ const RoleGrid = styled.div`
   grid-template-columns: repeat(2, 1fr);
   gap: ${theme.spacing.md};
   margin-bottom: ${theme.spacing.xl};
+  
+  & > *:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
 `;
 
-const RoleCard = styled.button<{ $selected: boolean; $color: string }>`
-  background: ${props => props.$selected ? props.$color : theme.colors.backgroundAlt};
-  color: ${props => props.$selected ? 'white' : theme.colors.text};
-  border: 2px solid ${props => props.$selected ? props.$color : theme.colors.border};
-  border-radius: ${theme.borderRadius.xl};
-  padding: ${theme.spacing.lg};
+const RoleCard = styled.button<{ $selected: boolean }>`
+  background: ${props => props.$selected ? theme.colors.surfaceElevated : theme.colors.surface};
+  color: ${theme.colors.text};
+  border: 1px solid ${props => props.$selected ? theme.colors.borderDark : theme.colors.border};
+  border-radius: ${theme.borderRadius.lg};
+  padding: ${theme.spacing.md} ${theme.spacing.lg};
   cursor: pointer;
   transition: all ${theme.transitions.base};
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: ${theme.spacing.sm};
+  gap: ${theme.spacing.xs};
+  box-shadow: ${props => props.$selected ? theme.shadows.md : theme.shadows.sm};
   
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: ${theme.shadows.lg};
-    border-color: ${props => props.$color};
+    background: ${theme.colors.surfaceElevated};
+    border-color: ${theme.colors.borderDark};
+    box-shadow: ${theme.shadows.md};
   }
   
   &:active {
-    transform: translateY(-2px);
+    box-shadow: ${theme.shadows.sm};
   }
 `;
 
-const RoleIcon = styled.div`
-  font-size: ${theme.typography.fontSize['3xl']};
+const RoleIcon = styled.span`
+  font-size: 28px;
+  line-height: 1;
+  color: ${theme.colors.primary};
 `;
 
 const RoleName = styled.div`
@@ -101,61 +115,68 @@ const RoleDescription = styled.div`
 `;
 
 const LoginButton = styled.button<{ $disabled: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   width: 100%;
-  padding: ${theme.spacing.lg};
-  background: ${props => props.$disabled ? theme.colors.gray[300] : theme.colors.primaryGradient};
-  color: white;
-  border: none;
-  border-radius: ${theme.borderRadius.xl};
-  font-size: ${theme.typography.fontSize.lg};
-  font-weight: ${theme.typography.fontWeight.semibold};
+  padding: ${theme.spacing.md} ${theme.spacing.lg};
+  background: ${props => props.$disabled ? theme.colors.gray[400] : theme.colors.primary};
+  color: ${theme.colors.textInverse};
+  border: 1px solid ${props => props.$disabled ? theme.colors.gray[400] : theme.colors.primary};
+  border-radius: ${theme.borderRadius.lg};
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.medium};
   cursor: ${props => props.$disabled ? 'not-allowed' : 'pointer'};
   transition: all ${theme.transitions.base};
-  box-shadow: ${props => props.$disabled ? 'none' : theme.shadows.primaryMd};
+  box-shadow: ${props => props.$disabled ? 'none' : theme.shadows.primarySm};
   
   &:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: ${theme.shadows.primaryLg};
+    background: ${theme.colors.primaryDark};
+    border-color: ${theme.colors.primaryDark};
+    box-shadow: ${theme.shadows.primaryMd};
   }
   
   &:active:not(:disabled) {
-    transform: translateY(0);
+    box-shadow: ${theme.shadows.sm};
   }
 `;
 
-const roles = [
+const roles: { id: UserRole; name: string; icon: string; description: string }[] = [
+  {
+    id: 'SUPER_ADMIN',
+    name: 'מנהל על',
+    icon: 'admin_panel_settings',
+    description: 'הרשאות מלאות + רשתות',
+  },
+  {
+    id: 'NETWORK_ADMIN',
+    name: 'מנהל רשת',
+    icon: 'hub',
+    description: 'ניהול רשת חנויות',
+  },
+  {
+    id: 'STORE_MANAGER',
+    name: 'מנהל חנות',
+    icon: 'store',
+    description: 'ניהול חנות בודדת',
+  },
+  {
+    id: 'SELLER',
+    name: 'מוכר',
+    icon: 'point_of_sale',
+    description: 'סריקה ותשלום',
+  },
   {
     id: 'CUSTOMER',
     name: 'לקוח',
-    icon: 'C',
-    description: 'קניות ועגלה',
-    color: '#6B7280', // Gray
-  },
-  {
-    id: 'CASHIER',
-    name: 'קופאי',
-    icon: 'K',
-    description: 'סריקה ותשלום',
-    color: '#059669', // Green
-  },
-  {
-    id: 'MANAGER',
-    name: 'מנהל',
-    icon: 'M',
-    description: 'דוחות וניהול',
-    color: '#4F46E5', // Blue
-  },
-  {
-    id: 'ADMIN',
-    name: 'מנהל מערכת',
-    icon: 'A',
-    description: 'הרשאות מלאות',
-    color: '#DC2626', // Red
+    icon: 'person',
+    description: 'קניות באפליקציה',
   },
 ];
 
 interface LoginPageProps {
-  onLogin: (role: string, token: string) => void;
+  onLogin: (role: UserRole, token?: string) => void;
 }
 
 /**
@@ -164,57 +185,29 @@ interface LoginPageProps {
  * Allows users to select their role and login to the system
  */
 export function LoginPage({ onLogin }: LoginPageProps) {
-  const [selectedRole, setSelectedRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
 
-  const handleLogin = async () => {
+  const handleLogin = () => {
     if (selectedRole) {
-      try {
-        setLoading(true);
-        setError(null);
-        // Call Dev Login API
-        const response = await fetch('/api/v1/auth/dev-login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ role: selectedRole })
-        });
-
-        if (!response.ok) {
-          throw new Error('Login failed');
-        }
-
-        const data = await response.json();
-        // data = { message, user_id, role, token }
-
-        onLogin(selectedRole, data.token);
-      } catch (err) {
-        console.error("Login error:", err);
-        setError("Login failed. Check server.");
-      } finally {
-        setLoading(false);
-      }
+      onLogin(selectedRole);
     }
   };
 
   return (
     <Container>
       <LoginCard>
-        <Logo>R</Logo>
+        <Logo><span className="material-symbols-outlined">nfc</span></Logo>
         <Title>מערכת RFID</Title>
         <Subtitle>בחר את התפקיד שלך להתחברות</Subtitle>
-
-        {error && <div style={{ color: 'red', textAlign: 'center', marginBottom: '10px' }}>{error}</div>}
 
         <RoleGrid>
           {roles.map(role => (
             <RoleCard
               key={role.id}
               $selected={selectedRole === role.id}
-              $color={role.color}
               onClick={() => setSelectedRole(role.id)}
             >
-              <RoleIcon>{role.icon}</RoleIcon>
+              <RoleIcon className="material-symbols-outlined">{role.icon}</RoleIcon>
               <RoleName>{role.name}</RoleName>
               <RoleDescription>{role.description}</RoleDescription>
             </RoleCard>
@@ -222,11 +215,11 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         </RoleGrid>
 
         <LoginButton
-          $disabled={!selectedRole || loading}
-          disabled={!selectedRole || loading}
+          $disabled={!selectedRole}
+          disabled={!selectedRole}
           onClick={handleLogin}
         >
-          {loading ? 'מתחבר...' : (selectedRole ? `התחבר כ${roles.find(r => r.id === selectedRole)?.name}` : 'בחר תפקיד')}
+          {selectedRole ? `התחבר כ${roles.find(r => r.id === selectedRole)?.name}` : 'בחר תפקיד'}
         </LoginButton>
       </LoginCard>
     </Container>

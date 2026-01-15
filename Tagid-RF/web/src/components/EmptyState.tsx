@@ -14,43 +14,50 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: ${theme.spacing.xxl};
+  padding: ${theme.spacing['3xl']} ${theme.spacing.xl};
   text-align: center;
-  min-height: 300px;
+  min-height: 280px;
+  background: ${theme.colors.surface};
+  border: 1px solid ${theme.colors.border};
+  border-radius: ${theme.borderRadius.lg};
 `;
 
-const Icon = styled.div`
-  font-size: 64px;
+const IconWrapper = styled.div`
   margin-bottom: ${theme.spacing.lg};
-  opacity: 0.5;
+  color: ${theme.colors.gray[500]};
+  opacity: 0.8;
 `;
 
 const Title = styled.h2`
-  font-size: ${theme.typography.fontSize['2xl']};
+  font-size: ${theme.typography.fontSize.xl};
   font-weight: ${theme.typography.fontWeight.semibold};
   color: ${theme.colors.text};
   margin-bottom: ${theme.spacing.sm};
 `;
 
 const Message = styled.p`
-  font-size: ${theme.typography.fontSize.base};
+  font-size: ${theme.typography.fontSize.sm};
   color: ${theme.colors.textSecondary};
   margin-bottom: ${theme.spacing.lg};
-  max-width: 400px;
+  max-width: 360px;
+  line-height: ${theme.typography.lineHeight.relaxed};
 `;
 
 const ActionContainer = styled.div`
-  margin-top: ${theme.spacing.md};
+  margin-top: ${theme.spacing.sm};
 `;
 
 export function EmptyState({ icon, title, message, action }: EmptyStateProps) {
   return (
     <Container>
-      {icon && <Icon>{icon}</Icon>}
+      {icon && (
+        <IconWrapper>
+          <span className="material-symbols-outlined" style={{ fontSize: 56 }}>{icon}</span>
+        </IconWrapper>
+      )}
       <Title>{title}</Title>
       {message && <Message>{message}</Message>}
       {action && <ActionContainer>{action}</ActionContainer>}
     </Container>
   );
 }
-

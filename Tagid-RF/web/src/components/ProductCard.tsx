@@ -16,9 +16,10 @@ const Card = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${theme.spacing.sm};
-  transition: box-shadow ${theme.transitions.fast};
+  transition: all ${theme.transitions.fast};
 
   &:hover {
+    border-color: ${theme.colors.borderDark};
     box-shadow: ${theme.shadows.md};
   }
 `;
@@ -26,16 +27,13 @@ const Card = styled.div`
 const ImagePlaceholder = styled.div`
   width: 100%;
   aspect-ratio: 1;
-  background: linear-gradient(
-    135deg,
-    ${theme.colors.backgroundAlt} 0%,
-    ${theme.colors.border} 100%
-  );
+  background: ${theme.colors.backgroundAlt};
+  border: 1px solid ${theme.colors.border};
   border-radius: ${theme.borderRadius.md};
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: ${theme.typography.fontSize['3xl']};
+  color: ${theme.colors.textMuted};
 `;
 
 const Image = styled.img`
@@ -43,13 +41,15 @@ const Image = styled.img`
   aspect-ratio: 1;
   object-fit: cover;
   border-radius: ${theme.borderRadius.md};
+  border: 1px solid ${theme.colors.border};
 `;
 
 const Name = styled.h3`
-  font-size: ${theme.typography.fontSize.lg};
-  font-weight: ${theme.typography.fontWeight.semibold};
+  font-size: ${theme.typography.fontSize.base};
+  font-weight: ${theme.typography.fontWeight.medium};
   color: ${theme.colors.text};
   margin: 0;
+  line-height: ${theme.typography.lineHeight.snug};
 `;
 
 const Info = styled.div`
@@ -60,36 +60,46 @@ const Info = styled.div`
 `;
 
 const Price = styled.span`
-  font-size: ${theme.typography.fontSize.xl};
+  font-size: ${theme.typography.fontSize.lg};
   font-weight: ${theme.typography.fontWeight.bold};
-  color: ${theme.colors.primary};
+  color: ${theme.colors.text};
 `;
 
 const Sku = styled.span`
-  font-size: ${theme.typography.fontSize.sm};
-  color: ${theme.colors.textSecondary};
+  font-size: ${theme.typography.fontSize.xs};
+  color: ${theme.colors.textMuted};
+  font-family: ${theme.typography.fontFamily.mono};
 `;
 
 const Button = styled.button`
-  background-color: ${theme.colors.primary};
-  color: white;
-  border: none;
+  background-color: ${theme.colors.gray[800]};
+  color: ${theme.colors.text};
+  border: 1px solid ${theme.colors.border};
   border-radius: ${theme.borderRadius.md};
   padding: ${theme.spacing.sm} ${theme.spacing.md};
   font-weight: ${theme.typography.fontWeight.medium};
-  font-size: ${theme.typography.fontSize.base};
+  font-size: ${theme.typography.fontSize.sm};
   cursor: pointer;
-  transition: background-color ${theme.transitions.fast};
+  transition: all ${theme.transitions.fast};
   margin-top: ${theme.spacing.sm};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: ${theme.spacing.xs};
 
   &:hover {
-    background-color: ${theme.colors.primaryDark};
+    background-color: ${theme.colors.gray[700]};
+    border-color: ${theme.colors.borderDark};
   }
 
   &:active {
     transform: scale(0.98);
   }
 `;
+
+const MaterialIcon = ({ name, size = 16 }: { name: string; size?: number }) => (
+  <span className="material-symbols-outlined" style={{ fontSize: size }}>{name}</span>
+);
 
 export function ProductCard({ product, onAddToCart }: ProductCardProps) {
   const { t, formatPrice } = useTranslation();
@@ -99,15 +109,18 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
       {product.imageUrl ? (
         <Image src={product.imageUrl} alt={product.name} />
       ) : (
-        <ImagePlaceholder>📦</ImagePlaceholder>
+        <ImagePlaceholder>
+          <MaterialIcon name="inventory_2" size={40} />
+        </ImagePlaceholder>
       )}
       <Name>{product.name}</Name>
       <Info>
         <Price>{formatPrice(product.priceInCents)}</Price>
-        {product.sku && <Sku>SKU: {product.sku}</Sku>}
+        {product.sku && <Sku>{product.sku}</Sku>}
       </Info>
-      <Button onClick={() => onAddToCart(product.id)}>{t('catalog.addToCart')}</Button>
+      <Button onClick={() => onAddToCart(product.id)}>
+        <MaterialIcon name="add_shopping_cart" /> {t('catalog.addToCart')}
+      </Button>
     </Card>
   );
 }
-

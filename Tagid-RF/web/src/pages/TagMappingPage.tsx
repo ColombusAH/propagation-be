@@ -203,8 +203,8 @@ const SmallButton = styled.button`
   transition: all 0.2s ease;
   
   &.copy {
-    background: ${theme.colors.secondary};
-    color: white;
+    background: ${theme.colors.gray[700]};
+    color: ${theme.colors.text};
   }
   &.delete {
     background: ${theme.colors.error}20;
@@ -222,6 +222,12 @@ const StatusBadge = styled.span<{ active: boolean }>`
   border-radius: 20px;
   background: ${({ active }) => active ? theme.colors.success + '20' : theme.colors.error + '20'};
   color: ${({ active }) => active ? theme.colors.success : theme.colors.error};
+  display: inline-flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  line-height: 1;
 `;
 
 const Message = styled.div<{ type: 'success' | 'error' }>`
@@ -237,6 +243,10 @@ const EmptyState = styled.div`
   padding: 3rem;
   color: ${theme.colors.textSecondary};
 `;
+
+const MaterialIcon = ({ name, size = 20 }: { name: string; size?: number }) => (
+  <span className="material-symbols-outlined" style={{ fontSize: size }}>{name}</span>
+);
 
 const VerifySection = styled.div`
   display: grid;
@@ -518,7 +528,7 @@ export function TagMappingPage() {
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
-        setMessage({ type: 'success', text: '📋 הועתק!' });
+        setMessage({ type: 'success', text: 'הועתק!' });
         setTimeout(() => setMessage(null), 2000);
     };
 
@@ -526,10 +536,16 @@ export function TagMappingPage() {
         <Layout>
             <Container>
                 <Header>
-                    <Title>🔐 סנכרון QR ↔ UHF Tags</Title>
+                    <Title style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <MaterialIcon name="qr_code_2" size={28} />
+                        סנכרון QR ↔ UHF Tags
+                    </Title>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <span style={{ fontSize: '0.85rem', color: '#888' }}>WebSocket:</span>
-                        <StatusBadge active={isWsConnected}>{isWsConnected ? '🟢 פעיל' : '🔴 מנותק'}</StatusBadge>
+                        <StatusBadge active={isWsConnected}>
+                            {isWsConnected ? 'פעיל' : 'מנותק'}
+                            <MaterialIcon name={isWsConnected ? 'check_circle' : 'cancel'} size={14} />
+                        </StatusBadge>
                     </div>
                 </Header>
 
@@ -539,7 +555,7 @@ export function TagMappingPage() {
 
                 {/* Live Scan & Auto Generate */}
                 <Card>
-                    <CardTitle>📡 סריקה חיה & שמירה אוטומטית</CardTitle>
+                    <CardTitle><MaterialIcon name="sensors" size={20} /> סריקה חיה ושמירה אוטומטית</CardTitle>
                     <LiveParams>
                         <div style={{ flex: 1 }}>
                             <strong>מצב סריקה אוטומטית:</strong>
@@ -567,7 +583,7 @@ export function TagMappingPage() {
                                         setIsScanning(!isScanning);
                                         setMessage({
                                             type: 'success',
-                                            text: isScanning ? '⏹ סריקה הופסקה' : '▶ סריקה החלה'
+                                            text: isScanning ? 'סריקה הופסקה' : 'סריקה החלה'
                                         });
                                         setTimeout(() => setMessage(null), 2000);
                                     } else {
@@ -579,11 +595,12 @@ export function TagMappingPage() {
                                 }
                             }}
                         >
-                            {isScanning ? '⏹ עצור סריקה' : '▶ התחל סריקה'}
+                            {isScanning ? 'עצור סריקה' : 'התחל סריקה'}{' '}
+                            <MaterialIcon name={isScanning ? 'stop' : 'play_arrow'} size={18} />
                         </Button>
                         {isScanning && (
-                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: theme.colors.primary, minWidth: '80px' }}>
-                                ⏱ {formatTime(scanDuration)}
+                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: theme.colors.primary, minWidth: '80px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <MaterialIcon name="timer" size={18} /> {formatTime(scanDuration)}
                             </div>
                         )}
                     </LiveParams>
@@ -612,11 +629,11 @@ export function TagMappingPage() {
                                     <div>
                                         {tag.target_qr && (
                                             <span
-                                                style={{ cursor: 'pointer', fontSize: '1.2rem' }}
+                                                style={{ cursor: 'pointer' }}
                                                 onClick={() => copyToClipboard(tag.target_qr!)}
                                                 title="Click to copy QR string"
                                             >
-                                                🔐
+                                                <MaterialIcon name="lock" size={20} />
                                             </span>
                                         )}
                                     </div>
@@ -628,7 +645,7 @@ export function TagMappingPage() {
 
                 {/* Create New Mapping */}
                 <Card>
-                    <CardTitle>➕ יצירת מיפוי חדש (ידני)</CardTitle>
+                    <CardTitle><MaterialIcon name="add_circle" size={20} /> יצירת מיפוי חדש (ידני)</CardTitle>
                     <Form onSubmit={handleCreate}>
                         <InputGroup>
                             <Label>EPC של תג UHF</Label>
@@ -650,14 +667,15 @@ export function TagMappingPage() {
                             />
                         </InputGroup>
                         <Button type="submit" disabled={creating || !newEpc.trim()}>
-                            {creating ? '⏳ יוצר...' : '🔐 צור QR מוצפן'}
+                            <MaterialIcon name={creating ? 'hourglass_empty' : 'lock'} size={18} />
+                            {' '}{creating ? 'יוצר...' : 'צור QR מוצפן'}
                         </Button>
                     </Form>
                 </Card>
 
                 {/* Verify Match */}
                 <Card>
-                    <CardTitle>✓ אימות התאמה</CardTitle>
+                    <CardTitle><MaterialIcon name="verified" size={20} /> אימות התאמה</CardTitle>
                     <Form onSubmit={handleVerify}>
                         <VerifySection>
                             <InputGroup>
@@ -680,26 +698,31 @@ export function TagMappingPage() {
                             </InputGroup>
                         </VerifySection>
                         <Button type="submit" variant="secondary" disabled={verifying}>
-                            {verifying ? '⏳ בודק...' : '🔍 בדוק התאמה'}
+                            <MaterialIcon name={verifying ? 'hourglass_empty' : 'search'} size={18} />
+                            {' '}{verifying ? 'בודק...' : 'בדוק התאמה'}
                         </Button>
                     </Form>
 
                     {verifyResult && (
                         <VerifyResult match={verifyResult.match}>
-                            {verifyResult.match ? '✅ ' : '❌ '}{verifyResult.message}
+                            <MaterialIcon name={verifyResult.match ? 'check_circle' : 'cancel'} size={20} />
+                            {' '}{verifyResult.message}
                         </VerifyResult>
                     )}
                 </Card>
 
                 {/* Existing Mappings */}
                 <Card>
-                    <CardTitle>📋 מיפויים קיימים ({mappings.length})</CardTitle>
+                    <CardTitle><MaterialIcon name="list_alt" size={20} /> מיפויים קיימים ({mappings.length})</CardTitle>
 
                     {loading ? (
-                        <EmptyState>⏳ טוען...</EmptyState>
+                        <EmptyState>
+                            <MaterialIcon name="hourglass_empty" size={32} />
+                            <div>טוען...</div>
+                        </EmptyState>
                     ) : mappings.length === 0 ? (
                         <EmptyState>
-                            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔗</div>
+                            <div style={{ marginBottom: '1rem' }}><MaterialIcon name="link" size={48} /></div>
                             <div>אין מיפויים עדיין</div>
                             <div style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>
                                 צור את המיפוי הראשון למעלה
@@ -734,13 +757,13 @@ export function TagMappingPage() {
                                             className="copy"
                                             onClick={() => copyToClipboard(mapping.encrypted_qr)}
                                         >
-                                            📋 העתק QR
+                                            <MaterialIcon name="content_copy" size={16} /> העתק QR
                                         </SmallButton>
                                         <SmallButton
                                             className="delete"
                                             onClick={() => handleDelete(mapping.id)}
                                         >
-                                            🗑️ מחק
+                                            <MaterialIcon name="delete" size={16} /> מחק
                                         </SmallButton>
                                     </ActionButtons>
                                 </MappingCard>

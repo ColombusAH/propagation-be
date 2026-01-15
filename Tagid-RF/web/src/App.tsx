@@ -2,26 +2,18 @@ import { useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
 import { GlobalStyles } from './styles/global';
-import { theme } from './styles/theme';
+import { lightTheme, darkTheme } from './styles/theme';
 import { AppRoutes } from './app.routes';
 import { useStore } from './store';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastContainer } from './components/Toast/ToastContainer';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LoginPage } from './pages/LoginPage';
-import productsData from './data/products.json';
 
 function AppContent() {
-  const loadProducts = useStore((state) => state.loadProducts);
-  const isLoaded = useStore((state) => state.isLoaded);
   const locale = useStore((state) => state.locale);
+  const darkMode = useStore((state) => state.darkMode);
   const { isAuthenticated, login } = useAuth();
-
-  useEffect(() => {
-    if (!isLoaded) {
-      loadProducts(productsData);
-    }
-  }, [loadProducts, isLoaded]);
 
   // Set RTL direction based on locale
   useEffect(() => {
@@ -33,9 +25,11 @@ function AppContent() {
     return <LoginPage onLogin={login} />;
   }
 
+  const currentTheme = darkMode ? darkTheme : lightTheme;
+
   return (
     <ErrorBoundary>
-      <ThemeProvider theme={theme}>
+      <ThemeProvider theme={currentTheme}>
         <GlobalStyles />
         <BrowserRouter>
           <AppRoutes />
