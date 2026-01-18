@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import { useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QuantityInput } from '../QuantityInput';
@@ -49,11 +50,20 @@ describe('QuantityInput', () => {
     expect(incrementButton).toBeDisabled();
   });
 
-  it.skip('should handle direct input', async () => {
+  it('should handle direct input', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
 
-    render(<QuantityInput value={5} onChange={onChange} />);
+    const Wrapper = () => {
+      const [val, setVal] = useState(5);
+      const handleChange = (v: number) => {
+        setVal(v);
+        onChange(v);
+      };
+      return <QuantityInput value={val} onChange={handleChange} />;
+    };
+
+    render(<Wrapper />);
 
     const input = screen.getByRole('spinbutton');
     await user.clear(input);
