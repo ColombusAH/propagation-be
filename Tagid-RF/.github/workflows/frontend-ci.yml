@@ -32,11 +32,11 @@ jobs:
 
       - name: Run TypeScript check
         working-directory: ./Tagid-RF/web
-        run: npm run type-check || echo "No type-check script"
+        run: npm run type-check
 
       - name: Run linting
         working-directory: ./Tagid-RF/web
-        run: npm run lint || echo "No lint script"
+        run: npm run lint
 
       - name: Build application
         working-directory: ./Tagid-RF/web
@@ -63,7 +63,7 @@ jobs:
 
       - name: Run unit tests
         working-directory: ./Tagid-RF/web
-        run: npm test -- --run || echo "No test script configured"
+        run: npm test -- --run
 
   e2e:
     runs-on: ubuntu-latest
