@@ -5,7 +5,7 @@ import { QuantityInput } from '../QuantityInput';
 
 describe('QuantityInput', () => {
   it('should render with initial value', () => {
-    render(<QuantityInput value={5} onChange={() => {}} />);
+    render(<QuantityInput value={5} onChange={() => { }} />);
 
     const input = screen.getByRole('spinbutton');
     expect(input).toHaveValue(5);
@@ -36,14 +36,14 @@ describe('QuantityInput', () => {
   });
 
   it('should disable decrement button at minimum', () => {
-    render(<QuantityInput value={1} onChange={() => {}} min={1} />);
+    render(<QuantityInput value={1} onChange={() => { }} min={1} />);
 
     const decrementButton = screen.getByText('−');
     expect(decrementButton).toBeDisabled();
   });
 
   it('should disable increment button at maximum', () => {
-    render(<QuantityInput value={10} onChange={() => {}} max={10} />);
+    render(<QuantityInput value={10} onChange={() => { }} max={10} />);
 
     const incrementButton = screen.getByText('+');
     expect(incrementButton).toBeDisabled();
@@ -59,7 +59,7 @@ describe('QuantityInput', () => {
     await user.clear(input);
     await user.type(input, '10');
 
-    expect(onChange).toHaveBeenCalledWith(10);
+    expect(onChange).toHaveBeenLastCalledWith(10);
   });
 });
 
