@@ -246,26 +246,26 @@ export function StoreBIPage() {
         </Header>
 
         <StatsGrid>
-            <StatCard style={{ borderTop: `4px solid #1E293B` }}>
-              <StatLabel>הכנסות כוללות</StatLabel>
-              <StatValue>{stats.totalRevenue.toLocaleString()} ש"ח</StatValue>
-              <StatChange $positive>אין נתונים להשוואה</StatChange>
-            </StatCard>
-            <StatCard style={{ borderTop: `4px solid #3B82F6` }}>
-              <StatLabel>מספר עסקאות</StatLabel>
-              <StatValue>{stats.totalSales}</StatValue>
-              <StatChange $positive>אין נתונים להשוואה</StatChange>
-            </StatCard>
-            <StatCard style={{ borderTop: `4px solid #10B981` }}>
-              <StatLabel>ממוצע לעסקה</StatLabel>
-              <StatValue>{stats.avgTransaction.toLocaleString()} ש"ח</StatValue>
-              <StatChange $positive>אין נתונים להשוואה</StatChange>
-            </StatCard>
-            <StatCard style={{ borderTop: `4px solid #F59E0B` }}>
-              <StatLabel>לקוחות</StatLabel>
-              <StatValue>{stats.customers}</StatValue>
-              <StatChange $positive>אין נתונים להשוואה</StatChange>
-            </StatCard>
+          <StatCard style={{ borderTop: `4px solid #1E293B` }}>
+            <StatLabel>הכנסות כוללות</StatLabel>
+            <StatValue>{stats.totalRevenue.toLocaleString()} ש"ח</StatValue>
+            <StatChange $positive>אין נתונים להשוואה</StatChange>
+          </StatCard>
+          <StatCard style={{ borderTop: `4px solid #3B82F6` }}>
+            <StatLabel>מספר עסקאות</StatLabel>
+            <StatValue>{stats.totalSales}</StatValue>
+            <StatChange $positive>אין נתונים להשוואה</StatChange>
+          </StatCard>
+          <StatCard style={{ borderTop: `4px solid #10B981` }}>
+            <StatLabel>ממוצע לעסקה</StatLabel>
+            <StatValue>{stats.avgTransaction.toLocaleString()} ש"ח</StatValue>
+            <StatChange $positive>אין נתונים להשוואה</StatChange>
+          </StatCard>
+          <StatCard style={{ borderTop: `4px solid #F59E0B` }}>
+            <StatLabel>לקוחות</StatLabel>
+            <StatValue>{stats.customers}</StatValue>
+            <StatChange $positive>אין נתונים להשוואה</StatChange>
+          </StatCard>
         </StatsGrid>
 
         <ChartsGrid>
@@ -317,7 +317,7 @@ export function StoreBIPage() {
                     outerRadius={100}
                     paddingAngle={5}
                     dataKey="value"
-                    label={({ name, percent }: { name: string; percent: number }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={(props: any) => `${props.name} ${(props.percent * 100).toFixed(0)}%`}
                   >
                     {categoryData.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />

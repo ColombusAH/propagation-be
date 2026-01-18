@@ -3,8 +3,8 @@ import styled, { keyframes } from 'styled-components';
 import { Toast as ToastType } from './types';
 
 interface ToastProps {
-    toast: ToastType;
-    onClose: () => void;
+  toast: ToastType;
+  onClose: () => void;
 }
 
 const slideIn = keyframes`
@@ -18,16 +18,6 @@ const slideIn = keyframes`
   }
 `;
 
-const slideOut = keyframes`
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(400px);
-    opacity: 0;
-  }
-`;
 
 const ToastWrapper = styled.div<{ $type: ToastType['type'] }>`
   display: flex;
@@ -41,14 +31,14 @@ const ToastWrapper = styled.div<{ $type: ToastType['type'] }>`
   max-width: 500px;
   animation: ${slideIn} 0.3s ease-out;
   background: ${props => {
-        switch (props.$type) {
-            case 'success': return '#10b981';
-            case 'error': return '#ef4444';
-            case 'warning': return '#f59e0b';
-            case 'info': return '#3b82f6';
-            default: return '#6b7280';
-        }
-    }};
+    switch (props.$type) {
+      case 'success': return '#10b981';
+      case 'error': return '#ef4444';
+      case 'warning': return '#f59e0b';
+      case 'info': return '#3b82f6';
+      default: return '#6b7280';
+    }
+  }};
   color: white;
   cursor: pointer;
   
@@ -90,13 +80,13 @@ const CloseButton = styled.button`
 `;
 
 const getIcon = (type: ToastType['type']): string => {
-    switch (type) {
-        case 'success': return '✓';
-        case 'error': return '✕';
-        case 'warning': return '⚠';
-        case 'info': return 'ℹ';
-        default: return '•';
-    }
+  switch (type) {
+    case 'success': return '✓';
+    case 'error': return '✕';
+    case 'warning': return '⚠';
+    case 'info': return 'ℹ';
+    default: return '•';
+  }
 };
 
 /**
@@ -105,21 +95,21 @@ const getIcon = (type: ToastType['type']): string => {
  * Displays a single toast notification with auto-dismiss.
  */
 export function Toast({ toast, onClose }: ToastProps) {
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            onClose();
-        }, toast.duration || 3000);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, toast.duration || 3000);
 
-        return () => clearTimeout(timer);
-    }, [toast.duration, onClose]);
+    return () => clearTimeout(timer);
+  }, [toast.duration, onClose]);
 
-    return (
-        <ToastWrapper $type={toast.type} onClick={onClose}>
-            <Icon>{getIcon(toast.type)}</Icon>
-            <Message>{toast.message}</Message>
-            <CloseButton onClick={onClose} aria-label="Close">
-                ×
-            </CloseButton>
-        </ToastWrapper>
-    );
+  return (
+    <ToastWrapper $type={toast.type} onClick={onClose}>
+      <Icon>{getIcon(toast.type)}</Icon>
+      <Message>{toast.message}</Message>
+      <CloseButton onClick={onClose} aria-label="Close">
+        ×
+      </CloseButton>
+    </ToastWrapper>
+  );
 }
