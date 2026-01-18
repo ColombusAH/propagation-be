@@ -2,9 +2,11 @@
 Extended tests for RFID Reader Service - scanning and advanced operations.
 """
 
-import pytest
 import socket
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
 from app.services.rfid_reader import RFIDReaderService
 
 

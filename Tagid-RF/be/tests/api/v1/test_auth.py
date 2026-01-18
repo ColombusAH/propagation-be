@@ -14,6 +14,7 @@ async def test_auth_root(client: AsyncClient):
 async def test_google_login_invalid_token(client: AsyncClient):
     """Test Google login with an invalid token."""
     from unittest.mock import MagicMock, patch
+
     from app.db.dependencies import get_db
     from app.main import app
 

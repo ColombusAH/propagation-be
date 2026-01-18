@@ -3,13 +3,15 @@ Comprehensive tests for RFID Reader Service.
 Covers connection, disconnection, command sending, scanning, and error handling.
 """
 
-import pytest
-import socket
 import asyncio
-from unittest.mock import MagicMock, patch, AsyncMock
-from app.services.rfid_reader import RFIDReaderService, HEAD
-from app.services.m200_protocol import M200Command, calculate_crc16
+import socket
 import struct
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
+from app.services.m200_protocol import M200Command, calculate_crc16
+from app.services.rfid_reader import HEAD, RFIDReaderService
 
 
 @pytest.fixture

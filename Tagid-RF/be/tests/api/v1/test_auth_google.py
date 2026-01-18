@@ -1,6 +1,7 @@
-from unittest.mock import MagicMock, patch, AsyncMock
-from types import SimpleNamespace
 import datetime
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 from httpx import AsyncClient
 

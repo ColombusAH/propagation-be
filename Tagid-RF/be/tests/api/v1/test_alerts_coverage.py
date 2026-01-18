@@ -2,8 +2,9 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from app.core.deps import get_current_user as get_current_user_core
+
 from app.api.dependencies.auth import get_current_user as get_current_user_auth
+from app.core.deps import get_current_user as get_current_user_core
 from app.core.permissions import requires_any_role
 from app.main import app
 

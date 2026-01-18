@@ -2,9 +2,11 @@
 Tests for Tag Listener Service to improve code coverage.
 """
 
-import pytest
 import asyncio
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
 from app.services.tag_listener_service import TagListenerService
 
 

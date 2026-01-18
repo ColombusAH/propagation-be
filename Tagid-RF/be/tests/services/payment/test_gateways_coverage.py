@@ -3,8 +3,9 @@ Comprehensive tests for CashGateway and StripeGateway.
 Covers all methods of the payment gateway implementations.
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
 
 
 class TestCashGateway:

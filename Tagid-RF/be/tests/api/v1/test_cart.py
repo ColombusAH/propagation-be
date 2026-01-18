@@ -5,12 +5,11 @@ Tests for Cart API - Simplified tests using TestClient with mocking.
 from unittest.mock import MagicMock, patch
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from app.routers.cart import router, FAKE_CART_DB, _calculate_summary
+from app.routers.cart import FAKE_CART_DB, _calculate_summary, router
 from app.schemas.cart import CartItem
-
-from fastapi import FastAPI
 
 app = FastAPI()
 app.include_router(router)

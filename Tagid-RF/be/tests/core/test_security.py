@@ -6,7 +6,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
-from jose import jwt, JWTError
+from jose import JWTError, jwt
 
 from app.core import security
 from app.core.security import (

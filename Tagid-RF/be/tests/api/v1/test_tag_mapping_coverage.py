@@ -3,12 +3,12 @@ Comprehensive tests for Tag Mapping API endpoints.
 Covers: create_mapping, verify_match, decrypt_qr, get_by_epc, get_by_qr, delete_mapping, list_mappings, simulate_scan
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 
-from app.core.deps import get_current_user as get_current_user_core
 from app.api.dependencies.auth import get_current_user as get_current_user_auth
+from app.core.deps import get_current_user as get_current_user_core
 from app.main import app
 
 

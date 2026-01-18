@@ -1,14 +1,15 @@
-import pytest
-from httpx import AsyncClient
 import uuid
 from unittest.mock import MagicMock, patch
+
+import pytest
+from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
 async def test_get_tag_not_found(client: AsyncClient):
     """Test getting a non-existent tag."""
-    from app.services.database import get_db
     from app.main import app
+    from app.services.database import get_db
 
     mock_db = MagicMock()
     # Return None to simulate 404
@@ -28,8 +29,8 @@ async def test_get_tag_not_found(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_get_tag_by_epc_not_found(client: AsyncClient):
     """Test getting a non-existent tag by EPC."""
-    from app.services.database import get_db
     from app.main import app
+    from app.services.database import get_db
 
     mock_db = MagicMock()
     # Return None to simulate 404
@@ -49,8 +50,8 @@ async def test_get_tag_by_epc_not_found(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_update_tag_not_found(client: AsyncClient):
     """Test updating a non-existent tag."""
-    from app.services.database import get_db
     from app.main import app
+    from app.services.database import get_db
 
     mock_db = MagicMock()
     mock_db.query.return_value.filter.return_value.first.return_value = None
@@ -69,10 +70,11 @@ async def test_update_tag_not_found(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_delete_tag(client: AsyncClient):
     """Test deleting (soft delete) a tag."""
-    from app.services.database import get_db
-    from app.main import app
-    from types import SimpleNamespace
     import datetime
+    from types import SimpleNamespace
+
+    from app.main import app
+    from app.services.database import get_db
 
     epc = "E2" + uuid.uuid4().hex[:22].upper()
     mock_tag = SimpleNamespace(
@@ -115,8 +117,8 @@ async def test_delete_tag(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_delete_tag_not_found(client: AsyncClient):
     """Test deleting a non-existent tag."""
-    from app.services.database import get_db
     from app.main import app
+    from app.services.database import get_db
 
     mock_db = MagicMock()
     mock_db.query.return_value.filter.return_value.first.return_value = None
@@ -135,10 +137,11 @@ async def test_delete_tag_not_found(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_list_tags_filtering(client: AsyncClient):
     """Test listing tags with filters."""
-    from app.services.database import get_db
-    from app.main import app
-    from types import SimpleNamespace
     import datetime
+    from types import SimpleNamespace
+
+    from app.main import app
+    from app.services.database import get_db
 
     epc1 = "E2" + uuid.uuid4().hex[:22].upper()
     mock_tag1 = SimpleNamespace(
@@ -184,11 +187,12 @@ async def test_list_tags_filtering(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_create_existing_tag_update(client: AsyncClient):
     """Test sending POST for existing tag updates it."""
-    from app.services.database import get_db
-    from app.main import app
+    import datetime
     from types import SimpleNamespace
     from unittest.mock import patch
-    import datetime
+
+    from app.main import app
+    from app.services.database import get_db
 
     epc = "E2" + uuid.uuid4().hex[:22].upper()
     mock_tag = SimpleNamespace(

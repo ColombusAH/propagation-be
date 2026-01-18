@@ -3,12 +3,14 @@ Advanced tests for RFID Reader - async methods and edge cases.
 Covers get_reader_info, read_single_tag, and error handling paths.
 """
 
-import pytest
 import socket
-from unittest.mock import MagicMock, patch, AsyncMock
 import struct
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
+from app.services.m200_protocol import HEAD, M200Commands, calculate_crc16
 from app.services.rfid_reader import RFIDReaderService
-from app.services.m200_protocol import calculate_crc16, HEAD, M200Commands
 
 
 @pytest.fixture

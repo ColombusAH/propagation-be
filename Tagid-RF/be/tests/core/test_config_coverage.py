@@ -3,8 +3,9 @@ Tests for core configuration settings.
 Covers: Settings, get_settings
 """
 
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 
 class TestSettings:
@@ -21,8 +22,9 @@ class TestSettings:
 
     def test_settings_defaults(self):
         """Test default values."""
-        from app.core.config import settings
         from unittest.mock import MagicMock
+
+        from app.core.config import settings
 
         # conftest.py sets these
         assert settings.JWT_ALGORITHM == "HS256"

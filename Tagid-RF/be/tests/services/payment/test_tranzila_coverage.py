@@ -3,8 +3,9 @@ Tests for TranzilaGateway payment integration.
 Covers all methods of the Tranzila payment gateway.
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
 
 
 class TestTranzilaGateway:

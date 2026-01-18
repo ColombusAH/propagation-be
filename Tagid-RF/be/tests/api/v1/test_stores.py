@@ -29,10 +29,11 @@ async def test_list_stores(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_get_store_by_id(client: AsyncClient):
     """Test getting store by ID."""
-    from app.services.database import get_db
-    from app.main import app
     from types import SimpleNamespace
     from unittest.mock import MagicMock
+
+    from app.main import app
+    from app.services.database import get_db
 
     # Properly mock the store object to satisfy Pydantic
     mock_store = SimpleNamespace(

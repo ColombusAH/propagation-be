@@ -15,9 +15,9 @@ from pydantic import BaseModel
 
 from app.api.dependencies.auth import get_current_user
 from app.core.permissions import requires_any_role
+from app.db.prisma import prisma_client
 from app.services.rfid_reader import rfid_reader_service
 from app.services.tag_listener_service import tag_listener_service
-from app.db.prisma import prisma_client
 
 logger = logging.getLogger(__name__)
 

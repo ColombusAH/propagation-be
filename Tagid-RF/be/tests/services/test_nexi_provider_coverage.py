@@ -3,8 +3,9 @@ Tests for NexiProvider payment service.
 Covers: __init__, create_payment_intent, confirm_payment, refund_payment, get_payment_status, cancel_payment
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 class TestNexiProvider:

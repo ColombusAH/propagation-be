@@ -4,8 +4,9 @@ Covers base types, factory, and all gateway implementations.
 """
 
 import os
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
 
 
 # --- Tests for base.py ---
@@ -60,7 +61,7 @@ def test_refund_result_model():
 # --- Tests for factory.py ---
 def test_get_gateway_unknown_provider():
     """Test get_gateway raises error for unknown provider."""
-    from app.services.payment.factory import get_gateway, _gateways
+    from app.services.payment.factory import _gateways, get_gateway
 
     _gateways.clear()  # Clear cached gateways
     with pytest.raises(ValueError, match="Unknown payment provider"):
@@ -69,8 +70,8 @@ def test_get_gateway_unknown_provider():
 
 def test_get_gateway_cash():
     """Test get_gateway returns CashGateway for 'cash' provider."""
-    from app.services.payment.factory import get_gateway, _gateways
     from app.services.payment.cash_gateway import CashGateway
+    from app.services.payment.factory import _gateways, get_gateway
 
     _gateways.clear()
     gateway = get_gateway("cash")
@@ -79,7 +80,7 @@ def test_get_gateway_cash():
 
 def test_get_gateway_caches_instance():
     """Test get_gateway returns cached instance on subsequent calls."""
-    from app.services.payment.factory import get_gateway, _gateways
+    from app.services.payment.factory import _gateways, get_gateway
 
     _gateways.clear()
     gateway1 = get_gateway("cash")
@@ -109,8 +110,8 @@ def test_get_available_providers_with_stripe():
 @pytest.mark.asyncio
 async def test_cash_gateway_provider():
     """Test CashGateway returns correct provider."""
-    from app.services.payment.cash_gateway import CashGateway
     from app.services.payment.base import PaymentProvider
+    from app.services.payment.cash_gateway import CashGateway
 
     gateway = CashGateway()
     assert gateway.provider == PaymentProvider.CASH
@@ -119,8 +120,8 @@ async def test_cash_gateway_provider():
 @pytest.mark.asyncio
 async def test_cash_gateway_create_payment():
     """Test CashGateway.create_payment creates pending payment."""
-    from app.services.payment.cash_gateway import CashGateway
     from app.services.payment.base import PaymentRequest, PaymentStatus
+    from app.services.payment.cash_gateway import CashGateway
 
     gateway = CashGateway()
     request = PaymentRequest(order_id="order-123", amount=1000)
@@ -134,8 +135,8 @@ async def test_cash_gateway_create_payment():
 @pytest.mark.asyncio
 async def test_cash_gateway_confirm_payment():
     """Test CashGateway.confirm_payment completes payment."""
-    from app.services.payment.cash_gateway import CashGateway
     from app.services.payment.base import PaymentStatus
+    from app.services.payment.cash_gateway import CashGateway
 
     gateway = CashGateway()
     result = await gateway.confirm_payment("cash_12345678")
@@ -147,8 +148,8 @@ async def test_cash_gateway_confirm_payment():
 @pytest.mark.asyncio
 async def test_cash_gateway_get_status():
     """Test CashGateway.get_payment_status."""
-    from app.services.payment.cash_gateway import CashGateway
     from app.services.payment.base import PaymentStatus
+    from app.services.payment.cash_gateway import CashGateway
 
     gateway = CashGateway()
     result = await gateway.get_payment_status("cash_12345678")
@@ -174,8 +175,8 @@ def test_stripe_gateway_provider():
     """Test StripeGateway returns correct provider."""
     with patch("app.services.payment.stripe_gateway.STRIPE_AVAILABLE", True):
         with patch("app.services.payment.stripe_gateway.stripe"):
-            from app.services.payment.stripe_gateway import StripeGateway
             from app.services.payment.base import PaymentProvider
+            from app.services.payment.stripe_gateway import StripeGateway
 
             gateway = StripeGateway(api_key="sk_test_123")
             assert gateway.provider == PaymentProvider.STRIPE
@@ -185,8 +186,8 @@ def test_stripe_gateway_map_status():
     """Test StripeGateway status mapping."""
     with patch("app.services.payment.stripe_gateway.STRIPE_AVAILABLE", True):
         with patch("app.services.payment.stripe_gateway.stripe"):
-            from app.services.payment.stripe_gateway import StripeGateway
             from app.services.payment.base import PaymentStatus
+            from app.services.payment.stripe_gateway import StripeGateway
 
             gateway = StripeGateway(api_key="sk_test_123")
             assert gateway._map_status("succeeded") == PaymentStatus.COMPLETED
@@ -206,8 +207,8 @@ async def test_stripe_gateway_create_payment_success():
     with patch("app.services.payment.stripe_gateway.STRIPE_AVAILABLE", True):
         with patch("app.services.payment.stripe_gateway.stripe") as mock_stripe:
             mock_stripe.PaymentIntent.create.return_value = mock_intent
-            from app.services.payment.stripe_gateway import StripeGateway
             from app.services.payment.base import PaymentRequest
+            from app.services.payment.stripe_gateway import StripeGateway
 
             gateway = StripeGateway(api_key="sk_test_123")
             request = PaymentRequest(order_id="order-123", amount=5000)
@@ -225,8 +226,8 @@ async def test_stripe_gateway_create_payment_error():
         with patch("app.services.payment.stripe_gateway.stripe") as mock_stripe:
             mock_stripe.error.StripeError = Exception
             mock_stripe.PaymentIntent.create.side_effect = Exception("API Error")
-            from app.services.payment.stripe_gateway import StripeGateway
             from app.services.payment.base import PaymentRequest
+            from app.services.payment.stripe_gateway import StripeGateway
 
             gateway = StripeGateway(api_key="sk_test_123")
             request = PaymentRequest(order_id="order-123", amount=5000)
@@ -247,8 +248,8 @@ async def test_stripe_gateway_confirm_payment():
     with patch("app.services.payment.stripe_gateway.STRIPE_AVAILABLE", True):
         with patch("app.services.payment.stripe_gateway.stripe") as mock_stripe:
             mock_stripe.PaymentIntent.confirm.return_value = mock_intent
-            from app.services.payment.stripe_gateway import StripeGateway
             from app.services.payment.base import PaymentStatus
+            from app.services.payment.stripe_gateway import StripeGateway
 
             gateway = StripeGateway(api_key="sk_test")
             result = await gateway.confirm_payment("pi_CONFIRM")
@@ -267,8 +268,8 @@ async def test_stripe_gateway_get_status():
     with patch("app.services.payment.stripe_gateway.STRIPE_AVAILABLE", True):
         with patch("app.services.payment.stripe_gateway.stripe") as mock_stripe:
             mock_stripe.PaymentIntent.retrieve.return_value = mock_intent
-            from app.services.payment.stripe_gateway import StripeGateway
             from app.services.payment.base import PaymentStatus
+            from app.services.payment.stripe_gateway import StripeGateway
 
             gateway = StripeGateway(api_key="sk_test")
             result = await gateway.get_payment_status("pi_STATUS")
@@ -320,8 +321,8 @@ def test_stripe_gateway_verify_webhook():
 # --- Tests for tranzila.py ---
 def test_tranzila_gateway_provider():
     """Test TranzilaGateway provider type."""
-    from app.services.payment.tranzila import TranzilaGateway
     from app.services.payment.base import PaymentProvider
+    from app.services.payment.tranzila import TranzilaGateway
 
     gateway = TranzilaGateway(terminal_name="test_term")
     assert gateway.provider == PaymentProvider.TRANZILA
@@ -330,8 +331,8 @@ def test_tranzila_gateway_provider():
 @pytest.mark.asyncio
 async def test_tranzila_create_redirect():
     """Test creating a redirect payment URL."""
-    from app.services.payment.tranzila import TranzilaGateway
     from app.services.payment.base import PaymentRequest, PaymentStatus
+    from app.services.payment.tranzila import TranzilaGateway
 
     gateway = TranzilaGateway(terminal_name="test_term", terminal_password="pass")
     request = PaymentRequest(
@@ -350,8 +351,8 @@ async def test_tranzila_create_redirect():
 @pytest.mark.asyncio
 async def test_tranzila_create_direct_fails():
     """Test direct payment returns specific failure."""
-    from app.services.payment.tranzila import TranzilaGateway
     from app.services.payment.base import PaymentRequest
+    from app.services.payment.tranzila import TranzilaGateway
 
     gateway = TranzilaGateway(terminal_name="term", use_redirect=False)
     request = PaymentRequest(order_id="ord", amount=100)
@@ -414,8 +415,8 @@ def test_tranzila_verify_callback():
 
 def test_tranzila_parse_callback():
     """Test callback parsing."""
-    from app.services.payment.tranzila import TranzilaGateway
     from app.services.payment.base import PaymentStatus
+    from app.services.payment.tranzila import TranzilaGateway
 
     gateway = TranzilaGateway("term")
 

@@ -1,11 +1,13 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
 from app.crud.user import (
+    authenticate_user,
+    create_user,
     get_user_by_email,
     get_user_by_id,
     update_user_google_info,
-    create_user,
-    authenticate_user,
 )
 
 

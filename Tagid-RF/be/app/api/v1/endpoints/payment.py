@@ -26,11 +26,11 @@ from app.schemas.payment import (
 
 # from app.services.cash_provider import CashProvider # Migrated to factory
 from app.services.nexi_provider import NexiProvider
+from app.services.payment.base import PaymentRequest, PaymentStatus
 
 # from app.services.stripe_provider import StripeProvider # Deleted
 # from app.services.tranzila_provider import TranzilaProvider # Deleted
 from app.services.payment.factory import get_gateway
-from app.services.payment.base import PaymentRequest, PaymentStatus
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

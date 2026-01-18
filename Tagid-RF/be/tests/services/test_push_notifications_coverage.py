@@ -3,8 +3,9 @@ Comprehensive tests for PushNotificationService.
 Covers: __init__, send_notification, send_bulk_notifications
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 class TestPushNotificationService:

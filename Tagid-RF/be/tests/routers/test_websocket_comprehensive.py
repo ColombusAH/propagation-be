@@ -3,8 +3,10 @@ Comprehensive tests for WebSocket router and ConnectionManager.
 Covers connection, disconnection, broadcasting, and message handling.
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
+
 from app.routers.websocket import ConnectionManager
 
 

@@ -1,13 +1,15 @@
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 from fastapi import HTTPException, status
 from prisma.models import User
+
 from app.core.permissions import (
-    requires_role,
-    requires_any_role,
+    can_create_role,
     is_admin,
     is_manager,
-    can_create_role,
+    requires_any_role,
+    requires_role,
 )
 
 

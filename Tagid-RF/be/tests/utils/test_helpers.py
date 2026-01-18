@@ -3,7 +3,8 @@ Tests for app.utils.helpers module.
 """
 
 from datetime import datetime
-from app.utils.helpers import parse_tag_data, validate_epc, format_rssi
+
+from app.utils.helpers import format_rssi, parse_tag_data, validate_epc
 
 
 def test_parse_tag_data():

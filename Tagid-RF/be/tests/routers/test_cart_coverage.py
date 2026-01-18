@@ -3,11 +3,13 @@ Comprehensive tests for Cart router endpoints.
 Covers: get_cart_session, add_to_cart, view_cart, checkout, _calculate_summary
 """
 
-import pytest
 import uuid
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch, AsyncMock
-from app.routers.cart import get_cart_session, _calculate_summary, FAKE_CART_DB
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
+from app.routers.cart import FAKE_CART_DB, _calculate_summary, get_cart_session
 from app.schemas.cart import CartItem
 
 
@@ -75,8 +77,8 @@ class TestAddToCart:
     @pytest.mark.asyncio
     async def test_add_to_cart_sku(self, client):
         """Test adding item by SKU."""
-        from app.services.database import get_db
         from app.main import app
+        from app.services.database import get_db
 
         mock_tag = SimpleNamespace(
             epc="E280681000001234",
@@ -108,8 +110,8 @@ class TestAddToCart:
     @pytest.mark.asyncio
     async def test_add_to_cart_epc(self, client):
         """Test adding item by EPC."""
-        from app.services.database import get_db
         from app.main import app
+        from app.services.database import get_db
 
         mock_tag = SimpleNamespace(
             epc="E280681000001234",
@@ -171,9 +173,9 @@ class TestCheckout:
     @pytest.mark.asyncio
     async def test_checkout_with_items(self, client):
         """Test checkout with items in cart."""
-        from app.services.payment.factory import get_gateway
-        from app.services.database import get_db
         from app.main import app
+        from app.services.database import get_db
+        from app.services.payment.factory import get_gateway
 
         mock_gw = MagicMock()
         mock_gw.create_payment = MagicMock(

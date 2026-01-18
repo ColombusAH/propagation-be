@@ -3,12 +3,14 @@ Tests for RFID Reader loops and error handling logic.
 Covers read_single_tag, _scan_loop, and connection resiliency.
 """
 
-import pytest
 import asyncio
 import socket
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
+from app.services.m200_protocol import HEAD, M200Commands, M200Status
 from app.services.rfid_reader import RFIDReaderService
-from app.services.m200_protocol import M200Status, M200Commands, HEAD
 
 
 @pytest.fixture

@@ -3,8 +3,9 @@ Comprehensive tests for RFID Scan API endpoints.
 Covers: get_scan_status, connect_reader, disconnect_reader, start_scanning, stop_scanning, perform_inventory
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 class TestGetScanStatus:

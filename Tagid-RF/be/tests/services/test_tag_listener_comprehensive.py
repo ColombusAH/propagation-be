@@ -3,8 +3,10 @@ Tests for Tag Listener Service.
 Covers start/stop scan, tag storage, and callback mechanics.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app.services.tag_listener_service import TagListenerService
 
 

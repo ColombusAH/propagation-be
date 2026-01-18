@@ -2,7 +2,7 @@
 Tests for Cart Router - shopping cart and checkout.
 """
 
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
@@ -10,7 +10,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.orm import Session
 
 from app.models.rfid_tag import RFIDTag
-from app.routers.cart import router, FAKE_CART_DB
+from app.routers.cart import FAKE_CART_DB, router
 from app.services.database import get_db
 
 

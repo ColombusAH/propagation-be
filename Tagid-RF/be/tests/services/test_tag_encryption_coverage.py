@@ -3,9 +3,10 @@ Comprehensive tests for TagEncryptionService.
 Covers: __init__, _create_fernet, encrypt_tag, decrypt_qr, verify_match, generate_hash, get_encryption_service
 """
 
-import pytest
-from unittest.mock import patch
 import os
+from unittest.mock import patch
+
+import pytest
 
 
 class TestTagEncryptionService:

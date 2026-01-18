@@ -1,17 +1,16 @@
+import uuid
+
 import pytest
 from httpx import AsyncClient
-import uuid
 
 
 @pytest.mark.asyncio
 async def test_list_tags_advanced_filters(client: AsyncClient):
     """Test list_tags with various filter combinations (line 225+)."""
-    from app.services.database import get_db
-    from app.main import app
     from unittest.mock import MagicMock
 
-    from app.services.database import get_db
     from app.main import app
+    from app.services.database import get_db
 
     mock_db = MagicMock()
     mock_db.query.return_value.filter.return_value.all.return_value = []
@@ -41,11 +40,12 @@ async def test_list_tags_advanced_filters(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_create_tag_full_metadata(client: AsyncClient):
     """Test creating a tag with all optional fields to cover update/create branches."""
-    from app.services.database import get_db
-    from app.main import app
+    import datetime
     from types import SimpleNamespace
     from unittest.mock import MagicMock, patch
-    import datetime
+
+    from app.main import app
+    from app.services.database import get_db
 
     epc = "EPC" + uuid.uuid4().hex[:20].upper()
 

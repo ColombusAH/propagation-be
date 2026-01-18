@@ -200,8 +200,8 @@ class TestPaymentFactory:
         """Test getting stripe gateway without API key raises."""
         mock_settings.STRIPE_SECRET_KEY = None
 
-        from app.services.payment.factory import _gateways, get_gateway
         import app.services.payment.factory as factory
+        from app.services.payment.factory import _gateways, get_gateway
 
         # Force the factory module to use our mock settings
         with patch.object(factory, "settings", mock_settings):

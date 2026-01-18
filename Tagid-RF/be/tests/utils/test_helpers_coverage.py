@@ -4,7 +4,8 @@ Covers: parse_tag_data, validate_epc, format_rssi
 """
 
 import pytest
-from app.utils.helpers import parse_tag_data, validate_epc, format_rssi
+
+from app.utils.helpers import format_rssi, parse_tag_data, validate_epc
 
 
 class TestParseTagData:

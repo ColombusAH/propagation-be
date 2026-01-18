@@ -3,8 +3,9 @@ Comprehensive tests for TheftDetectionService.
 Covers: check_tag_payment_status, _create_theft_alert, _get_stakeholders, _notify_stakeholders, _create_alert_message, resolve_alert
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 class TestTheftDetectionService:

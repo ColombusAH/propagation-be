@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.main import app, SecurityHeadersMiddleware
+from app.main import SecurityHeadersMiddleware, app
 
 
 @pytest.fixture

@@ -1,7 +1,9 @@
-import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
-from app.services.rfid_reader import RFIDReaderService
 import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
+from app.services.rfid_reader import RFIDReaderService
 
 
 @pytest.fixture

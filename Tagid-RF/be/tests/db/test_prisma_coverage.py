@@ -3,8 +3,9 @@ Comprehensive tests for PrismaClient and database functions.
 Covers: PrismaClient, init_db, shutdown_db
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 class TestPrismaClient:

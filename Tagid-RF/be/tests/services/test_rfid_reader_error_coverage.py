@@ -1,8 +1,10 @@
-import pytest
 import socket
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
+from app.services.m200_protocol import HEAD, M200Command
 from app.services.rfid_reader import RFIDReaderService
-from app.services.m200_protocol import M200Command, HEAD
 
 
 @pytest.fixture

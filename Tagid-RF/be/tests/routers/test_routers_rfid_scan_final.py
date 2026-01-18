@@ -1,9 +1,11 @@
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
-from app.api.v1.endpoints.rfid_scan import router
+
 from app.api.dependencies.auth import get_current_user as auth_get_user
+from app.api.v1.endpoints.rfid_scan import router
 from app.core.deps import get_current_user as core_get_user
 
 

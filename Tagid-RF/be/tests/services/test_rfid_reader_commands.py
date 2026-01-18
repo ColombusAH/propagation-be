@@ -3,11 +3,13 @@ Tests for RFID Reader command methods (relays, GPIO, power, etc.).
 Focuses on simple request-response flows.
 """
 
-import pytest
 import asyncio
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
+from app.services.m200_protocol import M200Commands, M200Status
 from app.services.rfid_reader import RFIDReaderService
-from app.services.m200_protocol import M200Status, M200Commands
 
 
 @pytest.fixture

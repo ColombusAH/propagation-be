@@ -1,8 +1,10 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from app.core.security import create_access_token, verify_access_token
-from jose import jwt, JWTError
+from jose import JWTError, jwt
+
 from app.core.config import get_settings
-from unittest.mock import patch, MagicMock
+from app.core.security import create_access_token, verify_access_token
 
 settings = get_settings()
 

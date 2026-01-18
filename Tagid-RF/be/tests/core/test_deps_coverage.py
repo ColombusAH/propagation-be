@@ -3,8 +3,9 @@ Comprehensive tests for core dependencies (deps.py).
 Covers: get_db, get_current_user
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from fastapi import HTTPException
 
 

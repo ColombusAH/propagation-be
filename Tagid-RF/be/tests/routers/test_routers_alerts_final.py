@@ -1,4 +1,5 @@
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
@@ -8,9 +9,10 @@ with patch("app.services.push_notifications.PushNotificationService"):
     with patch("app.services.theft_detection.TheftDetectionService"):
         from app.api.v1.endpoints.alerts import router
 
+from datetime import datetime
+
 from app.api.dependencies.auth import get_current_user as auth_get_user
 from app.core.deps import get_current_user as core_get_user
-from datetime import datetime
 
 
 @pytest.fixture

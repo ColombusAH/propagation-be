@@ -3,9 +3,10 @@ Tests for miscellaneous coverage areas.
 Covers: security headers, exception handlers, health check
 """
 
+from unittest.mock import patch
+
 import pytest
 from httpx import AsyncClient
-from unittest.mock import patch
 
 
 class TestSecurityHeaders:

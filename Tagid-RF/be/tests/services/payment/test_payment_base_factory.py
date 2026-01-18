@@ -3,9 +3,10 @@ Comprehensive tests for Payment Gateway factory and base classes.
 Covers: get_gateway, get_available_providers, PaymentRequest, PaymentResult, RefundResult
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
 import os
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestPaymentBase:
