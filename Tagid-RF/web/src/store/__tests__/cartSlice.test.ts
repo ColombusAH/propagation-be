@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { create } from 'zustand';
-import { createCatalogSlice } from '../slices/catalogSlice';
-import { createCartSlice } from '../slices/cartSlice';
+import { create, StoreApi, UseBoundStore } from 'zustand';
+import { createCatalogSlice, CatalogSlice } from '../slices/catalogSlice';
+import { createCartSlice, CartSlice } from '../slices/cartSlice';
 import { Product } from '../types';
 
 const mockProducts: Product[] = [
@@ -20,10 +20,12 @@ const mockProducts: Product[] = [
 ];
 
 describe('CartSlice', () => {
-  let store: ReturnType<typeof create>;
+  // UseBoundStore is the return type of create(), which has .getState()
+  // But create() needs generic arguments to return strict types
+  let store: UseBoundStore<StoreApi<CartSlice & CatalogSlice>>;
 
   beforeEach(() => {
-    store = create((...args) => ({
+    store = create<CartSlice & CatalogSlice>((...args) => ({
       ...createCatalogSlice(...args),
       ...createCartSlice(...args),
     }));
