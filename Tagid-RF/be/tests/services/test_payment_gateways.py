@@ -196,18 +196,22 @@ class TestPaymentFactory:
         gateway = get_gateway("stripe")
         assert gateway is not None
 
-    @patch("app.services.payment.factory.settings")
+    @patch("app.core.config.settings")
     def test_stripe_gateway_missing_key_raises(self, mock_settings):
         """Test getting stripe gateway without API key raises."""
         mock_settings.STRIPE_SECRET_KEY = None
         
         from app.services.payment.factory import _gateways, get_gateway
+        import app.services.payment.factory as factory
 
-        # Clear cache and ensure no key
-        _gateways.clear()
+        # Force the factory module to use our mock settings
+        with patch.object(factory, "settings", mock_settings):
+            # Clear cache and ensure no key
+            _gateways.clear()
 
-        with pytest.raises(ValueError, match="STRIPE_SECRET_KEY"):
-            get_gateway("stripe")
+            with pytest.raises(ValueError, match="STRIPE_SECRET_KEY"):
+                get_gateway("stripe")
+
 
     @patch("app.services.payment.factory.settings")
     def test_get_tranzila_gateway(self, mock_settings):

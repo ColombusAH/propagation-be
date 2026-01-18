@@ -63,6 +63,9 @@ async def test_websocket_invalid_json():
 @pytest.mark.asyncio
 async def test_manager_broadcast_error():
     """Test manager broadcast with connection error."""
+    # Clear connections from previous tests
+    manager.active_connections = []
+    
     mock_ws = AsyncMock()
     mock_ws.send_json.side_effect = Exception("Connection lost")
 
@@ -71,3 +74,4 @@ async def test_manager_broadcast_error():
 
     # Should have removed the failed connection
     assert mock_ws not in manager.active_connections
+

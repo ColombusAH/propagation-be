@@ -147,7 +147,7 @@ async def create_or_update_tag(tag: RFIDTagCreate, db: Session = Depends(get_db)
         if tag.user_memory:
             existing.user_memory = tag.user_memory
         if tag.meta:
-            existing.metadata = tag.meta
+            existing.meta = tag.meta
 
         # Update product info if provided
         if tag.product_name is not None:
@@ -172,7 +172,7 @@ async def create_or_update_tag(tag: RFIDTagCreate, db: Session = Depends(get_db)
             antenna_port=tag.antenna_port,
             frequency=tag.frequency,
             location=tag.location,
-            metadata=tag.meta,
+            meta=tag.meta,
             scanned_at=datetime.now(timezone.utc),
         )
         db.add(history)
@@ -190,7 +190,7 @@ async def create_or_update_tag(tag: RFIDTagCreate, db: Session = Depends(get_db)
             frequency=tag.frequency,
             pc=tag.pc,
             crc=tag.crc,
-            metadata=tag.meta,
+            meta=tag.meta,
             location=tag.location,
             notes=tag.notes,
             # Product info
@@ -212,7 +212,7 @@ async def create_or_update_tag(tag: RFIDTagCreate, db: Session = Depends(get_db)
             antenna_port=tag.antenna_port,
             frequency=tag.frequency,
             location=tag.location,
-            metadata=tag.meta,
+            meta=tag.meta,
             scanned_at=datetime.now(timezone.utc),
         )
         db.add(history)
@@ -402,7 +402,7 @@ async def update_tag(tag_id: int, tag_update: RFIDTagUpdate, db: Session = Depen
     if tag_update.user_memory is not None:
         tag.user_memory = tag_update.user_memory
     if tag_update.meta is not None:
-        tag.metadata = tag_update.meta
+        tag.meta = tag_update.meta
     if tag_update.is_active is not None:
         tag.is_active = tag_update.is_active
 

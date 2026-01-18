@@ -53,11 +53,15 @@ def _create_mock_tag(epc="E200TEST", product_name="Test Product", product_sku="S
 @pytest.mark.asyncio
 async def test_view_empty_cart(client: AsyncClient):
     """Test viewing an empty cart."""
+    # Clear the cart at start
+    FAKE_CART_DB.clear()
+    
     response = await client.get("/")
     assert response.status_code == 200
     data = response.json()
     assert data["total_items"] == 0
     assert data["total_price_cents"] == 0
+
 
 
 @pytest.mark.asyncio

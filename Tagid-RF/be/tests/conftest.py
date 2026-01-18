@@ -1,9 +1,49 @@
+import os
+
+# Set environment variables before any imports to satisfy Pydantic Settings
+os.environ["DATABASE_URL"] = "postgresql://user:pass@localhost:5432/db"
+os.environ["SECRET_KEY"] = "test-secret"
+os.environ["GOOGLE_CLIENT_ID"] = "test-google-id"
+
 import asyncio
 from typing import AsyncGenerator
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+
+# Mock create_engine before any imports to prevent DB driver loading issues
+mock_engine = MagicMock()
+patch("sqlalchemy.create_engine", return_value=mock_engine).start()
+
+# Mock Settings and firebase_admin
+mock_settings = MagicMock()
+mock_settings.PROJECT_NAME = "RFID Test"
+mock_settings.API_V1_STR = "/api/v1"
+mock_settings.FCM_PROJECT_ID = "test-project"
+mock_settings.FCM_SERVER_KEY = "test-key"
+mock_settings.GOOGLE_CLIENT_ID = "test-google-id"
+mock_settings.SECRET_KEY = "test-secret"
+mock_settings.ALGORITHM = "HS256"
+mock_settings.ACCESS_TOKEN_EXPIRE_MINUTES = 60
+mock_settings.SECURITY_HEADERS = False
+mock_settings.BACKEND_CORS_ORIGINS = ["*"]
+
+patch("app.core.config.get_settings", return_value=mock_settings).start()
+patch("app.core.config.settings", mock_settings).start()
+
+# Mock RFID and Tag Listener services to prevent hangs in lifespan
+patch("app.services.rfid_reader.rfid_reader_service.connect", return_value=AsyncMock(return_value=True)).start()
+patch("app.services.rfid_reader.rfid_reader_service.start_scanning", return_value=AsyncMock(return_value=None)).start()
+patch("app.services.rfid_reader.rfid_reader_service.disconnect", return_value=AsyncMock(return_value=None)).start()
+patch("app.services.tag_listener_service.tag_listener_service.start", return_value=MagicMock()).start()
+patch("app.services.tag_listener_service.tag_listener_service.stop", return_value=MagicMock()).start()
+
+# Mock firebase_admin
+mock_firebase = MagicMock()
+patch("firebase_admin.initialize_app", return_value=mock_firebase).start()
+patch("firebase_admin.credentials.Certificate", return_value=MagicMock()).start()
 
 from app.db.prisma import prisma_client
 from app.main import app
@@ -19,19 +59,13 @@ def event_loop():
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def db_setup():
-    """Ensure Prisma client is connected and app state is initialized."""
-    try:
-        if not prisma_client.client.is_connected():
-            await prisma_client.connect()
-    except Exception:
-        # Ignore already connected or other connection errors in setup
-        pass
-
-    # Initialize app state if not already set (needed for dependencies)
-    if not hasattr(app.state, "prisma") or app.state.prisma is None:
-        app.state.prisma = prisma_client
-
-    yield prisma_client
+    """Ensure Prisma client is mocked or connected."""
+    # Mock connect to avoid hangs if DB is unreachable
+    with patch.object(prisma_client, "connect", AsyncMock(return_value=None)):
+        # Initialize app state if not already set (needed for dependencies)
+        if not hasattr(app.state, "prisma") or app.state.prisma is None:
+            app.state.prisma = prisma_client
+        yield prisma_client
     # Optionally disconnect at the very end
     # await prisma_client.disconnect()
 

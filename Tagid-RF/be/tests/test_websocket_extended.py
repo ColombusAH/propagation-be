@@ -9,6 +9,9 @@ from app.routers.websocket import manager
 @pytest.mark.asyncio
 async def test_websocket_message_handling():
     """Test handling different WebSocket messages."""
+    # Clear any existing connections from previous tests
+    manager.active_connections = []
+    
     mock_ws = AsyncMock(spec=WebSocket)
     await manager.connect(mock_ws)
 
@@ -29,3 +32,4 @@ async def test_websocket_message_handling():
 
     manager.disconnect(mock_ws)
     manager.disconnect(mock_ws2)
+
