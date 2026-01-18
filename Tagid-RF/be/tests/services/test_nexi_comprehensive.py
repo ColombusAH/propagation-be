@@ -2,6 +2,7 @@
 Comprehensive tests for Nexi Payment Provider.
 Covers payment creation, confirmation, refund, and cancellation.
 """
+
 import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
 from app.services.nexi_provider import NexiProvider

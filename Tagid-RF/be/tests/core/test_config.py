@@ -1,6 +1,7 @@
 """
 Tests for app/core/config.py - Settings loading and validation.
 """
+
 import os
 from unittest.mock import patch
 
@@ -17,22 +18,23 @@ def test_settings_defaults():
     env_vars = {
         "DATABASE_URL": "postgresql://user:pass@localhost/db",
         "SECRET_KEY": "test_secret",
-        "GOOGLE_CLIENT_ID": "google_id"
+        "GOOGLE_CLIENT_ID": "google_id",
     }
-    
+
     with patch.dict(os.environ, env_vars, clear=True):
         settings = Settings()
-        
+
         # Check defaults
         assert settings.API_V1_STR == "/api/v1"
         assert settings.DEBUG is False
         assert settings.MODE == "development"
         assert settings.DEFAULT_CURRENCY == "ILS"
         assert settings.ENABLE_THEFT_DETECTION is True
-        
+
         # Check required
         assert settings.DATABASE_URL == env_vars["DATABASE_URL"]
         assert settings.SECRET_KEY == env_vars["SECRET_KEY"]
+
 
 def test_settings_override():
     """Test overriding defaults with environment variables."""
@@ -42,15 +44,16 @@ def test_settings_override():
         "GOOGLE_CLIENT_ID": "google_id_prod",
         "DEBUG": "True",
         "PROJECT_NAME": "Production App",
-        "RFID_READER_IP": "10.0.0.50"
+        "RFID_READER_IP": "10.0.0.50",
     }
-    
+
     with patch.dict(os.environ, env_vars, clear=True):
         settings = Settings()
-        
+
         assert settings.DEBUG is True
         assert settings.PROJECT_NAME == "Production App"
         assert settings.RFID_READER_IP == "10.0.0.50"
+
 
 def test_settings_missing_required():
     """Test that missing required fields raises ValidationError."""
@@ -66,11 +69,12 @@ def test_settings_missing_required():
         assert "DATABASE_URL" in errors or "database_url" in errors
         assert "SECRET_KEY" in errors or "secret_key" in errors
 
+
 def test_get_settings_caching():
     """Test that get_settings uses lru_cache."""
     # First call
     s1 = get_settings()
     # Second call
     s2 = get_settings()
-    
+
     assert s1 is s2

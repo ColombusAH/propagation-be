@@ -1,6 +1,7 @@
 """
 Extended tests for Tag Listener Service - deeper coverage.
 """
+
 import pytest
 import threading
 from unittest.mock import MagicMock, patch, AsyncMock

@@ -29,9 +29,9 @@ def calculate_crc16(data: bytes) -> int:
 
 def build_command() -> bytes:
     """Build RFM_GET_DEVICE_INFO command"""
-    frame = struct.pack('>BBHB', HEAD, BROADCAST_ADDR, CMD_GET_DEVICE_INFO, 0)
+    frame = struct.pack(">BBHB", HEAD, BROADCAST_ADDR, CMD_GET_DEVICE_INFO, 0)
     crc = calculate_crc16(frame)
-    frame += struct.pack('<H', crc)
+    frame += struct.pack("<H", crc)
     return frame
 
 
@@ -42,21 +42,21 @@ def test_port(ip: str, port: int, timeout: float = 2.0) -> dict:
         "open": False,
         "responds_to_rfid": False,
         "response": None,
-        "error": None
+        "error": None,
     }
-    
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(timeout)
-    
+
     try:
         # Try to connect
         sock.connect((ip, port))
         result["open"] = True
-        
+
         # Send RFID command
         cmd = build_command()
         sock.sendall(cmd)
-        
+
         # Try to receive response
         try:
             header = sock.recv(6, socket.MSG_DONTWAIT)
@@ -65,7 +65,7 @@ def test_port(ip: str, port: int, timeout: float = 2.0) -> dict:
                 result["response"] = header.hex().upper()
         except:
             pass
-            
+
     except socket.timeout:
         result["error"] = "Connection timeout"
     except ConnectionRefusedError:
@@ -74,7 +74,7 @@ def test_port(ip: str, port: int, timeout: float = 2.0) -> dict:
         result["error"] = str(e)
     finally:
         sock.close()
-    
+
     return result
 
 
@@ -83,7 +83,7 @@ def scan_ports(ip: str):
     print("=" * 70)
     print(f"Scanning M-200 at {ip}")
     print("=" * 70)
-    
+
     # Common RFID reader ports
     ports_to_scan = [
         (4001, "Standard Chafon port"),
@@ -94,14 +94,14 @@ def scan_ports(ip: str):
         (10001, "Alternative port 3"),
         (9090, "Alternative port 4"),
     ]
-    
+
     results = []
-    
+
     for port, description in ports_to_scan:
         print(f"\nTesting port {port} ({description})...")
         result = test_port(ip, port)
         results.append(result)
-        
+
         if result["open"]:
             print(f"  ✓ Port {port} is OPEN")
             if result["responds_to_rfid"]:
@@ -111,15 +111,15 @@ def scan_ports(ip: str):
                 print(f"  ⚠️  Port open but no RFID response")
         else:
             print(f"  ✗ Port {port} is CLOSED ({result['error']})")
-    
+
     # Summary
     print("\n" + "=" * 70)
     print("SUMMARY")
     print("=" * 70)
-    
+
     open_ports = [r for r in results if r["open"]]
     rfid_ports = [r for r in results if r["responds_to_rfid"]]
-    
+
     if rfid_ports:
         print(f"\n✓ Found {len(rfid_ports)} port(s) responding to RFID commands:")
         for r in rfid_ports:
@@ -144,11 +144,9 @@ def scan_ports(ip: str):
 
 if __name__ == "__main__":
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="Scan M-200 for RFID ports")
     parser.add_argument("--ip", default="169.254.128.161", help="M-200 IP address")
-    
+
     args = parser.parse_args()
     scan_ports(args.ip)
-
-

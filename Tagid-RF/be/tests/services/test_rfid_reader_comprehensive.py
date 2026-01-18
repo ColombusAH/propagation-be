@@ -2,6 +2,7 @@
 Comprehensive tests for RFID Reader Service.
 Covers connection, disconnection, command sending, scanning, and error handling.
 """
+
 import pytest
 import socket
 import asyncio
@@ -146,7 +147,6 @@ def test_send_command_basic(reader):
     mock_sock.sendall.assert_called_once()
     # Verify response contains expected frame
     assert response in result
-
 
 
 # --- Alias Method Tests ---

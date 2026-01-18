@@ -93,7 +93,7 @@ class TestCartRouterLogic:
         # Mock settings and gateway
         with patch("app.routers.cart.settings") as mock_settings:
             mock_settings.DEFAULT_PAYMENT_PROVIDER = "stripe"
-            
+
             with patch("app.routers.cart.get_gateway") as mock_get_gateway:
                 mock_gateway = MagicMock()
                 mock_get_gateway.return_value = mock_gateway
@@ -115,7 +115,9 @@ class TestCartRouterLogic:
                 mock_tag = MagicMock()
                 mock_db_session.query.return_value.filter.return_value.first.return_value = mock_tag
 
-                response = client.post(f"{API_V1}/cart/checkout", json={"payment_method_id": "pm_card"})
+                response = client.post(
+                    f"{API_V1}/cart/checkout", json={"payment_method_id": "pm_card"}
+                )
 
                 assert response.status_code == 200
                 data = response.json()

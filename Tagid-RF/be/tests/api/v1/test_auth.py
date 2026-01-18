@@ -16,11 +16,11 @@ async def test_google_login_invalid_token(client: AsyncClient):
     from unittest.mock import MagicMock, patch
     from app.db.dependencies import get_db
     from app.main import app
-    
+
     app.dependency_overrides[get_db] = lambda: MagicMock()
     try:
         payload = {"token": "invalid-token-123"}
-        
+
         with patch("app.api.v1.endpoints.auth.id_token.verify_oauth2_token") as mock_verify:
             mock_verify.side_effect = ValueError("Invalid token")
             response = await client.post("/api/v1/auth/google", json=payload)

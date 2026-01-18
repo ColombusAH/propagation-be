@@ -25,7 +25,11 @@ class TestSecurityHeaders:
         response = await client.get("/", headers={"Origin": "http://localhost:3000"})
         assert response.status_code == 200
         # If "*" is set, it might return "*" or the origin or None
-        assert response.headers.get("access-control-allow-origin") in ["*", "http://localhost:3000", None]
+        assert response.headers.get("access-control-allow-origin") in [
+            "*",
+            "http://localhost:3000",
+            None,
+        ]
 
 
 class TestExceptionHandlers:

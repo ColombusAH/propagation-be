@@ -63,8 +63,10 @@ class TestStartScanning:
     @pytest.mark.asyncio
     async def test_start_scanning_success(self, client):
         """Test starting RFID scanning."""
-        with patch("app.api.v1.endpoints.rfid_scan.rfid_reader_service") as mock_rfid, \
-             patch("app.api.v1.endpoints.rfid_scan.tag_listener_service") as mock_listener:
+        with (
+            patch("app.api.v1.endpoints.rfid_scan.rfid_reader_service") as mock_rfid,
+            patch("app.api.v1.endpoints.rfid_scan.tag_listener_service") as mock_listener,
+        ):
             mock_rfid.is_connected = True
             mock_rfid.start_continuous_scan = AsyncMock(return_value=True)
             mock_listener.start = MagicMock()
@@ -88,8 +90,10 @@ class TestStopScanning:
     @pytest.mark.asyncio
     async def test_stop_scanning(self, client):
         """Test stopping RFID scanning."""
-        with patch("app.api.v1.endpoints.rfid_scan.rfid_reader_service") as mock_rfid, \
-             patch("app.api.v1.endpoints.rfid_scan.tag_listener_service") as mock_listener:
+        with (
+            patch("app.api.v1.endpoints.rfid_scan.rfid_reader_service") as mock_rfid,
+            patch("app.api.v1.endpoints.rfid_scan.tag_listener_service") as mock_listener,
+        ):
             mock_rfid.stop_continuous_scan = MagicMock()
             mock_listener.stop = MagicMock()
 
@@ -103,13 +107,15 @@ class TestPerformInventory:
     @pytest.mark.asyncio
     async def test_perform_inventory_success(self, client):
         """Test successful inventory scan."""
-        with patch("app.api.v1.endpoints.rfid_scan.rfid_reader_service") as mock_rfid, \
-             patch("app.api.v1.endpoints.rfid_scan.prisma_client") as mock_prisma:
-            
+        with (
+            patch("app.api.v1.endpoints.rfid_scan.rfid_reader_service") as mock_rfid,
+            patch("app.api.v1.endpoints.rfid_scan.prisma_client") as mock_prisma,
+        ):
+
             mock_rfid.is_connected = True
-            mock_rfid.perform_inventory = AsyncMock(return_value=[
-                {"epc": "E280681000001234", "rssi": -55.0, "antenna_port": 1}
-            ])
+            mock_rfid.perform_inventory = AsyncMock(
+                return_value=[{"epc": "E280681000001234", "rssi": -55.0, "antenna_port": 1}]
+            )
             mock_prisma.client.tagmapping.find_unique = AsyncMock(return_value=None)
 
             response = await client.post("/api/v1/rfid-scan/inventory")
@@ -152,11 +158,10 @@ class TestModuleControl:
         with patch("app.api.v1.endpoints.rfid_scan.rfid_reader_service") as mock_rfid:
             mock_rfid.read_memory = AsyncMock(return_value={"data": "ABCD1234"})
 
-            response = await client.post("/api/v1/rfid-scan/read-memory", json={
-                "mem_bank": 2,
-                "start_addr": 0,
-                "word_count": 6
-            })
+            response = await client.post(
+                "/api/v1/rfid-scan/read-memory",
+                json={"mem_bank": 2, "start_addr": 0, "word_count": 6},
+            )
             assert response.status_code in [200, 401, 403, 422]
 
 
@@ -167,11 +172,13 @@ class TestNetworkConfiguration:
     async def test_get_network(self, client):
         """Test getting network configuration."""
         with patch("app.api.v1.endpoints.rfid_scan.rfid_reader_service") as mock_rfid:
-            mock_rfid.get_network = AsyncMock(return_value={
-                "ip": "192.168.1.100",
-                "subnet": "255.255.255.0",
-                "gateway": "192.168.1.1"
-            })
+            mock_rfid.get_network = AsyncMock(
+                return_value={
+                    "ip": "192.168.1.100",
+                    "subnet": "255.255.255.0",
+                    "gateway": "192.168.1.1",
+                }
+            )
 
             response = await client.get("/api/v1/rfid-scan/network")
             assert response.status_code in [200, 401, 403]
@@ -182,12 +189,15 @@ class TestNetworkConfiguration:
         with patch("app.api.v1.endpoints.rfid_scan.rfid_reader_service") as mock_rfid:
             mock_rfid.set_network = AsyncMock()
 
-            response = await client.post("/api/v1/rfid-scan/network", json={
-                "ip": "192.168.1.200",
-                "subnet": "255.255.255.0",
-                "gateway": "192.168.1.1",
-                "port": 4001
-            })
+            response = await client.post(
+                "/api/v1/rfid-scan/network",
+                json={
+                    "ip": "192.168.1.200",
+                    "subnet": "255.255.255.0",
+                    "gateway": "192.168.1.1",
+                    "port": 4001,
+                },
+            )
             assert response.status_code in [200, 401, 403]
 
     @pytest.mark.asyncio
@@ -196,10 +206,9 @@ class TestNetworkConfiguration:
         with patch("app.api.v1.endpoints.rfid_scan.rfid_reader_service") as mock_rfid:
             mock_rfid.set_rssi_filter = AsyncMock()
 
-            response = await client.post("/api/v1/rfid-scan/rssi-filter", json={
-                "antenna": 1,
-                "threshold": -60
-            })
+            response = await client.post(
+                "/api/v1/rfid-scan/rssi-filter", json={"antenna": 1, "threshold": -60}
+            )
             assert response.status_code in [200, 401, 403, 422]
 
     @pytest.mark.asyncio

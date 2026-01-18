@@ -23,27 +23,27 @@ async def main():
     print("=" * 70)
     print("Using rfid_reader_service")
     print("=" * 70)
-    
+
     from app.services.rfid_reader import rfid_reader_service
-    
+
     # Override IP/port
     rfid_reader_service.reader_ip = "192.168.1.200"
     rfid_reader_service.reader_port = 2022
-    
+
     print(f"\nConnecting to {rfid_reader_service.reader_ip}:{rfid_reader_service.reader_port}...")
-    
+
     connected = await rfid_reader_service.connect()
-    
+
     if connected:
         print("✓ Connected!")
-        
+
         print("\nGetting reader info...")
         info = await rfid_reader_service.get_reader_info()
         print(f"Reader Info: {info}")
-        
+
         print("\nReading tags (single shot)...")
         tags = await rfid_reader_service.read_single_tag()
-        
+
         if tags:
             print(f"\n✓ Found {len(tags)} tag(s):")
             for tag in tags:
@@ -52,7 +52,7 @@ async def main():
                 print(f"    Antenna: {tag.get('antenna_port')}")
         else:
             print("No tags found")
-        
+
         print("\nDisconnecting...")
         await rfid_reader_service.disconnect()
         print("Done.")

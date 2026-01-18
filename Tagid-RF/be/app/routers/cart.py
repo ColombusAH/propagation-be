@@ -61,7 +61,9 @@ async def add_to_cart(request: AddToCartRequest, db: Session = Depends(get_db)):
         # Strategy: Pick the first available tag for this product to assign to this cart
         target_tag = (
             db.query(RFIDTag)
-            .filter(RFIDTag.product_sku == sku, RFIDTag.is_paid.is_(False), RFIDTag.is_active.is_(True))
+            .filter(
+                RFIDTag.product_sku == sku, RFIDTag.is_paid.is_(False), RFIDTag.is_active.is_(True)
+            )
             .first()
         )
     else:
@@ -69,7 +71,9 @@ async def add_to_cart(request: AddToCartRequest, db: Session = Depends(get_db)):
         target_tag = (
             db.query(RFIDTag)
             .filter(
-                RFIDTag.epc == request.qr_data, RFIDTag.is_paid.is_(False), RFIDTag.is_active.is_(True)
+                RFIDTag.epc == request.qr_data,
+                RFIDTag.is_paid.is_(False),
+                RFIDTag.is_active.is_(True),
             )
             .first()
         )
@@ -124,54 +128,59 @@ async def checkout(request: CheckoutRequest, db: Session = Depends(get_db)):
 
     try:
         # Get configured payment gateway
-        # Ideally, provider is selected by client or config. 
+        # Ideally, provider is selected by client or config.
         # Using default "stripe" or based on settings
-        provider_name = settings.DEFAULT_PAYMENT_PROVIDER.lower() if hasattr(settings, "DEFAULT_PAYMENT_PROVIDER") else "stripe"
+        provider_name = (
+            settings.DEFAULT_PAYMENT_PROVIDER.lower()
+            if hasattr(settings, "DEFAULT_PAYMENT_PROVIDER")
+            else "stripe"
+        )
         gateway = get_gateway(provider_name)
 
         # 1. Create Payment
         payment_req = PaymentRequest(
-            order_id=f"order_{len(cart)}_{total_amount}", # Simple ID generation
+            order_id=f"order_{len(cart)}_{total_amount}",  # Simple ID generation
             amount=total_amount,
             currency="ILS",
             metadata={"items": str([i.product_sku for i in cart])},
-            customer_email="guest@example.com" # TODO: from auth
+            customer_email="guest@example.com",  # TODO: from auth
         )
-        
+
         payment_res = await gateway.create_payment(payment_req)
 
         if not payment_res.success:
-             raise HTTPException(
+            raise HTTPException(
                 status_code=400, detail=f"Payment creation failed: {payment_res.error}"
             )
 
         # 2. Confirm Payment (if necessary/supported by gateway in this flow)
         # Note: Some gateways return success immediately (redirect), others need confirmation
         # For Stripe, we emulate the client confirmation or server-side confirm if we have a method
-        
+
         final_status = payment_res.status
         external_id = payment_res.payment_id
 
         if request.payment_method_id and provider_name == "stripe":
-             # If client provided a payment method (e.g. from frontend Stripe Elements), confirm it
-             confirm_res = await gateway.confirm_payment(
-                 payment_id=payment_res.payment_id,
-                 payment_method=request.payment_method_id
-             )
-             if not confirm_res.success:
-                 raise HTTPException(
-                     status_code=400, detail=f"Payment failed: {confirm_res.error}"
-                 )
-             final_status = confirm_res.status
-             external_id = confirm_res.external_id or confirm_res.payment_id
-        
+            # If client provided a payment method (e.g. from frontend Stripe Elements), confirm it
+            confirm_res = await gateway.confirm_payment(
+                payment_id=payment_res.payment_id, payment_method=request.payment_method_id
+            )
+            if not confirm_res.success:
+                raise HTTPException(status_code=400, detail=f"Payment failed: {confirm_res.error}")
+            final_status = confirm_res.status
+            external_id = confirm_res.external_id or confirm_res.payment_id
+
         # Determine if success
-        if final_status not in [PaymentStatus.COMPLETED, PaymentStatus.PROCESSING, PaymentStatus.PENDING]:
-             # PENDING might be OK for redirect flows (Tranzila), but for direct checkout we might want completion
-             # For now, let's assume PENDING is acceptable for redirect, COMPLETED for direct
-             # If it's failed, raise error
-             if final_status == PaymentStatus.FAILED:
-                  raise HTTPException(status_code=400, detail="Payment failed")
+        if final_status not in [
+            PaymentStatus.COMPLETED,
+            PaymentStatus.PROCESSING,
+            PaymentStatus.PENDING,
+        ]:
+            # PENDING might be OK for redirect flows (Tranzila), but for direct checkout we might want completion
+            # For now, let's assume PENDING is acceptable for redirect, COMPLETED for direct
+            # If it's failed, raise error
+            if final_status == PaymentStatus.FAILED:
+                raise HTTPException(status_code=400, detail="Payment failed")
 
         # 3. Success! Mark items as PAID
         for item in cart:

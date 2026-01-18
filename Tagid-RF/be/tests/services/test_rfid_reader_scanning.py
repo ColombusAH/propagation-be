@@ -1,6 +1,7 @@
 """
 Extended tests for RFID Reader Service - scanning and advanced operations.
 """
+
 import pytest
 import socket
 from unittest.mock import MagicMock, patch, AsyncMock

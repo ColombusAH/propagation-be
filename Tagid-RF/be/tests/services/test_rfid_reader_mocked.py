@@ -72,7 +72,6 @@ class TestRFIDReaderServiceMocked:
         result = await service.connect()
         assert result is True
 
-
     async def test_disconnect_with_scan_stop(self, service):
         """Test disconnect stops scanning."""
         service.is_connected = True
@@ -135,7 +134,7 @@ class TestRFIDReaderServiceMocked:
         service._socket = mock_socket
         cmd = MagicMock(cmd=0x1234)
         cmd.serialize.return_value = b"CMD"
-        
+
         # Close immediately on first byte
         mock_socket.recv.return_value = b""
         with pytest.raises(ConnectionError):
@@ -147,12 +146,11 @@ class TestRFIDReaderServiceMocked:
         service._socket = mock_socket
         cmd = MagicMock(cmd=0x1234)
         cmd.serialize.return_value = b"CMD"
-        
+
         # Return header but close during body
-        mock_socket.recv.side_effect = [b"\xcf", b"\x00\x00\x00\x02", b""] 
+        mock_socket.recv.side_effect = [b"\xcf", b"\x00\x00\x00\x02", b""]
         with pytest.raises(ConnectionError):
             await asyncio.to_thread(service._send_command, cmd)
-
 
     async def test_send_command_timeout(self, service, mock_socket):
         """Test timeout waiting for response."""
@@ -312,14 +310,14 @@ class TestRFIDReaderServiceMocked:
     async def test_get_reader_info_protocol_mismatch(self, service):
         """Test handling of non-M200 responses (e.g. HTTP/JSON)."""
         service.is_connected = True
-        
+
         # Simulate HTTP response
-        http_response = b"HTTP/1.1 200 OK\r\nContent-Length: 20\r\n\r\n{\"type\":\"event\"}"
-        
+        http_response = b'HTTP/1.1 200 OK\r\nContent-Length: 20\r\n\r\n{"type":"event"}'
+
         with patch.object(service, "_send_command", return_value=http_response):
-             result = await service.get_reader_info()
-             assert "protocol_detected" in result
-             assert result["protocol_detected"] == "JSON/HTTP"
+            result = await service.get_reader_info()
+            assert "protocol_detected" in result
+            assert result["protocol_detected"] == "JSON/HTTP"
 
     async def test_get_reader_info_timeout(self, service):
         """Test get_reader_info timeout."""
@@ -335,7 +333,7 @@ class TestRFIDReaderServiceMocked:
         service.is_connected = False
         await service.start_scanning()
         assert service.is_scanning is False
-        
+
         # Already scanning
         service.is_connected = True
         service.is_scanning = True
@@ -347,12 +345,11 @@ class TestRFIDReaderServiceMocked:
     async def test_process_tag_error_handling(self, service):
         """Test _process_tag handles DB errors gracefully."""
         tag_data = {"epc": "E1", "rssi": -60, "antenna_port": 1}
-        
+
         # Patch SessionLocal to raise exception
         with patch.object(rfid_reader_module, "SessionLocal", side_effect=Exception("DB Error")):
-             # Should not raise exception
-             await service._process_tag(tag_data)
-
+            # Should not raise exception
+            await service._process_tag(tag_data)
 
     async def test_set_rssi_filter(self, service):
         """Test setting RSSI filter."""
@@ -390,7 +387,7 @@ class TestRFIDReaderServiceMocked:
         service.is_scanning = True
         service.reader_ip = "1.2.3.4"
         service.reader_port = 4001
-        
+
         status = service.get_status()
         assert status["is_connected"] is True
         assert status["is_scanning"] is True
@@ -402,27 +399,27 @@ class TestRFIDReaderServiceMocked:
         with patch.object(service, "_send_command", return_value=b"data"):
             with patch.object(rfid_reader_module, "M200ResponseParser") as MockParser:
                 MockParser.parse.return_value.success = True
-                MockParser.parse.return_value.data = b"\xAB\xCD"
-                
+                MockParser.parse.return_value.data = b"\xab\xcd"
+
                 result = await service.get_all_params()
                 assert result["success"] is True
-                assert result["data"] == "ABCD" # Hex upper
+                assert result["data"] == "ABCD"  # Hex upper
 
     async def test_get_all_params_error(self, service):
         """Test get_all_params error handling."""
         service.is_connected = True
         with patch.object(service, "_send_command", side_effect=Exception("Param Error")):
-             result = await service.get_all_params()
-             assert "error" in result
+            result = await service.get_all_params()
+            assert "error" in result
 
     async def test_aliases(self, service):
         """Test alias methods."""
         service.is_connected = True
-        
+
         # Test get_all_config alias
         with patch.object(service, "get_all_params", return_value={"ok": True}) as mock_real:
             assert await service.get_all_config() == {"ok": True}
-            
+
         # Test set_network alias
         with patch.object(service, "set_network_config", return_value=True) as mock_real:
             assert await service.set_network("a", "b", "c", 1) is True
@@ -450,45 +447,45 @@ class TestRFIDReaderServiceMocked:
         """Test stop_scanning when not scanning."""
         service.is_scanning = False
         # Should just log and return
-        await service.stop_scanning() 
+        await service.stop_scanning()
         assert service.is_scanning is False
-        
+
     async def test_stop_scanning_send_command_failure(self, service):
         """Test stop_scanning fails to send stop command but still cleans up."""
         service.is_scanning = True
         service.is_connected = True
-        
+
         with patch.object(service, "_send_command", side_effect=Exception("Stop Error")):
-             await service.stop_scanning()
-             assert service.is_scanning is False
+            await service.stop_scanning()
+            assert service.is_scanning is False
 
     async def test_get_network_config_error(self, service):
         """Test get_network_config generic error."""
         service.is_connected = True
         with patch.object(service, "_send_command", side_effect=Exception("Net Error")):
-             result = await service.get_network_config()
-             assert "error" in result
+            result = await service.get_network_config()
+            assert "error" in result
 
     async def test_set_rssi_filter_error(self, service):
         """Test set_rssi_filter error."""
         service.is_connected = True
         with patch.object(service, "_send_command", side_effect=Exception("RSSI Error")):
-             assert await service.set_rssi_filter(1, -90) is False
+            assert await service.set_rssi_filter(1, -90) is False
 
     async def test_gpio_helpers_error(self, service):
         """Test gpio helper errors."""
         service.is_connected = True
         with patch.object(service, "_send_command", side_effect=Exception("GPIO Error")):
-             assert await service.get_gpio_levels() == {}
-             assert await service.set_gpio(1, 1) is False
-             
+            assert await service.get_gpio_levels() == {}
+            assert await service.set_gpio(1, 1) is False
+
     async def test_not_connected_guards(self, service):
         """Test various methods return early if not connected."""
         service.is_connected = False
-        
+
         assert await service.initialize_device() is False
         assert await service.set_power(10) is False
-        assert await service.read_tag_memory(1,0,1) is None
+        assert await service.read_tag_memory(1, 0, 1) is None
         assert await service.get_network_config() == {"error": "Not connected"}
         assert await service.set_network_config("1.1.1.1") is False
         assert await service.set_rssi_filter(1, -10) is False
@@ -496,9 +493,9 @@ class TestRFIDReaderServiceMocked:
         assert await service.get_gpio_levels() == {}
         assert await service.set_gpio(1, 1) is False
         assert await service.control_relay(1) is False
-        
+
     async def test_read_tag_memory_error(self, service):
         """Test read_tag_memory error."""
         service.is_connected = True
         with patch.object(service, "_send_command", side_effect=Exception("Mem Error")):
-             assert await service.read_tag_memory(1,0,1) is None
+            assert await service.read_tag_memory(1, 0, 1) is None

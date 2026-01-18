@@ -6,6 +6,7 @@ import time
 LISTEN_IP = "0.0.0.0"
 LISTEN_PORT = 4001
 
+
 def calculate_crc16(data: bytes) -> int:
     PRESET_VALUE = 0xFFFF
     POLYNOMIAL = 0x8408
@@ -19,6 +20,7 @@ def calculate_crc16(data: bytes) -> int:
                 crc_value = crc_value >> 1
     return crc_value
 
+
 def build_command(cmd_code: int, data: bytes = b"", addr: int = 0xFF) -> bytes:
     head = 0xCF
     frame_body = struct.pack(">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF)
@@ -27,6 +29,7 @@ def build_command(cmd_code: int, data: bytes = b"", addr: int = 0xFF) -> bytes:
     crc = calculate_crc16(frame_body)
     return frame_body + struct.pack(">H", crc)
 
+
 def wait_for_response(client, expected_cmd, timeout=3.0):
     client.settimeout(timeout)
     start_time = time.time()
@@ -34,69 +37,78 @@ def wait_for_response(client, expected_cmd, timeout=3.0):
     try:
         while time.time() - start_time < timeout:
             chunk = client.recv(4096)
-            if not chunk: break
+            if not chunk:
+                break
             buffer += chunk
-            
+
             while len(buffer) >= 6:
                 if buffer[0] != 0xCF:
-                     idx = buffer.find(b'\xCF', 1)
-                     if idx != -1: buffer = buffer[idx:]
-                     else: buffer = b""
-                     continue
+                    idx = buffer.find(b"\xcf", 1)
+                    if idx != -1:
+                        buffer = buffer[idx:]
+                    else:
+                        buffer = b""
+                    continue
 
                 length = buffer[4]
                 if len(buffer) < 7 + length:
                     break
-                
-                frame = buffer[:7+length]
-                buffer = buffer[7+length:]
-                
+
+                frame = buffer[: 7 + length]
+                buffer = buffer[7 + length :]
+
                 cmd = (frame[2] << 8) | frame[3]
                 status = frame[5]
                 data = frame[6:-2]
-                
+
                 if cmd == expected_cmd:
                     return True, status, data
                 elif cmd == 0x0082:
                     continue
-                    
+
     except socket.timeout:
         return False, "Timeout", None
     return False, "Not Found", None
 
+
 def extract_epc(payload):
-    if len(payload) < 3: return None
+    if len(payload) < 3:
+        return None
     core_payload = payload[2:]
     real_len = len(core_payload)
-    while real_len > 0 and core_payload[real_len-1] == 0:
+    while real_len > 0 and core_payload[real_len - 1] == 0:
         real_len -= 1
-    if real_len == 0: return None
+    if real_len == 0:
+        return None
     return core_payload[:real_len].hex().upper()
+
 
 def main():
     print("=== MODIFY GATE PARAM (Increase Q) ===")
     print(f"Listening on {LISTEN_IP}:{LISTEN_PORT}...")
-    
+
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind((LISTEN_IP, LISTEN_PORT))
     server.listen(1)
-    
+
     conn, addr = server.accept()
     print(f"\n[+] Connected: {addr[0]}")
-    
+
     # 1. Stop first
     print("1. Sending STOP (0x0050)...")
     conn.send(build_command(0x0050))
     success, status, _ = wait_for_response(conn, 0x0050)
-    if success: print("   ✅ Stopped.")
-    else: print("   ⚠️ Stop Failed.")
-    
+    if success:
+        print("   ✅ Stopped.")
+    else:
+        print("   ⚠️ Stop Failed.")
+
     time.sleep(1.0)
-    
+
     # 2. Read Current Gate Param
     print("2. Reading Current Gate Param (0x0083)...")
-    conn.send(build_command(0x0083, b'\x02'))
+    conn.send(build_command(0x0083, b"\x02"))
     success, status, data = wait_for_response(conn, 0x0083)
     if success and data:
         print(f"   📦 Current Data: {data.hex().upper()}")
@@ -109,23 +121,23 @@ def main():
         return
 
     time.sleep(0.5)
-    
+
     # 3. Attempt to Write Gate Param with Q=5
     # Original: 02 00 01 02 01 02 00 00 00 00 00 04 00 00 00 00
     # Modified: Change byte 11 from 04 to 05 (Q=5 for more tags)
     # Hypothesis: \x01 prefix for SET
     print("3. Setting Gate Param (0x0083)...")
-    
+
     # Original data was: 02000102010200000000000400000000
     # Analysis: Bytes 3 and 5 are "02" - likely Session 2!
     # Setting them to "00" for Session 0 (continuous reading)
     # Also keeping bytes 10-11 as 0C (12 bytes EPC)
     new_gate_data = bytes.fromhex("010001000100000000000C0C00000000")
     print(f"   Payload: {new_gate_data.hex().upper()}")
-    
+
     conn.send(build_command(0x0083, new_gate_data))
     success, status, data = wait_for_response(conn, 0x0083)
-    
+
     if success and status == 0x00:
         print(f"   ✅ SUCCESS! Gate Param Updated.")
     else:
@@ -135,7 +147,7 @@ def main():
 
     # 4. Verify New Gate Param
     print("4. Verifying New Gate Param (0x0083)...")
-    conn.send(build_command(0x0083, b'\x02'))
+    conn.send(build_command(0x0083, b"\x02"))
     success, status, data = wait_for_response(conn, 0x0083)
     if success and data:
         print(f"   📦 New Data: {data.hex().upper()}")
@@ -144,9 +156,10 @@ def main():
 
     # 5. Power cycle needed to apply changes? Or just start?
     print("\n5. Done! Power cycle the reader and run debug_multi_tag.py to test.")
-    
+
     conn.close()
     server.close()
+
 
 if __name__ == "__main__":
     main()

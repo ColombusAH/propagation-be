@@ -2,6 +2,7 @@
 Advanced tests for RFID Reader - async methods and edge cases.
 Covers get_reader_info, read_single_tag, and error handling paths.
 """
+
 import pytest
 import socket
 from unittest.mock import MagicMock, patch, AsyncMock
@@ -143,7 +144,6 @@ async def test_get_gate_status_not_connected():
 
     # Should return None, error dict, or False when not connected
     assert result is None or isinstance(result, dict) or result is False
-
 
 
 # --- GPIO Tests ---

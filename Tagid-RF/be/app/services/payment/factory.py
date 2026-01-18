@@ -33,6 +33,7 @@ def get_gateway(provider: str = "stripe") -> PaymentGateway:
 
 from app.core.config import settings
 
+
 def _create_stripe_gateway() -> PaymentGateway:
     """Create a Stripe gateway instance."""
     from .stripe_gateway import StripeGateway
@@ -50,16 +51,16 @@ def _create_tranzila_gateway() -> PaymentGateway:
     """Create a Tranzila gateway instance."""
     from .tranzila import TranzilaGateway
 
-    # Note: config.py uses TRANZILA_TERMINAL_NAME, factory used TRANZILA_TERMINAL. 
+    # Note: config.py uses TRANZILA_TERMINAL_NAME, factory used TRANZILA_TERMINAL.
     # Aligning to config.py
     terminal = settings.TRANZILA_TERMINAL_NAME
-    # config.py doesn't seem to have TRANZILA_PASSWORD, it has TRANZILA_API_KEY. 
-    # Let's check tranzila.py requirements. 
-    # tranzila.py asks for terminal_password. 
+    # config.py doesn't seem to have TRANZILA_PASSWORD, it has TRANZILA_API_KEY.
+    # Let's check tranzila.py requirements.
+    # tranzila.py asks for terminal_password.
     # Let's assume TRANZILA_API_KEY map to password or we need to add PASSWORD to config.
     # For now, I will use TRANZILA_API_KEY as password if that's the intent, or stick to os.getenv if missing.
     # config.py has TRANZILA_API_KEY.
-    password = settings.TRANZILA_API_KEY 
+    password = settings.TRANZILA_API_KEY
 
     if not terminal:
         raise ValueError("TRANZILA_TERMINAL_NAME is required in settings")

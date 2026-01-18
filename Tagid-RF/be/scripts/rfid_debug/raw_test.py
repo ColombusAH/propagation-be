@@ -32,18 +32,18 @@ def test_raw_socket(ip: str, port: int):
     print(f"Raw Socket Test")
     print(f"Target: {ip}:{port}")
     print("=" * 70)
-    
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(10)
-    
+
     try:
         print(f"\n1. Connecting...")
         sock.connect((ip, port))
         print(f"   ✓ Connected!")
-        
+
         # Wait for device to stabilize
         time.sleep(0.1)
-        
+
         # Clear any buffered data
         print("\n2. Checking for buffered data...")
         sock.setblocking(False)
@@ -56,19 +56,19 @@ def test_raw_socket(ip: str, port: int):
             print("   No buffered data")
         sock.setblocking(True)
         sock.settimeout(10)
-        
+
         # Build command with CRC in BOTH endianness
         print("\n3. Testing GET_DEVICE_INFO (0x0070) with different CRC formats...")
-        
-        frame_base = struct.pack('>BBHB', HEAD, BROADCAST_ADDR, 0x0070, 0)
+
+        frame_base = struct.pack(">BBHB", HEAD, BROADCAST_ADDR, 0x0070, 0)
         crc = calculate_crc16(frame_base)
-        
+
         # Try little-endian CRC
-        cmd_le = frame_base + struct.pack('<H', crc)
+        cmd_le = frame_base + struct.pack("<H", crc)
         print(f"\n   a) Little-endian CRC:")
         print(f"      TX: {cmd_le.hex().upper()}")
         sock.sendall(cmd_le)
-        
+
         # Wait and collect
         sock.settimeout(3)
         try:
@@ -80,15 +80,15 @@ def test_raw_socket(ip: str, port: int):
                 print("      No response (connection closed)")
         except socket.timeout:
             print("      TIMEOUT")
-        
+
         time.sleep(0.5)
-        
+
         # Try big-endian CRC
-        cmd_be = frame_base + struct.pack('>H', crc)
+        cmd_be = frame_base + struct.pack(">H", crc)
         print(f"\n   b) Big-endian CRC:")
         print(f"      TX: {cmd_be.hex().upper()}")
         sock.sendall(cmd_be)
-        
+
         sock.settimeout(3)
         try:
             response = sock.recv(4096)
@@ -99,15 +99,15 @@ def test_raw_socket(ip: str, port: int):
                 print("      No response")
         except socket.timeout:
             print("      TIMEOUT")
-        
+
         # Try inventory command which worked partially before
         print("\n4. Testing INVENTORY command (0x0001)...")
-        frame_inv = struct.pack('>BBHBBB', HEAD, BROADCAST_ADDR, 0x0001, 2, 0x00, 0)
+        frame_inv = struct.pack(">BBHBBB", HEAD, BROADCAST_ADDR, 0x0001, 2, 0x00, 0)
         crc_inv = calculate_crc16(frame_inv)
-        cmd_inv = frame_inv + struct.pack('<H', crc_inv)
+        cmd_inv = frame_inv + struct.pack("<H", crc_inv)
         print(f"   TX: {cmd_inv.hex().upper()}")
         sock.sendall(cmd_inv)
-        
+
         sock.settimeout(5)
         try:
             response = sock.recv(4096)
@@ -118,10 +118,11 @@ def test_raw_socket(ip: str, port: int):
                 print("   No response")
         except socket.timeout:
             print("   TIMEOUT")
-            
+
     except Exception as e:
         print(f"Error: {e}")
         import traceback
+
         traceback.print_exc()
     finally:
         sock.close()
@@ -132,7 +133,7 @@ def analyze_response(data: bytes):
     """Try to analyze response"""
     if len(data) >= 6 and data[0] == HEAD:
         addr = data[1]
-        cmd = struct.unpack('>H', data[2:4])[0]
+        cmd = struct.unpack(">H", data[2:4])[0]
         length = data[4]
         status = data[5]
         print(f"   RFID Frame detected:")
@@ -146,7 +147,7 @@ def analyze_response(data: bytes):
                 print(f"      DATA:   {payload.hex().upper()}")
                 # Try to decode as ASCII
                 try:
-                    ascii_str = payload.rstrip(b'\x00').decode('ascii', errors='replace')
+                    ascii_str = payload.rstrip(b"\x00").decode("ascii", errors="replace")
                     if any(c.isalnum() for c in ascii_str):
                         print(f"      ASCII:  {ascii_str}")
                 except:
@@ -155,8 +156,8 @@ def analyze_response(data: bytes):
     else:
         # Check if ASCII
         try:
-            ascii_view = data.decode('ascii', errors='replace')
-            printable = ''.join(c if c.isprintable() or c in '\n\r\t' else '.' for c in ascii_view)
+            ascii_view = data.decode("ascii", errors="replace")
+            printable = "".join(c if c.isprintable() or c in "\n\r\t" else "." for c in ascii_view)
             if printable.strip():
                 print(f"   ASCII: {printable[:200]}")
         except:

@@ -1,6 +1,7 @@
 """
 Standardized tests for Payment Services.
 """
+
 import os
 import sys
 import uuid
@@ -37,7 +38,7 @@ class TestPaymentFactory:
         with patch.object(factory, "settings") as mock_settings:
             mock_settings.STRIPE_SECRET_KEY = "sk_test_123"
             mock_settings.STRIPE_WEBHOOK_SECRET = "whsec_123"
-            
+
             with patch("app.services.payment.stripe_gateway.stripe"):
                 g1 = factory.get_gateway("stripe")
                 g2 = factory.get_gateway("stripe")
@@ -49,7 +50,7 @@ class TestPaymentFactory:
         with patch.object(factory, "settings") as mock_settings:
             mock_settings.TRANZILA_TERMINAL_NAME = "term1"
             mock_settings.TRANZILA_API_KEY = "pass"
-            
+
             g = factory.get_gateway("tranzila")
             assert g.provider == PaymentProvider.TRANZILA
 
@@ -83,7 +84,9 @@ class TestPaymentFactory:
 
     def test_get_available_providers(self):
         with patch("os.getenv") as mock_getenv:
-            mock_getenv.side_effect = lambda k: "val" if k in ["STRIPE_SECRET_KEY", "TRANZILA_TERMINAL"] else None
+            mock_getenv.side_effect = lambda k: (
+                "val" if k in ["STRIPE_SECRET_KEY", "TRANZILA_TERMINAL"] else None
+            )
             providers = factory.get_available_providers()
             assert "stripe" in providers
             assert "tranzila" in providers
@@ -101,6 +104,7 @@ class TestStripeGateway:
     @pytest.fixture
     def gateway(self, mock_stripe):
         from app.services.payment.stripe_gateway import StripeGateway
+
         with patch("app.services.payment.stripe_gateway.STRIPE_AVAILABLE", True):
             return StripeGateway(api_key="sk_test", webhook_secret="wh_sec")
 

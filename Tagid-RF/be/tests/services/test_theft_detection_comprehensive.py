@@ -2,6 +2,7 @@
 Tests for Theft Detection Service.
 Covers tag payment checking, alert creation, and notification logic.
 """
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from app.services.theft_detection import TheftDetectionService

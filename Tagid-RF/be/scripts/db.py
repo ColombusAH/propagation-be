@@ -15,10 +15,10 @@ ROOT_DIR = Path(__file__).parent.parent
 def run_command(command, env=None):
     """Run a shell command and display output"""
     print(f"Running: {' '.join(command)}")
-    
+
     if env is None:
         env = os.environ.copy()
-    
+
     try:
         result = subprocess.run(
             command,
@@ -39,13 +39,13 @@ def run_command(command, env=None):
 def setup_prisma_environment():
     """Set up the Prisma environment"""
     env = os.environ.copy()
-    
+
     # Check if DATABASE_URL is set, if not, use default for local development
     if "DATABASE_URL" not in env:
         # Default for local development
         env["DATABASE_URL"] = "postgresql://postgres:postgres@localhost:5432/shifty"
         print(f"Using default DATABASE_URL: {env['DATABASE_URL']}")
-    
+
     return env
 
 
@@ -78,7 +78,7 @@ def reset_database():
     if confirm.lower() != "yes":
         print("Operation canceled.")
         return
-    
+
     run_command(["python", "-m", "prisma", "migrate", "reset", "--force"], env)
     print("Database reset successfully!")
 
@@ -92,25 +92,25 @@ def status():
 def main():
     parser = argparse.ArgumentParser(description="Database migration utility")
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
-    
+
     # Generate client
     subparsers.add_parser("generate", help="Generate Prisma client")
-    
+
     # Create migration
     migrate_parser = subparsers.add_parser("migrate", help="Create a new migration")
     migrate_parser.add_argument("--name", help="Migration name")
-    
+
     # Deploy migrations
     subparsers.add_parser("deploy", help="Deploy all pending migrations")
-    
+
     # Reset database
     subparsers.add_parser("reset", help="Reset database (WARNING: destroys all data)")
-    
+
     # Status
     subparsers.add_parser("status", help="Show migration status")
-    
+
     args = parser.parse_args()
-    
+
     if args.command == "generate":
         generate_client()
     elif args.command == "migrate":
@@ -126,4 +126,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()

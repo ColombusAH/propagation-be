@@ -15,31 +15,34 @@ class TestTheftDetectionService:
         """Create TheftDetectionService instance."""
         with patch("app.services.theft_detection.PushNotificationService"):
             from app.services.theft_detection import TheftDetectionService
+
             return TheftDetectionService()
 
     @pytest.mark.asyncio
     async def test_check_tag_payment_status_paid(self, service):
         """Test checking paid tag - no alert."""
         with patch("app.services.theft_detection.prisma_client") as mock_prisma:
-            mock_prisma.client.tagmapping.find_unique = AsyncMock(return_value=MagicMock(
-                isPaid=True
-            ))
+            mock_prisma.client.tagmapping.find_unique = AsyncMock(
+                return_value=MagicMock(isPaid=True)
+            )
 
             result = await service.check_tag_payment_status("E280681000001234")
-            
+
             assert result is True
 
     @pytest.mark.asyncio
     async def test_check_tag_payment_status_unpaid(self, service):
         """Test checking unpaid tag - creates alert."""
         with patch("app.services.theft_detection.prisma_client") as mock_prisma:
-            mock_tag = MagicMock(isPaid=False, id="tag-1", epc="EPC123", productDescription="Product")
+            mock_tag = MagicMock(
+                isPaid=False, id="tag-1", epc="EPC123", productDescription="Product"
+            )
             mock_prisma.client.tagmapping.find_unique = AsyncMock(return_value=mock_tag)
             mock_prisma.client.theftalert.create = AsyncMock(return_value=MagicMock(id="alert-1"))
             mock_prisma.client.user.find_many = AsyncMock(return_value=[])
 
             result = await service.check_tag_payment_status("E280681000001234")
-            
+
             assert result is False
 
     @pytest.mark.asyncio
@@ -49,7 +52,7 @@ class TestTheftDetectionService:
             mock_prisma.client.tagmapping.find_unique = AsyncMock(return_value=None)
 
             result = await service.check_tag_payment_status("UNKNOWN_EPC")
-            
+
             assert result is True  # Don't alert for unknown tags
 
     @pytest.mark.asyncio
@@ -59,14 +62,14 @@ class TestTheftDetectionService:
             mock_prisma.client.tagmapping.find_unique = AsyncMock(side_effect=Exception("DB error"))
 
             result = await service.check_tag_payment_status("E280681000001234")
-            
+
             assert result is True  # Don't alert on errors
 
     @pytest.mark.asyncio
     async def test_create_theft_alert(self, service):
         """Test creating a theft alert."""
         mock_tag = MagicMock(id="tag-1", epc="EPC123", productDescription="Product")
-        
+
         with patch("app.services.theft_detection.prisma_client") as mock_prisma:
             mock_prisma.client.theftalert.create = AsyncMock(return_value=MagicMock(id="alert-1"))
             mock_prisma.client.user.find_many = AsyncMock(return_value=[])
@@ -79,12 +82,12 @@ class TestTheftDetectionService:
     async def test_get_stakeholders(self, service):
         """Test getting stakeholders to notify."""
         with patch("app.services.theft_detection.prisma_client") as mock_prisma:
-            mock_prisma.client.user.find_many = AsyncMock(return_value=[
-                MagicMock(id="user-1", email="manager@example.com")
-            ])
+            mock_prisma.client.user.find_many = AsyncMock(
+                return_value=[MagicMock(id="user-1", email="manager@example.com")]
+            )
 
             stakeholders = await service._get_stakeholders()
-            
+
             assert len(stakeholders) == 1
 
     @pytest.mark.asyncio
@@ -94,7 +97,7 @@ class TestTheftDetectionService:
             mock_prisma.client.user.find_many = AsyncMock(side_effect=Exception("DB error"))
 
             stakeholders = await service._get_stakeholders()
-            
+
             assert stakeholders == []
 
     @pytest.mark.asyncio
@@ -105,7 +108,9 @@ class TestTheftDetectionService:
         mock_user = MagicMock(id="user-1", email="test@example.com")
 
         with patch("app.services.theft_detection.prisma_client") as mock_prisma:
-            mock_prisma.client.alertrecipient.create = AsyncMock(return_value=MagicMock(id="recipient-1"))
+            mock_prisma.client.alertrecipient.create = AsyncMock(
+                return_value=MagicMock(id="recipient-1")
+            )
             mock_prisma.client.alertrecipient.update = AsyncMock()
             service.push_service.send_notification = AsyncMock(return_value=True)
 

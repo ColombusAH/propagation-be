@@ -1,6 +1,7 @@
 """
 Tests for Tags Router to improve code coverage.
 """
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 from unittest.mock import MagicMock, patch, AsyncMock

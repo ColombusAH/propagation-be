@@ -1,6 +1,7 @@
 """
 Extended tests for Tags Router - covering more endpoints and edge cases.
 """
+
 import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
 from datetime import datetime, timezone
@@ -58,14 +59,12 @@ def test_create_tag_new(mock_db):
     new_tag = _create_mock_tag("E200NEWTAG")
     mock_db.add = MagicMock()
     mock_db.commit = MagicMock()
-    mock_db.refresh = MagicMock(side_effect=lambda x: setattr(x, 'id', 1))
+    mock_db.refresh = MagicMock(side_effect=lambda x: setattr(x, "id", 1))
 
     with patch("app.routers.tags.RFIDTag", return_value=new_tag):
-        response = client.post(f"{API_V1}/tags/", json={
-            "epc": "E200NEWTAG",
-            "rssi": -50,
-            "antenna_port": 1
-        })
+        response = client.post(
+            f"{API_V1}/tags/", json={"epc": "E200NEWTAG", "rssi": -50, "antenna_port": 1}
+        )
 
     # Should succeed or fail validation - depends on mocking
     assert response.status_code in [200, 201, 422, 500]
@@ -78,10 +77,7 @@ def test_update_existing_tag(mock_db):
     mock_db.commit = MagicMock()
     mock_db.refresh = MagicMock()
 
-    response = client.post(f"{API_V1}/tags/", json={
-        "epc": "E200EXISTING",
-        "rssi": -60
-    })
+    response = client.post(f"{API_V1}/tags/", json={"epc": "E200EXISTING", "rssi": -60})
 
     assert response.status_code in [200, 201, 422, 500]
 
@@ -90,7 +86,7 @@ def test_update_existing_tag(mock_db):
 def test_list_tags(mock_db):
     """Test listing all tags."""
     mock_tags = [_create_mock_tag(f"EPC{i:04d}") for i in range(5)]
-    
+
     # Set up the mock chain
     mock_query = MagicMock()
     mock_db.query.return_value = mock_query
@@ -107,7 +103,7 @@ def test_list_tags(mock_db):
 def test_list_tags_with_pagination(mock_db):
     """Test listing tags with pagination."""
     mock_tags = [_create_mock_tag(f"EPC{i:04d}") for i in range(10)]
-    
+
     mock_query = MagicMock()
     mock_db.query.return_value = mock_query
     mock_query.filter.return_value = mock_query

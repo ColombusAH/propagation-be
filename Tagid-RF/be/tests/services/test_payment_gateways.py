@@ -181,13 +181,12 @@ class TestPaymentFactory:
         # Should return same instance
         assert gateway1 is gateway2
 
-
     @patch("app.services.payment.factory.settings")
     def test_get_stripe_gateway(self, mock_settings):
         """Test getting stripe gateway with API key."""
         mock_settings.STRIPE_SECRET_KEY = "sk_test_123"
         mock_settings.STRIPE_WEBHOOK_SECRET = "whsec_test"
-        
+
         from app.services.payment.factory import _gateways, get_gateway
 
         # Clear cache
@@ -200,7 +199,7 @@ class TestPaymentFactory:
     def test_stripe_gateway_missing_key_raises(self, mock_settings):
         """Test getting stripe gateway without API key raises."""
         mock_settings.STRIPE_SECRET_KEY = None
-        
+
         from app.services.payment.factory import _gateways, get_gateway
         import app.services.payment.factory as factory
 
@@ -212,13 +211,12 @@ class TestPaymentFactory:
             with pytest.raises(ValueError, match="STRIPE_SECRET_KEY"):
                 get_gateway("stripe")
 
-
     @patch("app.services.payment.factory.settings")
     def test_get_tranzila_gateway(self, mock_settings):
         """Test getting tranzila gateway."""
         mock_settings.TRANZILA_TERMINAL_NAME = "tagid_test"
         mock_settings.TRANZILA_API_KEY = "secret"
-        
+
         from app.services.payment.factory import _gateways, get_gateway
 
         _gateways.clear()
@@ -230,7 +228,7 @@ class TestPaymentFactory:
     def test_tranzila_gateway_missing_terminal_raises(self, mock_settings):
         """Test getting tranzila gateway without terminal raises."""
         mock_settings.TRANZILA_TERMINAL_NAME = None
-        
+
         from app.services.payment.factory import _gateways, get_gateway
 
         _gateways.clear()

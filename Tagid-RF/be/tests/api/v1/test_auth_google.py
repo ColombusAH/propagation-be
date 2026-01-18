@@ -4,6 +4,7 @@ import datetime
 import pytest
 from httpx import AsyncClient
 
+
 def create_mock_user(id="user-1", email="test@example.com", role="CUSTOMER", business_id="biz-1"):
     """Helper to create a clean mock user that satisfies Prisma/Pydantic schemas."""
     return SimpleNamespace(
@@ -36,15 +37,16 @@ def create_mock_user(id="user-1", email="test@example.com", role="CUSTOMER", bus
         botConversations=[],
         formSubmissions=[],
         scheduleGenerationRequests=[],
-        alertRecipients=[]
+        alertRecipients=[],
     )
+
 
 @pytest.mark.asyncio
 async def test_google_login_success(client: AsyncClient):
     """Test successful Google login with mocking."""
     from app.db.dependencies import get_db
     from app.main import app
-    
+
     app.dependency_overrides[get_db] = lambda: MagicMock()
     try:
         payload = {"token": "mock-valid-token"}
@@ -55,7 +57,9 @@ async def test_google_login_success(client: AsyncClient):
         ):
 
             mock_verify.return_value = {"email": "test@example.com", "sub": "google-sub-123"}
-            mock_user = create_mock_user(id="user-123", email="test@example.com", role="SUPER_ADMIN", business_id="biz-123")
+            mock_user = create_mock_user(
+                id="user-123", email="test@example.com", role="SUPER_ADMIN", business_id="biz-123"
+            )
             mock_user.subId = "google-sub-123"
             mock_get_user.return_value = mock_user
 

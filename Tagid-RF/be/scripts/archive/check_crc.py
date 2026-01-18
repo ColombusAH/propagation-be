@@ -1,5 +1,6 @@
 import struct
 
+
 def calculate_crc16(data: bytes) -> int:
     PRESET_VALUE = 0xFFFF
     POLYNOMIAL = 0x8408
@@ -12,6 +13,7 @@ def calculate_crc16(data: bytes) -> int:
             else:
                 crc_value = crc_value >> 1
     return crc_value
+
 
 # Real frame captured from reader (Get Info Response)
 # Hex string excluding last 2 bytes (CRC)
@@ -27,4 +29,6 @@ calc_crc = calculate_crc16(frame_bytes)
 print(f"Calculated CRC: 0x{calc_crc:04X}")
 print(f"Expected CRC:   0x{expected_crc:04X}")
 print(f"Match Big Endian (>H)? {calc_crc == expected_crc}")
-print(f"Match Little Endian (<H)? {struct.unpack('<H', struct.pack('>H', calc_crc))[0] == expected_crc}")
+print(
+    f"Match Little Endian (<H)? {struct.unpack('<H', struct.pack('>H', calc_crc))[0] == expected_crc}"
+)

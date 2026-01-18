@@ -12,7 +12,8 @@ import struct
 LISTEN_PORT = 4001
 HEAD = 0xCF
 ADDR = 0x00
-POWER_DBM = 30 # Max power
+POWER_DBM = 30  # Max power
+
 
 def calculate_crc16(data: bytes) -> int:
     PRESET_VALUE = 0xFFFF
@@ -27,18 +28,22 @@ def calculate_crc16(data: bytes) -> int:
                 crc_value = crc_value >> 1
     return crc_value
 
+
 def build_frame(cmd: int, data: bytes = b"") -> bytes:
     frame_no_crc = struct.pack(">BBBB", HEAD, ADDR, (cmd >> 8) & 0xFF, cmd & 0xFF)
     frame_no_crc += struct.pack("B", len(data))
     frame_no_crc += data
-    
+
     crc = calculate_crc16(frame_no_crc)
     return frame_no_crc + struct.pack("<H", crc)
 
+
 def parse_response(data: bytes):
-    if len(data) < 7: return False, f"Short frame: {data.hex().upper()}"
+    if len(data) < 7:
+        return False, f"Short frame: {data.hex().upper()}"
     status = data[5]
     return status == 0, f"Status: 0x{status:02X}"
+
 
 def main():
     print(f"🎧 Waiting for reader on port {LISTEN_PORT}...")
@@ -46,19 +51,19 @@ def main():
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind(("0.0.0.0", LISTEN_PORT))
     server.listen(1)
-    
+
     try:
         conn, addr = server.accept()
         print(f"✅ Connected to reader: {addr}")
         conn.settimeout(2)
-        
+
         # 1. Set Query Params (Q=4) using SIMPLE structure
         # Based on m200_protocol.py lines 608: data = struct.pack("BBB", q_value, session, target)
         print("\n1️⃣ Setting Multi-Tag Params (Q=4)...")
         # Q=4, Session=0(S0), Target=0(A)
         query_data = struct.pack("BBB", 4, 0, 0)
-        
-        frame = build_frame(0x005B, query_data) # RFM_SET_QUERY_PARAM
+
+        frame = build_frame(0x005B, query_data)  # RFM_SET_QUERY_PARAM
         conn.send(frame)
         time.sleep(0.5)
         resp = conn.recv(1024)
@@ -76,13 +81,14 @@ def main():
         resp = conn.recv(1024)
         success, msg = parse_response(resp)
         print(f"   Result: {'Success' if success else 'Failed'} ({msg})")
-        
+
         print("\n✅ Configuration Complete! Please restart the server.")
 
     except Exception as e:
         print(f"❌ Error: {e}")
     finally:
         server.close()
+
 
 if __name__ == "__main__":
     main()

@@ -122,9 +122,10 @@ class TestCashProvider:
 
 class TestTagListenerService:
     """Tests for TagListenerService."""
-    
+
     def test_init(self):
         from app.services.tag_listener_service import TagListenerService
+
         service = TagListenerService(port=9999)
         assert service.port == 9999
         assert service._running is False
@@ -132,6 +133,7 @@ class TestTagListenerService:
     @pytest.mark.asyncio
     async def test_start_stop_mock(self):
         from app.services.tag_listener_service import TagListenerService
+
         service = TagListenerService()
         # Just test that they run without crashing with mocks
         with patch("app.services.tag_listener_service.start_inventory") as m1:
@@ -146,24 +148,27 @@ class TestTheftDetectionEnhanced:
     @pytest.mark.asyncio
     async def test_check_tag_not_found(self):
         from app.services.theft_detection import TheftDetectionService
+
         with patch("app.services.theft_detection.prisma_client") as mock_p:
             mock_p.client.tagmapping.find_unique = AsyncMock(return_value=None)
             service = TheftDetectionService()
             result = await service.check_tag_payment_status("UNKNOWN")
-            assert result is True # Should return True (don't alert) on unknown
+            assert result is True  # Should return True (don't alert) on unknown
 
     @pytest.mark.asyncio
     async def test_check_tag_exception(self):
         from app.services.theft_detection import TheftDetectionService
+
         with patch("app.services.theft_detection.prisma_client") as mock_p:
             mock_p.client.tagmapping.find_unique = AsyncMock(side_effect=Exception("DB Error"))
             service = TheftDetectionService()
             result = await service.check_tag_payment_status("ERROR")
-            assert result is True # Should return True on error
+            assert result is True  # Should return True on error
 
     @pytest.mark.asyncio
     async def test_resolve_alert_success(self):
         from app.services.theft_detection import TheftDetectionService
+
         with patch("app.services.theft_detection.prisma_client") as mock_p:
             mock_p.client.theftalert.update = AsyncMock()
             service = TheftDetectionService()
@@ -226,12 +231,12 @@ class TestPaymentProviderFactory:
     def test_get_stripe_provider_mock(self):
         """Test getting stripe provider."""
         from app.services.payment.factory import get_gateway
-        
+
         # Patch the settings used by the factory
         with patch("app.services.payment.factory.settings") as mock_settings:
             mock_settings.STRIPE_SECRET_KEY = "sk_test_123"
             mock_settings.STRIPE_WEBHOOK_SECRET = "whsec_123"
-            
+
             provider = get_gateway("stripe")
             assert provider is not None
 

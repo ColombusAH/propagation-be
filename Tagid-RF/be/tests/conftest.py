@@ -34,7 +34,11 @@ patch("app.core.config.get_settings", return_value=mock_settings).start()
 patch("app.core.config.settings", mock_settings).start()
 
 # Mock RFID and Tag Listener services to prevent hangs in lifespan
-patch("app.services.rfid_reader.rfid_reader_service.connect", new_callable=AsyncMock, return_value=True).start()
+patch(
+    "app.services.rfid_reader.rfid_reader_service.connect",
+    new_callable=AsyncMock,
+    return_value=True,
+).start()
 patch("app.services.rfid_reader.rfid_reader_service.start_scanning", new_callable=AsyncMock).start()
 patch("app.services.rfid_reader.rfid_reader_service.disconnect", new_callable=AsyncMock).start()
 patch("app.services.tag_listener_service.tag_listener_service.start", return_value=None).start()
@@ -52,6 +56,7 @@ patch("firebase_admin.credentials.Certificate", return_value=MagicMock()).start(
 
 # Global Prisma Mocking to prevent ANY real connection attempts
 from prisma import Prisma
+
 patch.object(Prisma, "connect", new_callable=AsyncMock).start()
 patch.object(Prisma, "disconnect", new_callable=AsyncMock).start()
 

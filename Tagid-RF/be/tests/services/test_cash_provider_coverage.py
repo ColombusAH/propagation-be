@@ -20,7 +20,7 @@ class TestCashProvider:
     async def test_create_payment_intent(self, provider):
         """Test creating a cash payment intent."""
         result = await provider.create_payment_intent(1000, "ILS", {"note": "test"})
-        
+
         assert "payment_id" in result
         assert result["status"] == PaymentStatus.PENDING
         assert result["external_id"] == result["payment_id"]
@@ -30,7 +30,7 @@ class TestCashProvider:
     async def test_create_payment_intent_without_metadata(self, provider):
         """Test creating payment intent without metadata."""
         result = await provider.create_payment_intent(500, "ILS")
-        
+
         assert result["status"] == PaymentStatus.PENDING
 
     @pytest.mark.asyncio
@@ -39,10 +39,10 @@ class TestCashProvider:
         # Create payment first
         create_result = await provider.create_payment_intent(1000, "ILS")
         payment_id = create_result["payment_id"]
-        
+
         # Confirm it
         confirm_result = await provider.confirm_payment(payment_id)
-        
+
         assert confirm_result["status"] == PaymentStatus.COMPLETED
         assert confirm_result["external_id"] == payment_id
 
@@ -59,10 +59,10 @@ class TestCashProvider:
         create_result = await provider.create_payment_intent(1000, "ILS")
         payment_id = create_result["payment_id"]
         await provider.confirm_payment(payment_id)
-        
+
         # Refund
         refund_result = await provider.refund_payment(payment_id)
-        
+
         assert refund_result["status"] == PaymentStatus.REFUNDED
         assert refund_result["amount"] == 1000
 
@@ -73,10 +73,10 @@ class TestCashProvider:
         create_result = await provider.create_payment_intent(1000, "ILS")
         payment_id = create_result["payment_id"]
         await provider.confirm_payment(payment_id)
-        
+
         # Partial refund
         refund_result = await provider.refund_payment(payment_id, 500)
-        
+
         assert refund_result["amount"] == 500
 
     @pytest.mark.asyncio
@@ -90,7 +90,7 @@ class TestCashProvider:
         """Test refunding pending payment raises error."""
         create_result = await provider.create_payment_intent(1000, "ILS")
         payment_id = create_result["payment_id"]
-        
+
         with pytest.raises(ValueError, match="Cannot refund"):
             await provider.refund_payment(payment_id)
 
@@ -99,10 +99,10 @@ class TestCashProvider:
         """Test getting payment status."""
         create_result = await provider.create_payment_intent(1000, "ILS")
         payment_id = create_result["payment_id"]
-        
+
         status = await provider.get_payment_status(payment_id)
         assert status == PaymentStatus.PENDING
-        
+
         await provider.confirm_payment(payment_id)
         status = await provider.get_payment_status(payment_id)
         assert status == PaymentStatus.COMPLETED
@@ -118,9 +118,9 @@ class TestCashProvider:
         """Test cancelling a pending payment."""
         create_result = await provider.create_payment_intent(1000, "ILS")
         payment_id = create_result["payment_id"]
-        
+
         cancel_result = await provider.cancel_payment(payment_id)
-        
+
         assert cancel_result["status"] == PaymentStatus.FAILED
 
     @pytest.mark.asyncio
@@ -135,6 +135,6 @@ class TestCashProvider:
         create_result = await provider.create_payment_intent(1000, "ILS")
         payment_id = create_result["payment_id"]
         await provider.confirm_payment(payment_id)
-        
+
         with pytest.raises(ValueError, match="Cannot cancel"):
             await provider.cancel_payment(payment_id)

@@ -7,6 +7,7 @@ from app.api.dependencies.auth import get_current_user as get_current_user_auth
 from app.core.permissions import requires_any_role
 from app.main import app
 
+
 @pytest.fixture
 def mock_user():
     user = MagicMock()
@@ -15,12 +16,14 @@ def mock_user():
     user.role = "STORE_MANAGER"
     return user
 
+
 @pytest.fixture(autouse=True)
 def setup_overrides(mock_user):
     app.dependency_overrides[get_current_user_core] = lambda: mock_user
     app.dependency_overrides[get_current_user_auth] = lambda: mock_user
     yield
     app.dependency_overrides.clear()
+
 
 class TestListTheftAlerts:
     """Tests for GET /alerts/ endpoint."""
@@ -39,7 +42,7 @@ class TestListTheftAlerts:
             mock_alert.resolvedAt = None
             mock_alert.resolvedBy = None
             mock_alert.notes = None
-            
+
             mock_prisma.client.theftalert.find_many = AsyncMock(return_value=[mock_alert])
 
             response = await client.get("/api/v1/alerts/")
@@ -84,10 +87,10 @@ class TestGetMyAlerts:
             mock_alert.resolvedAt = None
             mock_alert.resolvedBy = None
             mock_alert.notes = None
-            
+
             mock_recipient = MagicMock()
             mock_recipient.theftAlert = mock_alert
-            
+
             mock_prisma.client.alertrecipient.find_many = AsyncMock(return_value=[mock_recipient])
 
             response = await client.get("/api/v1/alerts/my-alerts")
@@ -122,7 +125,7 @@ class TestGetAlertDetails:
             mock_alert.resolvedAt = None
             mock_alert.resolvedBy = None
             mock_alert.notes = None
-            
+
             mock_prisma.client.theftalert.find_unique = AsyncMock(return_value=mock_alert)
 
             response = await client.get("/api/v1/alerts/alert-1")
@@ -147,9 +150,10 @@ class TestResolveAlert:
         with patch("app.api.v1.endpoints.alerts.theft_service") as mock_service:
             mock_service.resolve_alert = AsyncMock()
 
-            response = await client.post("/api/v1/alerts/alert-1/resolve", json={
-                "notes": "False alarm - customer had receipt"
-            })
+            response = await client.post(
+                "/api/v1/alerts/alert-1/resolve",
+                json={"notes": "False alarm - customer had receipt"},
+            )
             assert response.status_code == 200
 
     @pytest.mark.asyncio
@@ -171,7 +175,7 @@ class TestMarkAlertRead:
         with patch("app.api.v1.endpoints.alerts.prisma_client") as mock_prisma:
             mock_recipient = MagicMock()
             mock_recipient.id = "recipient-1"
-            
+
             mock_prisma.client.alertrecipient.find_first = AsyncMock(return_value=mock_recipient)
             mock_prisma.client.alertrecipient.update = AsyncMock()
 
@@ -186,4 +190,3 @@ class TestMarkAlertRead:
 
             response = await client.post("/api/v1/alerts/mark-read/unknown-alert")
             assert response.status_code == 404
-

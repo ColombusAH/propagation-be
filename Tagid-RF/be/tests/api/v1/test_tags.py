@@ -1,6 +1,7 @@
 """
 Comprehensive tests for RFID Tags router.
 """
+
 import pytest
 from httpx import AsyncClient
 from unittest.mock import MagicMock, patch, AsyncMock
@@ -13,16 +14,34 @@ from app.main import app
 async def test_create_tag(client: AsyncClient):
     """Test creating a new RFID tag."""
     from app.services.database import get_db
-    
+
     now = datetime.now(timezone.utc)
     mock_tag = SimpleNamespace(
-        id=1, epc="E280681000001234", product_name="Test Product", 
-        product_sku="SKU-123", price_cents=1000, is_paid=False, is_active=True,
-        tid=None, user_memory=None, rssi=None, antenna_port=None, frequency=None,
-        pc=None, crc=None, meta={}, location=None, notes=None, store_id=None,
-        read_count=1, first_seen=now, last_seen=now, created_at=now, updated_at=now
+        id=1,
+        epc="E280681000001234",
+        product_name="Test Product",
+        product_sku="SKU-123",
+        price_cents=1000,
+        is_paid=False,
+        is_active=True,
+        tid=None,
+        user_memory=None,
+        rssi=None,
+        antenna_port=None,
+        frequency=None,
+        pc=None,
+        crc=None,
+        meta={},
+        location=None,
+        notes=None,
+        store_id=None,
+        read_count=1,
+        first_seen=now,
+        last_seen=now,
+        created_at=now,
+        updated_at=now,
     )
-    
+
     async def override_get_db():
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = None
@@ -30,10 +49,11 @@ async def test_create_tag(client: AsyncClient):
         mock_db.commit = MagicMock()
         mock_db.refresh = MagicMock()
         yield mock_db
-        
+
     app.dependency_overrides[get_db] = override_get_db
     try:
         from app.routers.tags import RFIDTag
+
         with patch("app.routers.tags.RFIDTag", return_value=mock_tag):
             response = await client.post(
                 "/api/v1/tags/",
@@ -41,8 +61,8 @@ async def test_create_tag(client: AsyncClient):
                     "epc": "E280681000001234",
                     "product_name": "Test Product",
                     "product_sku": "SKU-123",
-                    "price_cents": 1000
-                }
+                    "price_cents": 1000,
+                },
             )
             assert response.status_code == 201
             assert response.json()["epc"] == "E280681000001234"
@@ -54,22 +74,40 @@ async def test_create_tag(client: AsyncClient):
 async def test_update_tag(client: AsyncClient):
     """Test updating an RFID tag using PUT."""
     from app.services.database import get_db
-    
+
     tag_id = 1
     now = datetime.now(timezone.utc)
     mock_tag = SimpleNamespace(
-        id=tag_id, epc="E1", product_name="Old", product_sku="OLD-SKU", 
-        price_cents=100, is_paid=False, is_active=True, location=None, notes=None,
-        user_memory=None, meta=None, store_id=None, tid=None, rssi=None,
-        antenna_port=None, frequency=None, pc=None, crc=None,
-        read_count=1, first_seen=now, last_seen=now, created_at=now, updated_at=now
+        id=tag_id,
+        epc="E1",
+        product_name="Old",
+        product_sku="OLD-SKU",
+        price_cents=100,
+        is_paid=False,
+        is_active=True,
+        location=None,
+        notes=None,
+        user_memory=None,
+        meta=None,
+        store_id=None,
+        tid=None,
+        rssi=None,
+        antenna_port=None,
+        frequency=None,
+        pc=None,
+        crc=None,
+        read_count=1,
+        first_seen=now,
+        last_seen=now,
+        created_at=now,
+        updated_at=now,
     )
-    
+
     async def override_get_db():
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = mock_tag
         yield mock_db
-        
+
     app.dependency_overrides[get_db] = override_get_db
     try:
         payload = {
@@ -82,7 +120,7 @@ async def test_update_tag(client: AsyncClient):
             "product_sku": "NEW-SKU",
             "price_cents": 2000,
             "store_id": 10,
-            "is_paid": True
+            "is_paid": True,
         }
         response = await client.put(f"/api/v1/tags/{tag_id}", json=payload)
         assert response.status_code == 200
@@ -95,21 +133,21 @@ async def test_update_tag(client: AsyncClient):
 async def test_get_tag_stats(client: AsyncClient):
     """Test tag statistics endpoint."""
     from app.services.database import get_db
-    
+
     async def override_get_db():
         mock_db = MagicMock()
         mock_db.query.return_value.count.return_value = 10
         mock_db.query.return_value.filter.return_value.count.return_value = 5
-        mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = [("Zone A", 5)]
+        mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = [
+            ("Zone A", 5)
+        ]
         mock_db.query.return_value.filter.return_value.scalar.return_value = -55.5
-        
-        mock_most_scanned = SimpleNamespace(
-            id=1, epc="MOST1", read_count=500
-        )
+
+        mock_most_scanned = SimpleNamespace(id=1, epc="MOST1", read_count=500)
         mock_db.query.return_value.order_by.return_value.first.return_value = mock_most_scanned
-        
+
         yield mock_db
-        
+
     app.dependency_overrides[get_db] = override_get_db
     try:
         # CORRECT URL IS /stats/summary

@@ -15,24 +15,24 @@ def passive_listen(ip: str, port: int, duration: int = 30):
     print(f"Target: {ip}:{port}")
     print(f"Listening for {duration} seconds...")
     print("=" * 70)
-    
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(5)
-    
+
     try:
         print(f"\nConnecting...")
         sock.connect((ip, port))
         print(f"✓ Connected!")
-        
+
         # Set short timeout for recv
         sock.settimeout(2)
-        
+
         start_time = time.time()
         message_count = 0
-        
+
         print(f"\nListening for incoming data...")
         print("-" * 70)
-        
+
         while time.time() - start_time < duration:
             try:
                 data = sock.recv(4096)
@@ -41,16 +41,18 @@ def passive_listen(ip: str, port: int, duration: int = 30):
                     elapsed = time.time() - start_time
                     print(f"\n[{elapsed:.1f}s] Received {len(data)} bytes:")
                     print(f"  HEX: {data.hex().upper()}")
-                    
+
                     # Try ASCII
                     try:
-                        ascii_data = data.decode('ascii', errors='replace')
-                        printable = ''.join(c if c.isprintable() or c in '\n\r\t' else '.' for c in ascii_data)
+                        ascii_data = data.decode("ascii", errors="replace")
+                        printable = "".join(
+                            c if c.isprintable() or c in "\n\r\t" else "." for c in ascii_data
+                        )
                         if printable.strip():
                             print(f"  ASCII: {printable[:200]}")
                     except:
                         pass
-                    
+
                     # Check for RFID header
                     if len(data) >= 6 and data[0] == 0xCF:
                         cmd = (data[2] << 8) | data[3]
@@ -60,22 +62,22 @@ def passive_listen(ip: str, port: int, duration: int = 30):
                 else:
                     print("Connection closed by remote")
                     break
-                    
+
             except socket.timeout:
                 # Keep listening
                 continue
             except Exception as e:
                 print(f"Error: {e}")
                 break
-        
+
         print("-" * 70)
         print(f"\nReceived {message_count} messages in {duration} seconds")
-        
+
         # Now try some simple commands
         print("\n" + "=" * 70)
         print("Trying simple ASCII commands...")
         print("=" * 70)
-        
+
         test_commands = [
             b"AT\r\n",
             b"VERSION\r\n",
@@ -84,19 +86,19 @@ def passive_listen(ip: str, port: int, duration: int = 30):
             b"HELP\r\n",
             b"\r\n",
         ]
-        
+
         for cmd in test_commands:
             try:
                 print(f"\nTX: {repr(cmd)}")
                 sock.sendall(cmd)
                 sock.settimeout(2)
-                
+
                 response = sock.recv(1024)
                 if response:
                     print(f"RX ({len(response)} bytes):")
                     print(f"  HEX: {response.hex().upper()}")
                     try:
-                        ascii_resp = response.decode('ascii', errors='replace')
+                        ascii_resp = response.decode("ascii", errors="replace")
                         print(f"  ASCII: {ascii_resp}")
                     except:
                         pass
@@ -106,9 +108,9 @@ def passive_listen(ip: str, port: int, duration: int = 30):
                 print("  TIMEOUT")
             except Exception as e:
                 print(f"  ERROR: {e}")
-            
+
             time.sleep(0.5)
-            
+
     except Exception as e:
         print(f"Error: {e}")
     finally:

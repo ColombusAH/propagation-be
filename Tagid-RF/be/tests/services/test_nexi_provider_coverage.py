@@ -18,8 +18,9 @@ class TestNexiProvider:
             mock_settings.NEXI_API_KEY = "test_api_key"
             mock_settings.NEXI_API_ENDPOINT = "https://test.nexi.co.il"
             mock_settings.NEXI_MERCHANT_ID = "test_merchant"
-            
+
             from app.services.nexi_provider import NexiProvider
+
             return NexiProvider()
 
     def test_init(self, provider):
@@ -34,14 +35,11 @@ class TestNexiProvider:
         with patch("app.services.nexi_provider.httpx.AsyncClient") as mock_client:
             mock_response = MagicMock()
             mock_response.status_code = 200
-            mock_response.json.return_value = {
-                "transaction_id": "nexi_123",
-                "status": "pending"
-            }
+            mock_response.json.return_value = {"transaction_id": "nexi_123", "status": "pending"}
             mock_cm = MagicMock()
-            mock_cm.__aenter__ = AsyncMock(return_value=MagicMock(
-                post=AsyncMock(return_value=mock_response)
-            ))
+            mock_cm.__aenter__ = AsyncMock(
+                return_value=MagicMock(post=AsyncMock(return_value=mock_response))
+            )
             mock_cm.__aexit__ = AsyncMock()
             mock_client.return_value = mock_cm
 
@@ -58,9 +56,9 @@ class TestNexiProvider:
             mock_response.status_code = 400
             mock_response.text = "Bad Request"
             mock_cm = MagicMock()
-            mock_cm.__aenter__ = AsyncMock(return_value=MagicMock(
-                post=AsyncMock(return_value=mock_response)
-            ))
+            mock_cm.__aenter__ = AsyncMock(
+                return_value=MagicMock(post=AsyncMock(return_value=mock_response))
+            )
             mock_cm.__aexit__ = AsyncMock()
             mock_client.return_value = mock_cm
 
@@ -72,11 +70,12 @@ class TestNexiProvider:
         """Test confirming a payment."""
         # First add transaction to pending
         from app.services.nexi_provider import PaymentStatus
+
         provider.pending_transactions["txn-123"] = {
             "amount": 1000,
             "currency": "ILS",
             "status": PaymentStatus.PENDING,
-            "metadata": {}
+            "metadata": {},
         }
 
         with patch("app.services.nexi_provider.httpx.AsyncClient") as mock_client:
@@ -84,9 +83,9 @@ class TestNexiProvider:
             mock_response.status_code = 200
             mock_response.json.return_value = {"status": "completed"}
             mock_cm = MagicMock()
-            mock_cm.__aenter__ = AsyncMock(return_value=MagicMock(
-                post=AsyncMock(return_value=mock_response)
-            ))
+            mock_cm.__aenter__ = AsyncMock(
+                return_value=MagicMock(post=AsyncMock(return_value=mock_response))
+            )
             mock_cm.__aexit__ = AsyncMock()
             mock_client.return_value = mock_cm
 
@@ -104,11 +103,12 @@ class TestNexiProvider:
     async def test_refund_payment(self, provider):
         """Test refunding a payment."""
         from app.services.nexi_provider import PaymentStatus
+
         provider.pending_transactions["txn-123"] = {
             "amount": 1000,
             "currency": "ILS",
             "status": PaymentStatus.COMPLETED,
-            "metadata": {}
+            "metadata": {},
         }
 
         with patch("app.services.nexi_provider.httpx.AsyncClient") as mock_client:
@@ -116,9 +116,9 @@ class TestNexiProvider:
             mock_response.status_code = 200
             mock_response.json.return_value = {"refund_id": "ref-123", "amount": 500}
             mock_cm = MagicMock()
-            mock_cm.__aenter__ = AsyncMock(return_value=MagicMock(
-                post=AsyncMock(return_value=mock_response)
-            ))
+            mock_cm.__aenter__ = AsyncMock(
+                return_value=MagicMock(post=AsyncMock(return_value=mock_response))
+            )
             mock_cm.__aexit__ = AsyncMock()
             mock_client.return_value = mock_cm
 
@@ -130,9 +130,8 @@ class TestNexiProvider:
     async def test_get_payment_status(self, provider):
         """Test getting payment status."""
         from app.services.nexi_provider import PaymentStatus
-        provider.pending_transactions["txn-123"] = {
-            "status": PaymentStatus.COMPLETED
-        }
+
+        provider.pending_transactions["txn-123"] = {"status": PaymentStatus.COMPLETED}
 
         result = await provider.get_payment_status("txn-123")
 
@@ -142,11 +141,12 @@ class TestNexiProvider:
     async def test_cancel_payment(self, provider):
         """Test cancelling a payment."""
         from app.services.nexi_provider import PaymentStatus
+
         provider.pending_transactions["txn-123"] = {
             "amount": 1000,
             "currency": "ILS",
             "status": PaymentStatus.PENDING,
-            "metadata": {}
+            "metadata": {},
         }
 
         with patch("app.services.nexi_provider.httpx.AsyncClient") as mock_client:
@@ -154,9 +154,9 @@ class TestNexiProvider:
             mock_response.status_code = 200
             mock_response.json.return_value = {"status": "cancelled"}
             mock_cm = MagicMock()
-            mock_cm.__aenter__ = AsyncMock(return_value=MagicMock(
-                post=AsyncMock(return_value=mock_response)
-            ))
+            mock_cm.__aenter__ = AsyncMock(
+                return_value=MagicMock(post=AsyncMock(return_value=mock_response))
+            )
             mock_cm.__aexit__ = AsyncMock()
             mock_client.return_value = mock_cm
 
@@ -168,9 +168,8 @@ class TestNexiProvider:
     async def test_cancel_non_pending_fails(self, provider):
         """Test cancelling a non-pending payment fails."""
         from app.services.nexi_provider import PaymentStatus
-        provider.pending_transactions["txn-123"] = {
-            "status": PaymentStatus.COMPLETED
-        }
+
+        provider.pending_transactions["txn-123"] = {"status": PaymentStatus.COMPLETED}
 
         with pytest.raises(ValueError, match="Cannot cancel"):
             await provider.cancel_payment("txn-123")

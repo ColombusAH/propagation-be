@@ -23,7 +23,7 @@ async def test_websocket_broadcast():
     """Test broadcasting a message to a mock connection."""
     # Clear any existing connections from previous tests
     manager.active_connections = []
-    
+
     mock_ws = AsyncMock()
     await manager.connect(mock_ws)
     assert len(manager.active_connections) == 1
@@ -35,4 +35,3 @@ async def test_websocket_broadcast():
 
     manager.disconnect(mock_ws)
     assert len(manager.active_connections) == 0
-

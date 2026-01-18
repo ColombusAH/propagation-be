@@ -15,6 +15,7 @@ class TestTagEncryptionService:
     def service(self):
         """Create TagEncryptionService with test key."""
         from app.services.tag_encryption import TagEncryptionService
+
         return TagEncryptionService(secret_key="test_secret_key_12345")
 
     def test_init_with_secret_key(self, service):
@@ -26,6 +27,7 @@ class TestTagEncryptionService:
         """Test initialization with environment variable."""
         with patch.dict(os.environ, {"TAG_ENCRYPTION_KEY": "env_key_12345"}):
             from app.services.tag_encryption import TagEncryptionService
+
             svc = TagEncryptionService()
             assert svc.secret_key == "env_key_12345"
 
@@ -34,6 +36,7 @@ class TestTagEncryptionService:
         with patch.dict(os.environ, {}, clear=True):
             with patch("app.services.tag_encryption.os.getenv", return_value=None):
                 from app.services.tag_encryption import TagEncryptionService
+
                 svc = TagEncryptionService()
                 assert svc.secret_key is not None
                 assert len(svc.secret_key) > 10
@@ -42,7 +45,7 @@ class TestTagEncryptionService:
         """Test encrypting an EPC tag."""
         epc = "E280681000001234"
         encrypted = service.encrypt_tag(epc)
-        
+
         assert encrypted is not None
         assert encrypted != epc
         assert len(encrypted) > len(epc)
@@ -52,7 +55,7 @@ class TestTagEncryptionService:
         epc = "E280681000001234"
         encrypted1 = service.encrypt_tag(epc)
         encrypted2 = service.encrypt_tag(epc)
-        
+
         # Should be different due to random nonce
         assert encrypted1 != encrypted2
 
@@ -60,9 +63,9 @@ class TestTagEncryptionService:
         """Test successful QR decryption."""
         epc = "E280681000001234"
         encrypted = service.encrypt_tag(epc)
-        
+
         decrypted = service.decrypt_qr(encrypted)
-        
+
         assert decrypted == epc
 
     def test_decrypt_qr_invalid(self, service):
@@ -73,20 +76,21 @@ class TestTagEncryptionService:
     def test_decrypt_qr_wrong_key(self, service):
         """Test decryption with wrong key."""
         from app.services.tag_encryption import TagEncryptionService
+
         other_service = TagEncryptionService(secret_key="different_key_12345")
-        
+
         encrypted = service.encrypt_tag("E280681000001234")
         result = other_service.decrypt_qr(encrypted)
-        
+
         assert result is None
 
     def test_verify_match_true(self, service):
         """Test verify_match returns True for matching EPC and QR."""
         epc = "E280681000001234"
         encrypted = service.encrypt_tag(epc)
-        
+
         result = service.verify_match(epc, encrypted)
-        
+
         assert result is True
 
     def test_verify_match_false(self, service):
@@ -94,18 +98,18 @@ class TestTagEncryptionService:
         epc1 = "E280681000001234"
         epc2 = "E280681000005678"
         encrypted = service.encrypt_tag(epc1)
-        
+
         result = service.verify_match(epc2, encrypted)
-        
+
         assert result is False
 
     def test_verify_match_case_insensitive(self, service):
         """Test verify_match is case insensitive."""
         epc = "e280681000001234"  # lowercase
         encrypted = service.encrypt_tag("E280681000001234")  # uppercase
-        
+
         result = service.verify_match(epc, encrypted)
-        
+
         assert result is True
 
     def test_verify_match_invalid_qr(self, service):
@@ -117,7 +121,7 @@ class TestTagEncryptionService:
         """Test generating hash of EPC."""
         epc = "E280681000001234"
         hash1 = service.generate_hash(epc)
-        
+
         assert hash1 is not None
         assert len(hash1) == 32  # SHA-256 truncated to 32 chars
 
@@ -126,14 +130,14 @@ class TestTagEncryptionService:
         epc = "E280681000001234"
         hash1 = service.generate_hash(epc)
         hash2 = service.generate_hash(epc)
-        
+
         assert hash1 == hash2
 
     def test_generate_hash_different_for_different_epc(self, service):
         """Test hash is different for different EPCs."""
         hash1 = service.generate_hash("E280681000001234")
         hash2 = service.generate_hash("E280681000005678")
-        
+
         assert hash1 != hash2
 
 
@@ -144,11 +148,12 @@ class TestGetEncryptionService:
         """Test that get_encryption_service returns singleton."""
         # Clear the singleton first
         import app.services.tag_encryption as module
+
         module._encryption_service = None
-        
+
         from app.services.tag_encryption import get_encryption_service
-        
+
         service1 = get_encryption_service()
         service2 = get_encryption_service()
-        
+
         assert service1 is service2

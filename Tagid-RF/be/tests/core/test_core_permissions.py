@@ -7,16 +7,18 @@ from app.core.permissions import (
     requires_any_role,
     is_admin,
     is_manager,
-    can_create_role
+    can_create_role,
 )
+
 
 def create_mock_user(role: str):
     user = MagicMock(spec=User)
     user.role = role
     return user
 
+
 class TestPermissions:
-    
+
     def test_is_admin(self):
         assert is_admin(create_mock_user("SUPER_ADMIN")) is True
         assert is_admin(create_mock_user("NETWORK_MANAGER")) is True
@@ -35,18 +37,18 @@ class TestPermissions:
         admin = create_mock_user("SUPER_ADMIN")
         assert can_create_role(admin, "SUPER_ADMIN") is True
         assert can_create_role(admin, "CUSTOMER") is True
-        
+
         # NETWORK_MANAGER hierarchy
         nm = create_mock_user("NETWORK_MANAGER")
         assert can_create_role(nm, "SUPER_ADMIN") is False
         assert can_create_role(nm, "STORE_MANAGER") is True
         assert can_create_role(nm, "CUSTOMER") is True
-        
+
         # STORE_MANAGER hierarchy
         sm = create_mock_user("STORE_MANAGER")
         assert can_create_role(sm, "NETWORK_MANAGER") is False
         assert can_create_role(sm, "EMPLOYEE") is True
-        
+
         # Others can create nothing
         cust = create_mock_user("CUSTOMER")
         assert can_create_role(cust, "CUSTOMER") is False
@@ -57,7 +59,7 @@ class TestPermissions:
         @requires_role("ADMIN", "MANAGER")
         async def mock_endpoint(current_user: User):
             return "success"
-        
+
         user = create_mock_user("ADMIN")
         result = await mock_endpoint(current_user=user)
         assert result == "success"
@@ -67,7 +69,7 @@ class TestPermissions:
         @requires_role("ADMIN")
         async def mock_endpoint(current_user: User):
             return "success"
-        
+
         user = create_mock_user("CUSTOMER")
         with pytest.raises(HTTPException) as excinfo:
             await mock_endpoint(current_user=user)
@@ -79,15 +81,15 @@ class TestPermissions:
         # requires_any_role returns a dependency function
         check_role = requires_any_role(["ADMIN", "MANAGER"])
         user = create_mock_user("MANAGER")
-        
+
         result = await check_role(current_user=user)
-        assert result == user # Now returns the user object
+        assert result == user  # Now returns the user object
 
     @pytest.mark.asyncio
     async def test_requires_any_role_dependency_forbidden(self):
         check_role = requires_any_role(["ADMIN"])
         user = create_mock_user("CUSTOMER")
-        
+
         with pytest.raises(HTTPException) as excinfo:
             await check_role(current_user=user)
         assert excinfo.value.status_code == status.HTTP_403_FORBIDDEN

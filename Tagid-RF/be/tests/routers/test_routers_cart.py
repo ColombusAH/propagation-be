@@ -39,7 +39,9 @@ async def client(test_app, mock_db):
     FAKE_CART_DB.clear()
 
 
-def _create_mock_tag(epc="E200TEST", product_name="Test Product", product_sku="SKU123", price_cents=1999):
+def _create_mock_tag(
+    epc="E200TEST", product_name="Test Product", product_sku="SKU123", price_cents=1999
+):
     tag = MagicMock(spec=RFIDTag)
     tag.epc = epc
     tag.product_name = product_name
@@ -55,13 +57,12 @@ async def test_view_empty_cart(client: AsyncClient):
     """Test viewing an empty cart."""
     # Clear the cart at start
     FAKE_CART_DB.clear()
-    
+
     response = await client.get("/")
     assert response.status_code == 200
     data = response.json()
     assert data["total_items"] == 0
     assert data["total_price_cents"] == 0
-
 
 
 @pytest.mark.asyncio
@@ -114,10 +115,10 @@ async def test_add_to_cart_duplicate(client: AsyncClient, mock_db):
 
     # Add first time
     await client.post("/add", json={"qr_data": "E200DUP"})
-    
+
     # Add second time - should fail
     response = await client.post("/add", json={"qr_data": "E200DUP"})
-    
+
     assert response.status_code == 400
     assert "already in cart" in response.json()["detail"]
 
@@ -182,7 +183,7 @@ async def test_checkout_payment_failed(client: AsyncClient, mock_db):
     # Mock settings to force Stripe
     with patch("app.routers.cart.settings") as mock_settings:
         mock_settings.DEFAULT_PAYMENT_PROVIDER = "stripe"
-        
+
         with patch("app.routers.cart.get_gateway") as mock_get_gateway:
             mock_gateway = MagicMock()
             mock_get_gateway.return_value = mock_gateway

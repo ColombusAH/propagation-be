@@ -6,12 +6,13 @@ from app.services.database import engine
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def fix_schema():
     logger.info("Starting schema verification and fix...")
-    
+
     inspector = inspect(engine)
     table_name = "rfid_tags"
-    
+
     if not inspector.has_table(table_name):
         logger.error(f"Table {table_name} does not exist! Run init_db() first.")
         return
@@ -33,14 +34,11 @@ def fix_schema():
         "pc": "VARCHAR(16)",
         "crc": "VARCHAR(16)",
         "frequency": "FLOAT",
-        "metadata": "JSON"
+        "metadata": "JSON",
     }
 
-
-
-
     with engine.connect() as conn:
-        with conn.begin(): # Transaction
+        with conn.begin():  # Transaction
             for col, definition in new_columns.items():
                 if col not in existing_columns:
                     logger.info(f"Adding missing column: {col}")
@@ -54,6 +52,7 @@ def fix_schema():
                     logger.info(f"Column {col} already exists.")
 
     logger.info("Schema fix complete.")
+
 
 if __name__ == "__main__":
     fix_schema()

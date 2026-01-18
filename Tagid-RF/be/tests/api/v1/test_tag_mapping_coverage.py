@@ -11,6 +11,7 @@ from app.core.deps import get_current_user as get_current_user_core
 from app.api.dependencies.auth import get_current_user as get_current_user_auth
 from app.main import app
 
+
 # Mock prisma_client and dependencies before importing the router
 @pytest.fixture
 def mock_prisma():
@@ -42,6 +43,7 @@ def mock_current_user():
     user.role = "STORE_MANAGER"
     return user
 
+
 @pytest.fixture(autouse=True)
 def setup_overrides(mock_current_user):
     app.dependency_overrides[get_current_user_core] = lambda: mock_current_user
@@ -57,31 +59,32 @@ class TestCreateMapping:
     async def test_create_mapping_success(self, mock_prisma, mock_encryption_service, client):
         """Test successful mapping creation."""
         mock_prisma.client.tagmapping.find_unique = AsyncMock(return_value=None)
-        mock_prisma.client.tagmapping.create = AsyncMock(return_value=MagicMock(
-            id="mapping-1",
-            epc="E280681000001234",
-            encryptedQr="encrypted_qr_123",
-            epcHash="hash_abc",
-            productId="prod-1",
-            containerId=None,
-            isActive=True
-        ))
+        mock_prisma.client.tagmapping.create = AsyncMock(
+            return_value=MagicMock(
+                id="mapping-1",
+                epc="E280681000001234",
+                encryptedQr="encrypted_qr_123",
+                epcHash="hash_abc",
+                productId="prod-1",
+                containerId=None,
+                isActive=True,
+            )
+        )
 
-        response = await client.post("/api/v1/tag-mapping/create", json={
-            "epc": "E280681000001234",
-            "product_id": "prod-1"
-        })
+        response = await client.post(
+            "/api/v1/tag-mapping/create", json={"epc": "E280681000001234", "product_id": "prod-1"}
+        )
 
         assert response.status_code in [200, 201, 401, 403]  # May fail auth in test
 
     @pytest.mark.asyncio
-    async def test_create_mapping_already_exists(self, mock_prisma, mock_encryption_service, client):
+    async def test_create_mapping_already_exists(
+        self, mock_prisma, mock_encryption_service, client
+    ):
         """Test mapping creation when EPC already exists."""
         mock_prisma.client.tagmapping.find_unique = AsyncMock(return_value=MagicMock(id="existing"))
 
-        response = await client.post("/api/v1/tag-mapping/create", json={
-            "epc": "E280681000001234"
-        })
+        response = await client.post("/api/v1/tag-mapping/create", json={"epc": "E280681000001234"})
 
         assert response.status_code in [400, 401, 403]
 
@@ -94,10 +97,10 @@ class TestVerifyMatch:
         """Test successful EPC-QR verification."""
         mock_encryption_service.verify_match.return_value = True
 
-        response = await client.post("/api/v1/tag-mapping/verify", json={
-            "epc": "E280681000001234",
-            "qr_code": "encrypted_qr_123"
-        })
+        response = await client.post(
+            "/api/v1/tag-mapping/verify",
+            json={"epc": "E280681000001234", "qr_code": "encrypted_qr_123"},
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -108,10 +111,9 @@ class TestVerifyMatch:
         """Test EPC-QR verification failure."""
         mock_encryption_service.verify_match.return_value = False
 
-        response = await client.post("/api/v1/tag-mapping/verify", json={
-            "epc": "E280681000001234",
-            "qr_code": "wrong_qr"
-        })
+        response = await client.post(
+            "/api/v1/tag-mapping/verify", json={"epc": "E280681000001234", "qr_code": "wrong_qr"}
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -122,17 +124,18 @@ class TestDecryptQR:
     """Tests for POST /tag-mapping/decrypt endpoint."""
 
     @pytest.mark.asyncio
-    async def test_decrypt_qr_success_with_mapping(self, mock_prisma, mock_encryption_service, client):
+    async def test_decrypt_qr_success_with_mapping(
+        self, mock_prisma, mock_encryption_service, client
+    ):
         """Test successful QR decryption with database mapping."""
         mock_encryption_service.decrypt_qr.return_value = "E280681000001234"
-        mock_prisma.client.tagmapping.find_unique = AsyncMock(return_value=MagicMock(
-            productId="prod-1",
-            containerId="container-1"
-        ))
+        mock_prisma.client.tagmapping.find_unique = AsyncMock(
+            return_value=MagicMock(productId="prod-1", containerId="container-1")
+        )
 
-        response = await client.post("/api/v1/tag-mapping/decrypt", json={
-            "qr_code": "encrypted_qr_123"
-        })
+        response = await client.post(
+            "/api/v1/tag-mapping/decrypt", json={"qr_code": "encrypted_qr_123"}
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -140,14 +143,16 @@ class TestDecryptQR:
         assert data["epc"] == "E280681000001234"
 
     @pytest.mark.asyncio
-    async def test_decrypt_qr_success_no_mapping(self, mock_prisma, mock_encryption_service, client):
+    async def test_decrypt_qr_success_no_mapping(
+        self, mock_prisma, mock_encryption_service, client
+    ):
         """Test QR decryption without database mapping."""
         mock_encryption_service.decrypt_qr.return_value = "E280681000001234"
         mock_prisma.client.tagmapping.find_unique = AsyncMock(return_value=None)
 
-        response = await client.post("/api/v1/tag-mapping/decrypt", json={
-            "qr_code": "encrypted_qr_123"
-        })
+        response = await client.post(
+            "/api/v1/tag-mapping/decrypt", json={"qr_code": "encrypted_qr_123"}
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -159,9 +164,7 @@ class TestDecryptQR:
         """Test QR decryption with invalid QR code."""
         mock_encryption_service.decrypt_qr.return_value = None
 
-        response = await client.post("/api/v1/tag-mapping/decrypt", json={
-            "qr_code": "invalid_qr"
-        })
+        response = await client.post("/api/v1/tag-mapping/decrypt", json={"qr_code": "invalid_qr"})
 
         assert response.status_code == 200
         data = response.json()
@@ -174,15 +177,17 @@ class TestGetByEPC:
     @pytest.mark.asyncio
     async def test_get_by_epc_found(self, mock_prisma, client):
         """Test getting mapping by EPC - found."""
-        mock_prisma.client.tagmapping.find_unique = AsyncMock(return_value=MagicMock(
-            id="mapping-1",
-            epc="E280681000001234",
-            encryptedQr="encrypted_qr_123",
-            epcHash="hash_abc",
-            productId="prod-1",
-            containerId=None,
-            isActive=True
-        ))
+        mock_prisma.client.tagmapping.find_unique = AsyncMock(
+            return_value=MagicMock(
+                id="mapping-1",
+                epc="E280681000001234",
+                encryptedQr="encrypted_qr_123",
+                epcHash="hash_abc",
+                productId="prod-1",
+                containerId=None,
+                isActive=True,
+            )
+        )
 
         response = await client.get("/api/v1/tag-mapping/by-epc/E280681000001234")
 
@@ -204,15 +209,17 @@ class TestGetByQR:
     @pytest.mark.asyncio
     async def test_get_by_qr_found(self, mock_prisma, client):
         """Test getting mapping by QR - found."""
-        mock_prisma.client.tagmapping.find_unique = AsyncMock(return_value=MagicMock(
-            id="mapping-1",
-            epc="E280681000001234",
-            encryptedQr="encrypted_qr_123",
-            epcHash="hash_abc",
-            productId="prod-1",
-            containerId=None,
-            isActive=True
-        ))
+        mock_prisma.client.tagmapping.find_unique = AsyncMock(
+            return_value=MagicMock(
+                id="mapping-1",
+                epc="E280681000001234",
+                encryptedQr="encrypted_qr_123",
+                epcHash="hash_abc",
+                productId="prod-1",
+                containerId=None,
+                isActive=True,
+            )
+        )
 
         response = await client.get("/api/v1/tag-mapping/by-qr/encrypted_qr_123")
 
@@ -266,17 +273,19 @@ class TestListMappings:
     @pytest.mark.asyncio
     async def test_list_mappings_with_pagination(self, mock_prisma, client):
         """Test listing mappings with pagination."""
-        mock_prisma.client.tagmapping.find_many = AsyncMock(return_value=[
-            MagicMock(
-                id="mapping-1",
-                epc="E280681000001234",
-                encryptedQr="qr1",
-                epcHash="hash1",
-                productId=None,
-                containerId=None,
-                isActive=True
-            )
-        ])
+        mock_prisma.client.tagmapping.find_many = AsyncMock(
+            return_value=[
+                MagicMock(
+                    id="mapping-1",
+                    epc="E280681000001234",
+                    encryptedQr="qr1",
+                    epcHash="hash1",
+                    productId=None,
+                    containerId=None,
+                    isActive=True,
+                )
+            ]
+        )
 
         response = await client.get("/api/v1/tag-mapping/list?skip=0&take=10")
 
@@ -295,8 +304,7 @@ class TestSimulateScan:
             mock_rfid._process_tag = AsyncMock()
 
             response = await client.post(
-                "/api/v1/tag-mapping/simulate-scan",
-                params={"epc": "E2806810000000001234TEST"}
+                "/api/v1/tag-mapping/simulate-scan", params={"epc": "E2806810000000001234TEST"}
             )
 
             assert response.status_code in [200, 422]  # May require different param format

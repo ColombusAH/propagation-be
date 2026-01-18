@@ -18,6 +18,7 @@ from app.services.database import get_db
 app = FastAPI()
 app.include_router(router, prefix="/api/v1/tags")
 
+
 @pytest.fixture
 def mock_db_session():
     """Fixture for a mocked database session."""
@@ -30,8 +31,9 @@ def mock_db_session():
     mock_query.offset.return_value = mock_query
     mock_query.limit.return_value = mock_query
     mock_query.group_by.return_value = mock_query
-    
+
     return db, mock_query
+
 
 @pytest.fixture
 def client(mock_db_session):
@@ -41,6 +43,7 @@ def client(mock_db_session):
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
 
 def _create_mock_tag(id=1, epc="E200TEST", read_count=1):
     tag = MagicMock(spec=RFIDTag)
@@ -53,7 +56,7 @@ def _create_mock_tag(id=1, epc="E200TEST", read_count=1):
     tag.updated_at = datetime.now(timezone.utc)
     tag.is_active = True
     tag.rssi = -60.0
-    
+
     # Optional fields defaults
     tag.tid = None
     tag.user_memory = None
@@ -72,7 +75,9 @@ def _create_mock_tag(id=1, epc="E200TEST", read_count=1):
 
     return tag
 
+
 # --- CRUD Tests ---
+
 
 def test_list_tags(client, mock_db_session):
     """Test listing tags with filters."""
@@ -90,6 +95,7 @@ def test_list_tags(client, mock_db_session):
     # filter() should have been called multiple times
     assert mock_query.filter.call_count >= 2
 
+
 def test_get_tag_by_id(client, mock_db_session):
     """Test getting a specific tag."""
     db, mock_query = mock_db_session
@@ -100,6 +106,7 @@ def test_get_tag_by_id(client, mock_db_session):
     assert response.status_code == 200
     assert response.json()["id"] == 1
 
+
 def test_get_tag_not_found(client, mock_db_session):
     """Test 404 behavior."""
     db, mock_query = mock_db_session
@@ -107,6 +114,7 @@ def test_get_tag_not_found(client, mock_db_session):
 
     response = client.get("/api/v1/tags/999")
     assert response.status_code == 404
+
 
 def test_get_tag_by_epc(client, mock_db_session):
     """Test getting tag by EPC."""
@@ -118,22 +126,23 @@ def test_get_tag_by_epc(client, mock_db_session):
     assert response.status_code == 200
     assert response.json()["epc"] == "E200TEST"
 
+
 @patch("app.routers.tags.RFIDTag")
 def test_create_new_tag(mock_rfid_tag_cls, client, mock_db_session):
     """Test creating a new tag via scan."""
     db, mock_query = mock_db_session
     mock_query.first.return_value = None  # No existing tag
-    
+
     # Configure the mock instance returned by constructor
     mock_instance = mock_rfid_tag_cls.return_value
-    mock_instance.id = None # Initially None
-    
+    mock_instance.id = None  # Initially None
+
     # Mock behavior for add/refresh
     def side_effect_refresh(obj):
         # obj is the mock_instance
         if not obj.id:
             obj.id = 1
-        
+
         obj.created_at = datetime.now(timezone.utc)
         obj.updated_at = datetime.now(timezone.utc)
         obj.read_count = 1
@@ -141,7 +150,7 @@ def test_create_new_tag(mock_rfid_tag_cls, client, mock_db_session):
         obj.last_seen = datetime.now(timezone.utc)
         obj.is_active = True
         obj.is_paid = False
-        
+
         # Ensure optional fields are None
         obj.tid = None
         obj.user_memory = None
@@ -154,26 +163,22 @@ def test_create_new_tag(mock_rfid_tag_cls, client, mock_db_session):
         obj.product_sku = None
         obj.price_cents = None
         obj.store_id = None
-        
+
         # Set fields that would have been set by constructor
-        obj.epc = "E200NEW" 
+        obj.epc = "E200NEW"
         obj.rssi = -50.0
         obj.antenna_port = 1
         obj.location = "Gate 1"
-    
+
     db.refresh.side_effect = side_effect_refresh
 
-    data = {
-        "epc": "E200NEW",
-        "rssi": -50,
-        "antenna_port": 1,
-        "location": "Gate 1"
-    }
+    data = {"epc": "E200NEW", "rssi": -50, "antenna_port": 1, "location": "Gate 1"}
     response = client.post("/api/v1/tags/", json=data)
-    
+
     assert response.status_code == 201
     assert db.add.call_count == 2  # New tag + history
     assert db.commit.call_count == 2
+
 
 def test_update_existing_tag_scan(client, mock_db_session):
     """Test updating existing tag via scan."""
@@ -181,16 +186,14 @@ def test_update_existing_tag_scan(client, mock_db_session):
     mock_tag = _create_mock_tag(read_count=5)
     mock_query.first.return_value = mock_tag
 
-    data = {
-        "epc": "E200TEST",
-        "rssi": -40
-    }
+    data = {"epc": "E200TEST", "rssi": -40}
     response = client.post("/api/v1/tags/", json=data)
 
     assert response.status_code == 201
     assert mock_tag.read_count == 6  # Incremented
     assert db.add.call_count == 1  # Only history added
     assert db.commit.call_count == 2
+
 
 def test_manual_update_tag(client, mock_db_session):
     """Test manual PUT update."""
@@ -205,6 +208,7 @@ def test_manual_update_tag(client, mock_db_session):
     assert mock_tag.notes == "Updated note"
     assert mock_tag.is_active is False
 
+
 def test_delete_tag(client, mock_db_session):
     """Test soft delete."""
     db, mock_query = mock_db_session
@@ -215,27 +219,30 @@ def test_delete_tag(client, mock_db_session):
     assert response.status_code == 204
     assert mock_tag.is_active is False
 
+
 # --- Stats Tests ---
+
 
 def test_get_recent_scans(client, mock_db_session):
     """Test recent scans history."""
     db, mock_query = mock_db_session
     mock_query.all.return_value = []
-    
+
     response = client.get("/api/v1/tags/recent/scans?hours=24")
     assert response.status_code == 200
+
 
 def test_get_stats_summary(client, mock_db_session):
     """Test stats summary endpoint."""
     db, mock_query = mock_db_session
-    
+
     # Mock counts
-    mock_query.count.return_value = 10 
+    mock_query.count.return_value = 10
     # Mock aggregates
     mock_query.scalar.return_value = -55.5
     # Mock group by
     mock_query.all.return_value = [("Warehouse", 5)]
-    
+
     # Mock most scanned
     mock_tag = _create_mock_tag()
     mock_query.order_by.return_value.first.return_value = mock_tag
@@ -247,7 +254,9 @@ def test_get_stats_summary(client, mock_db_session):
     assert data["average_rssi"] == -55.5
     assert "Warehouse" in data["tags_by_location"]
 
+
 # --- Reader Control Tests ---
+
 
 # Patching the service implementation directly, as it's imported inside functions
 @patch("app.services.rfid_reader.rfid_reader_service")
@@ -259,13 +268,14 @@ async def test_connect_reader_success(mock_reader_global, client):
     mock_reader_global.get_reader_info = AsyncMock(return_value={"model": "Test"})
     mock_reader_global.reader_ip = "127.0.0.1"
     mock_reader_global.reader_port = 2000
-    
+
     # We must patch where it's defined because it's a singleton instance in services/rfid_reader.py
     # and the router does `from app.services.rfid_reader import rfid_reader_service`
-    
+
     response = client.post("/api/v1/tags/reader/connect")
     assert response.status_code == 200
     assert response.json()["status"] == "connected"
+
 
 @patch("app.services.rfid_reader.rfid_reader_service")
 @pytest.mark.asyncio
@@ -278,6 +288,7 @@ async def test_connect_reader_failure(mock_reader_global, client):
     response = client.post("/api/v1/tags/reader/connect")
     assert response.status_code == 500
 
+
 @patch("app.services.rfid_reader.rfid_reader_service")
 @pytest.mark.asyncio
 async def test_disconnect_reader(mock_reader_global, client):
@@ -286,16 +297,18 @@ async def test_disconnect_reader(mock_reader_global, client):
     response = client.post("/api/v1/tags/reader/disconnect")
     assert response.status_code == 200
 
+
 @patch("app.services.rfid_reader.rfid_reader_service")
 @pytest.mark.asyncio
 async def test_start_scanning(mock_reader_global, client):
     """Test start scanning."""
     mock_reader_global.is_connected = True
     mock_reader_global.start_scanning = AsyncMock()
-    
+
     response = client.post("/api/v1/tags/reader/start-scanning")
     assert response.status_code == 200
     assert response.json()["status"] == "scanning"
+
 
 @patch("app.services.rfid_reader.rfid_reader_service")
 @pytest.mark.asyncio
@@ -305,6 +318,7 @@ async def test_start_scanning_not_connected(mock_reader_global, client):
     response = client.post("/api/v1/tags/reader/start-scanning")
     assert response.status_code == 400
 
+
 @patch("app.services.rfid_reader.rfid_reader_service")
 @pytest.mark.asyncio
 async def test_stop_scanning(mock_reader_global, client):
@@ -313,16 +327,18 @@ async def test_stop_scanning(mock_reader_global, client):
     response = client.post("/api/v1/tags/reader/stop-scanning")
     assert response.status_code == 200
 
+
 @patch("app.services.rfid_reader.rfid_reader_service")
 @pytest.mark.asyncio
 async def test_read_single(mock_reader_global, client):
     """Test read single tag."""
     mock_reader_global.is_connected = True
     mock_reader_global.read_single_tag = AsyncMock(return_value={"epc": "E200SINGLE"})
-    
+
     response = client.post("/api/v1/tags/reader/read-single")
     assert response.status_code == 200
     assert response.json()["tag"]["epc"] == "E200SINGLE"
+
 
 @patch("app.services.rfid_reader.rfid_reader_service")
 @pytest.mark.asyncio
@@ -334,23 +350,25 @@ async def test_reader_status(mock_reader_global, client):
     mock_reader_global.connection_type = "tcp"
     mock_reader_global.reader_ip = "1.2.3.4"
     mock_reader_global.reader_port = 1234
-    
+
     response = client.get("/api/v1/tags/reader/status")
     assert response.status_code == 200
     assert response.json()["connected"] is True
 
+
 # --- Live Stats Tests (Mocked Imports) ---
+
 
 def test_live_recent_tags_import_error(client):
     """Test live recent endpoint handling import error gracefully."""
     # We rely on the fact that tag_listener_server might not be in path or we leave it normal
     # But specifically, if we mock sys.modules to raise ImportError for 'tag_listener_server'
-    with patch.dict('sys.modules', {'tag_listener_server': None}):
+    with patch.dict("sys.modules", {"tag_listener_server": None}):
         # Trigger the import error logic
         # Note: This is tricky because the router imports inside the function.
         # Ideally we patch builtins.__import__ or similar, but the router uses try-except ImportError.
         pass
-        
+
     # Checking the normal behavior if module not found:
     # Since we are running in 'tests/', the relative path structure might differ from runtime
     # But usually it won't find 'tag_listener_server' unless we setup PYTHONPATH
@@ -358,6 +376,7 @@ def test_live_recent_tags_import_error(client):
     # It returns 200 with empty list on ImportError
     assert response.status_code == 200
     assert "tags" in response.json()
+
 
 def test_live_stats_import_error(client):
     """Test live stats endpoint handling import error."""

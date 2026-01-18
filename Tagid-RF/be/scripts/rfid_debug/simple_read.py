@@ -6,22 +6,24 @@ Simple blocking reader - just read everything that comes.
 import socket
 import sys
 
+
 def simple_read(ip: str, port: int):
     print(f"Connecting to {ip}:{port}...")
-    
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(5)
     sock.connect((ip, port))
     print("Connected!")
-    
+
     # Read for 30 seconds
     import time
+
     start = time.time()
     total_bytes = 0
-    
+
     print("\nListening (30s)... Bring tags near the reader!")
     print("-" * 60)
-    
+
     while time.time() - start < 30:
         try:
             sock.settimeout(1)
@@ -30,21 +32,21 @@ def simple_read(ip: str, port: int):
                 total_bytes += len(data)
                 ts = time.strftime("%H:%M:%S")
                 print(f"[{ts}] {len(data)} bytes: {data.hex().upper()}")
-                
+
                 # Quick parse
                 if len(data) >= 6 and data[0] == 0xCF:
                     cmd = (data[2] << 8) | data[3]
                     length = data[4]
                     status = data[5]
                     print(f"        CMD=0x{cmd:04X} LEN={length} STATUS=0x{status:02X}")
-                    
+
                     if cmd == 0x0001 and status == 0x00 and length > 5:
                         # Tag data!
-                        payload = data[6:6+length-1]
+                        payload = data[6 : 6 + length - 1]
                         if len(payload) >= 5:
                             epc_len = payload[4]
                             if len(payload) >= 5 + epc_len:
-                                epc = payload[5:5+epc_len].hex().upper()
+                                epc = payload[5 : 5 + epc_len].hex().upper()
                                 rssi = -payload[0]
                                 print(f"        📍 TAG: {epc}, RSSI: {rssi}dBm")
         except socket.timeout:
@@ -52,7 +54,7 @@ def simple_read(ip: str, port: int):
         except Exception as e:
             print(f"Error: {e}")
             break
-    
+
     sock.close()
     print("-" * 60)
     print(f"Total: {total_bytes} bytes received")

@@ -23,8 +23,10 @@ from app.schemas.payment import (
     RefundRequest,
     RefundResponse,
 )
+
 # from app.services.cash_provider import CashProvider # Migrated to factory
 from app.services.nexi_provider import NexiProvider
+
 # from app.services.stripe_provider import StripeProvider # Deleted
 # from app.services.tranzila_provider import TranzilaProvider # Deleted
 from app.services.payment.factory import get_gateway
@@ -32,6 +34,7 @@ from app.services.payment.base import PaymentRequest, PaymentStatus
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
 
 # Helper to bridge Enum to factory string
 def get_provider_gateway(provider_enum: PaymentProviderEnum):
@@ -57,7 +60,7 @@ async def create_payment_intent(
         try:
             gateway = get_provider_gateway(request.payment_provider)
         except ValueError:
-             raise HTTPException(
+            raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid payment provider: {request.payment_provider}",
             )
@@ -65,15 +68,15 @@ async def create_payment_intent(
         # Create payment intent with provider
         # New Gateway interface uses PaymentRequest object
         # Adapting request...
-        
+
         # Note: Legacy providers (Nexi) might still use old signature: create_payment_intent(amount, currency, metadata)
         # New Gateway uses: create_payment(PaymentRequest)
-        
+
         external_id = None
         client_secret = None
-        
+
         if request.payment_provider == PaymentProviderEnum.NEXI:
-             # Legacy path for Nexi
+            # Legacy path for Nexi
             intent = await gateway.create_payment_intent(
                 amount=request.amount, currency=request.currency, metadata=request.metadata
             )
@@ -85,16 +88,16 @@ async def create_payment_intent(
                 amount=request.amount,
                 currency=request.currency,
                 metadata=request.metadata or {},
-                order_id=request.order_id
+                order_id=request.order_id,
             )
             result = await gateway.create_payment(pay_req)
             if not result.success:
-                 raise HTTPException(
+                raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Payment creation failed: {result.error}",
                 )
             external_id = result.payment_id
-            client_secret = result.payment_id # Or metadata?
+            client_secret = result.payment_id  # Or metadata?
 
         # Create payment record in database
         payment = await prisma_client.client.payment.create(
@@ -151,7 +154,7 @@ async def confirm_payment(request: PaymentConfirmRequest, current_user=Depends(g
             provider_enum = PaymentProviderEnum(payment.provider)
             gateway = get_provider_gateway(provider_enum)
         except ValueError:
-             raise HTTPException(
+            raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid payment provider: {payment.provider}",
             )
@@ -159,31 +162,30 @@ async def confirm_payment(request: PaymentConfirmRequest, current_user=Depends(g
         # Confirm payment with provider
         status_val = PaymentStatusEnum.PENDING
         metadata = {}
-        
+
         if provider_enum == PaymentProviderEnum.NEXI:
-             confirmation = await gateway.confirm_payment(
+            confirmation = await gateway.confirm_payment(
                 payment_id=payment.externalId, payment_method_id=request.payment_method_id
             )
-             status_val = confirmation["status"]
-             metadata = confirmation.get("metadata")
+            status_val = confirmation["status"]
+            metadata = confirmation.get("metadata")
         else:
             # New Gateway interface
             # Confirm is mostly for Stripe. Tranzila usually confirms via callback or redirect validation.
             # Assuming confirm_payment signature: confirm_payment(payment_id, payment_method)
             result = await gateway.confirm_payment(
-                payment_id=payment.externalId, 
-                payment_method=request.payment_method_id
+                payment_id=payment.externalId, payment_method=request.payment_method_id
             )
-            
+
             if result.success:
-                 # Map new status to enum
-                 # PaymentStatus.COMPLETED -> COMPLETED
-                 if result.status == PaymentStatus.COMPLETED:
-                     status_val = PaymentStatusEnum.COMPLETED
-                 elif result.status == PaymentStatus.FAILED:
-                     status_val = PaymentStatusEnum.FAILED
-                 else:
-                     status_val = PaymentStatusEnum.PENDING
+                # Map new status to enum
+                # PaymentStatus.COMPLETED -> COMPLETED
+                if result.status == PaymentStatus.COMPLETED:
+                    status_val = PaymentStatusEnum.COMPLETED
+                elif result.status == PaymentStatus.FAILED:
+                    status_val = PaymentStatusEnum.FAILED
+                else:
+                    status_val = PaymentStatusEnum.PENDING
             else:
                 status_val = PaymentStatusEnum.FAILED
 
@@ -192,11 +194,7 @@ async def confirm_payment(request: PaymentConfirmRequest, current_user=Depends(g
             where={"id": payment.id},
             data={
                 "status": status_val.value,
-                "paidAt": (
-                    datetime.now()
-                    if status_val == PaymentStatusEnum.COMPLETED
-                    else None
-                ),
+                "paidAt": (datetime.now() if status_val == PaymentStatusEnum.COMPLETED else None),
             },
         )
 
@@ -240,10 +238,10 @@ async def create_cash_payment(
             amount=request.amount,
             currency="ILS",
             metadata={"notes": request.notes},
-            order_id=request.order_id
+            order_id=request.order_id,
         )
         result = await gateway.create_payment(pay_req)
-        
+
         # Create payment record
         payment = await prisma_client.client.payment.create(
             data={
@@ -303,7 +301,7 @@ async def refund_payment(
             provider_enum = PaymentProviderEnum(payment.provider)
             gateway = get_provider_gateway(provider_enum)
         except ValueError:
-             raise HTTPException(
+            raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid payment provider: {payment.provider}",
             )
@@ -311,19 +309,23 @@ async def refund_payment(
         # Refund with provider
         refund_id = None
         refund_amount = request.amount
-        
+
         if provider_enum == PaymentProviderEnum.NEXI:
-             refund = await gateway.refund_payment(payment_id=payment.externalId, amount=request.amount)
-             refund_id = refund["refund_id"]
-             refund_amount = refund["amount"]
+            refund = await gateway.refund_payment(
+                payment_id=payment.externalId, amount=request.amount
+            )
+            refund_id = refund["refund_id"]
+            refund_amount = refund["amount"]
         else:
-             # New Gateway
-             result = await gateway.refund_payment(payment_id=payment.externalId, amount=request.amount)
-             if not result.success:
-                  raise HTTPException(status_code=400, detail=f"Refund failed: {result.error}")
-             refund_id = result.refund_id
-             # Assuming full refund if amount not returned
-             
+            # New Gateway
+            result = await gateway.refund_payment(
+                payment_id=payment.externalId, amount=request.amount
+            )
+            if not result.success:
+                raise HTTPException(status_code=400, detail=f"Refund failed: {result.error}")
+            refund_id = result.refund_id
+            # Assuming full refund if amount not returned
+
         # Update payment status
         await prisma_client.client.payment.update(
             where={"id": payment.id}, data={"status": "REFUNDED"}

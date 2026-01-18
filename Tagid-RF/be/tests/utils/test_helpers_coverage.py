@@ -21,11 +21,11 @@ class TestParseTagData:
             "pc": 3000,
             "crc": "1234",
             "metadata": {"type": "item"},
-            "location": "Zone A"
+            "location": "Zone A",
         }
-        
+
         result = parse_tag_data(raw)
-        
+
         assert result["epc"] == "E280681000001234"
         assert result["tid"] == "TID123"
         assert result["rssi"] == -55.0
@@ -40,9 +40,9 @@ class TestParseTagData:
     def test_parse_minimal_data(self):
         """Test parsing minimal tag data."""
         raw = {"epc": "E280681000001234"}
-        
+
         result = parse_tag_data(raw)
-        
+
         assert result["epc"] == "E280681000001234"
         assert result["tid"] is None
         assert result["rssi"] is None
@@ -51,9 +51,9 @@ class TestParseTagData:
     def test_parse_empty_data(self):
         """Test parsing empty tag data."""
         raw = {}
-        
+
         result = parse_tag_data(raw)
-        
+
         assert result["epc"] == ""
         assert "timestamp" in result
 
@@ -82,7 +82,7 @@ class TestValidateEpc:
         # 128 chars should be valid
         long_epc = "A" * 128
         assert validate_epc(long_epc) is True
-        
+
         # Over 128 chars should be invalid
         too_long_epc = "A" * 129
         assert validate_epc(too_long_epc) is False

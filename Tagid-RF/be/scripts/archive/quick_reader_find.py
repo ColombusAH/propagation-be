@@ -27,9 +27,9 @@ def calculate_crc16(data: bytes) -> int:
 
 
 def build_command() -> bytes:
-    frame = struct.pack('>BBHB', HEAD, BROADCAST_ADDR, CMD_GET_DEVICE_INFO, 0)
+    frame = struct.pack(">BBHB", HEAD, BROADCAST_ADDR, CMD_GET_DEVICE_INFO, 0)
     crc = calculate_crc16(frame)
-    frame += struct.pack('<H', crc)
+    frame += struct.pack("<H", crc)
     return frame
 
 
@@ -52,7 +52,7 @@ if __name__ == "__main__":
     print("Quick RFID Reader Discovery")
     print("=" * 60)
     print("\nTesting common IPs and ports...\n")
-    
+
     # Common IPs to test
     ips_to_test = [
         "192.168.1.200",
@@ -65,12 +65,12 @@ if __name__ == "__main__":
         "169.254.1.1",
         "169.254.1.100",
     ]
-    
+
     # Common ports
     ports_to_test = [4001, 5000, 6000, 8080, 9090]
-    
+
     found = False
-    
+
     for ip in ips_to_test:
         for port in ports_to_test:
             print(f"Testing {ip}:{port}...", end=" ")
@@ -89,7 +89,7 @@ if __name__ == "__main__":
                 print("✗")
         if found:
             break
-    
+
     if not found:
         print("\n" + "=" * 60)
         print("No RFID reader found")
@@ -108,5 +108,3 @@ if __name__ == "__main__":
         print("     - http://192.168.1.200")
         print("     - http://169.254.203.1")
         print("  3. Enable TCP server in reader settings")
-
-
