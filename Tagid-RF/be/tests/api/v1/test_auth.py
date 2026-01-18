@@ -13,8 +13,19 @@ async def test_auth_root(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_google_login_invalid_token(client: AsyncClient):
     """Test Google login with an invalid token."""
-    payload = {"token": "invalid-token-123"}
-    response = await client.post("/api/v1/auth/google", json=payload)
-    # Token verification should fail and return 401
-    assert response.status_code == 401
-    assert "Invalid Google token" in response.json()["detail"]
+    from unittest.mock import MagicMock, patch
+    from app.db.dependencies import get_db
+    from app.main import app
+    
+    app.dependency_overrides[get_db] = lambda: MagicMock()
+    try:
+        payload = {"token": "invalid-token-123"}
+        
+        with patch("app.api.v1.endpoints.auth.id_token.verify_oauth2_token") as mock_verify:
+            mock_verify.side_effect = ValueError("Invalid token")
+            response = await client.post("/api/v1/auth/google", json=payload)
+            # Token verification should fail and return 401
+            assert response.status_code == 401
+            assert "Invalid Google token" in response.json()["detail"]
+    finally:
+        app.dependency_overrides.clear()

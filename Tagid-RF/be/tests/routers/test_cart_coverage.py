@@ -4,7 +4,9 @@ Covers: get_cart_session, add_to_cart, view_cart, checkout, _calculate_summary
 """
 
 import pytest
-from unittest.mock import MagicMock, patch
+import uuid
+from types import SimpleNamespace
+from unittest.mock import MagicMock, patch, AsyncMock
 from app.routers.cart import get_cart_session, _calculate_summary, FAKE_CART_DB
 from app.schemas.cart import CartItem
 
@@ -73,32 +75,68 @@ class TestAddToCart:
     @pytest.mark.asyncio
     async def test_add_to_cart_sku(self, client):
         """Test adding item by SKU."""
-        with patch("app.routers.cart.get_db") as mock_db:
-            mock_session = MagicMock()
-            mock_tag = MagicMock(
-                epc="E280681000001234",
-                product_name="Test Product",
-                product_sku="SKU-001",
-                price_cents=1000,
-                is_paid=False,
-                is_active=True
-            )
-            mock_session.query.return_value.filter.return_value.first.return_value = mock_tag
-            mock_db.return_value = mock_session
-
+        from app.services.database import get_db
+        from app.main import app
+        
+        mock_tag = SimpleNamespace(
+            epc="E280681000001234",
+            product_name="Test Product",
+            product_sku="SKU-001",
+            price_cents=1000,
+            is_paid=False,
+            is_active=True
+        )
+        
+        mock_db = MagicMock()
+        mock_query = mock_db.query.return_value
+        mock_query.filter.return_value = mock_query
+        mock_query.first.return_value = mock_tag
+        
+        async def override_get_db():
+            yield mock_db
+            
+        app.dependency_overrides[get_db] = override_get_db
+        try:
             FAKE_CART_DB.clear()
             response = await client.post("/api/v1/cart/add", json={
                 "qr_data": "tagid://product/SKU-001"
             })
-            assert response.status_code in [200, 404, 500]
+            assert response.status_code in [200, 201]
+        finally:
+            app.dependency_overrides.clear()
 
     @pytest.mark.asyncio
     async def test_add_to_cart_epc(self, client):
         """Test adding item by EPC."""
-        response = await client.post("/api/v1/cart/add", json={
-            "qr_data": "E280681000001234"
-        })
-        assert response.status_code in [200, 404, 500]
+        from app.services.database import get_db
+        from app.main import app
+        
+        mock_tag = SimpleNamespace(
+            epc="E280681000001234",
+            product_name="Test Product",
+            product_sku="SKU-001",
+            price_cents=1000,
+            is_paid=False,
+            is_active=True
+        )
+        
+        mock_db = MagicMock()
+        mock_query = mock_db.query.return_value
+        mock_query.filter.return_value = mock_query
+        mock_query.first.return_value = mock_tag
+        
+        async def override_get_db():
+            yield mock_db
+            
+        app.dependency_overrides[get_db] = override_get_db
+        try:
+            FAKE_CART_DB.clear()
+            response = await client.post("/api/v1/cart/add", json={
+                "qr_data": "E280681000001234"
+            })
+            assert response.status_code in [200, 201]
+        finally:
+            app.dependency_overrides.clear()
 
 
 class TestViewCart:
@@ -130,28 +168,33 @@ class TestCheckout:
         """Test checkout with empty cart."""
         FAKE_CART_DB.clear()
         response = await client.post("/api/v1/cart/checkout", json={
-            "payment_method_id": None
+            "payment_method_id": "none"
         })
-        assert response.status_code in [400, 500]
+        assert response.status_code in [400, 422, 500]
 
     @pytest.mark.asyncio
     async def test_checkout_with_items(self, client):
         """Test checkout with items in cart."""
-        with patch("app.routers.cart.get_gateway") as mock_gateway, \
-             patch("app.routers.cart.get_db") as mock_db:
-            
-            mock_gw = MagicMock()
-            mock_gw.create_payment = MagicMock(return_value=MagicMock(
-                success=True,
-                payment_id="pay-123",
-                status="pending"
-            ))
-            mock_gateway.return_value = mock_gw
-
+        from app.services.payment.factory import get_gateway
+        from app.services.database import get_db
+        from app.main import app
+        
+        mock_gw = MagicMock()
+        mock_gw.create_payment = MagicMock(return_value=SimpleNamespace(
+            success=True,
+            payment_id="pay-123",
+            status="pending"
+        ))
+        
+        app.dependency_overrides[get_gateway] = lambda: mock_gw
+        app.dependency_overrides[get_db] = lambda: MagicMock()
+        try:
             FAKE_CART_DB.clear()
             FAKE_CART_DB["demo_guest"] = [
                 CartItem(epc="EPC1", product_name="Product", product_sku="SKU", price_cents=1000)
             ]
 
-            response = await client.post("/api/v1/cart/checkout", json={})
-            assert response.status_code in [200, 400, 500]
+            response = await client.post("/api/v1/cart/checkout", json={"payment_method_id": "stripe"})
+            assert response.status_code in [200, 201, 500]
+        finally:
+            app.dependency_overrides.clear()

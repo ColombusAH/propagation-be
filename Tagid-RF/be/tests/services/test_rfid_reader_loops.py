@@ -22,23 +22,14 @@ def reader():
 @pytest.mark.asyncio
 async def test_read_single_tag_success(reader):
     """Test read_single_tag parsing a valid tag response."""
-    # Mock _send_command to return raw bytes for a successful inventory
-    # Frame format: HEAD len cmd_h cmd_l status count [tag1...] crc_h crc_l
-    # Simplest valid empty inventory response:
     mock_response = bytes([HEAD, 0x05, 0x01, M200Commands.RFM_INVENTORYISO_CONTINUE, 0x01, 0x00, 0x00, 0x00])
-
-    # We need to mock M200ResponseParser.parse OR the raw response handling
-    # The previous test failed with assert 0 == 1, meaning empty list returned.
-    # This happens if response.status is not SUCCESS or response.success property is False.
+    
     mock_parsed = MagicMock()
     mock_parsed.status = M200Status.SUCCESS
     mock_parsed.success = True
     mock_parsed.data = [
         {"epc": "E2001", "rssi": -50, "antenna_port": 1}
     ]
-    
-    # We must patch M200ResponseParser.parse AND parse_inventory_response 
-    # because read_single_tag calls parse_inventory_response(response.data)
     
     mock_tags = [{"epc": "E2001", "rssi": -50, "antenna_port": 1}]
     
@@ -99,7 +90,6 @@ async def test_scan_loop_runs_and_stops(reader):
     """Test _scan_loop runs and processes tags until stopped."""
     reader.is_scanning = True
     
-    # Mock read_single_tag to return tags once, then stop scanning
     scan_count = 0
     
     async def mock_read():
@@ -113,8 +103,8 @@ async def test_scan_loop_runs_and_stops(reader):
     callback = AsyncMock()
     reader.read_single_tag = mock_read
     
-    # Run loop (it should exit when is_scanning set to False)
-    await reader._scan_loop(callback)
+    with patch.object(reader, "_process_tag", new_callable=AsyncMock):
+        await reader._scan_loop(callback)
     
     assert scan_count == 2
 
@@ -131,10 +121,6 @@ async def test_scan_loop_calls_callback(reader):
     reader.read_single_tag = mock_read
     mock_cb = AsyncMock()
     
-    # We also need to patch _process_tag since that calls the callback
-    # But let's verify _scan_loop calls _process_tag, or use the real _process_tag
-    # rfid_reader.py:497 await self._process_tag(tag_data, callback)
-    
     with patch.object(reader, "_process_tag", new_callable=AsyncMock) as mock_process:
         await reader._scan_loop(mock_cb)
         
@@ -147,25 +133,37 @@ async def test_scan_loop_calls_callback(reader):
 # --- _process_tag Tests ---
 @pytest.mark.asyncio
 async def test_process_tag_logic(reader):
-    """Test _process_tag handles callback and deduplication (if any)."""
-    # The current implementation of _scan_loop simply calls _process_tag
-    # We need to check what _process_tag does. 
-    # Based on view_file earlier, we didn't see _process_tag implementation but it was called.
-    # Let's assume standard behavior: calls callback if provided.
+    """Test _process_tag handles callback and deduplication."""
+    tag_data = {"epc": "P1", "rssi": -50, "antenna_port": 1}
     
-    # Mocking _process_tag to see if it calls the callback
-    # Wait, we need to TEST _process_tag, so we shouldn't mock it on the reader object 
-    # if we want to test its body.
-    # Since we couldn't view it, let's look at the file content assumption or skip deep logic 
-    # and just trust it exists.
-    # Actually, let's implement a test that assumes it calls the callback.
-    
-    tag_data = {"epc": "P1", "rssi": -50}
-    mock_cb = AsyncMock()
-    
-    # If the method exists
-    if hasattr(reader, "_process_tag"):
-        await reader._process_tag(tag_data, mock_cb)
-        mock_cb.assert_called_with(tag_data)
-    else:
-        pytest.skip("_process_tag not implemented")
+    called_with = []
+    def mock_callback(data):
+        called_with.append(data)
+
+    # Patch everything that _process_tag uses
+    with patch("app.services.rfid_reader.SessionLocal") as mock_session_local, \
+         patch("app.services.rfid_reader.manager") as mock_manager, \
+         patch("app.services.rfid_reader.RFIDTag") as mock_tag_cls, \
+         patch("app.services.rfid_reader.RFIDScanHistory") as mock_hist_cls, \
+         patch("app.db.prisma.prisma_client") as mock_prisma:
+             
+        mock_db = MagicMock()
+        mock_session_local.return_value = mock_db
+        mock_db.query.return_value.filter.return_value.first.return_value = None
+        
+        # Ensure all awaited objects return AsyncMocks or are AsyncMocks themselves
+        mock_manager.broadcast = AsyncMock()
+        mock_prisma.client.tagmapping.find_unique = AsyncMock(return_value=None)
+        
+        # Mock class instantiations
+        mock_tag_obj = MagicMock()
+        mock_tag_obj.id = 1
+        mock_tag_cls.return_value = mock_tag_obj
+        
+        # Run the method
+        await reader._process_tag(tag_data, mock_callback)
+        
+        # Verify callback was called
+        assert len(called_with) == 1
+        assert called_with[0]["epc"] == "P1"
+        assert mock_manager.broadcast.called

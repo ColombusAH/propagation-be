@@ -1,10 +1,42 @@
-"""
-Comprehensive tests for Auth API endpoints.
-Covers: auth_root, dev_login, get_me, login_with_google, login_with_email, register_user
-"""
-
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+from types import SimpleNamespace
+import datetime
+
+def create_mock_user(id="user-1", email="test@example.com", role="CUSTOMER", business_id="biz-1"):
+    """Helper to create a clean mock user that satisfies Prisma/Pydantic schemas."""
+    return SimpleNamespace(
+        id=id,
+        email=email,
+        name=f"Mock {role}",
+        phone="000-000-0000",
+        address="Mock Adr",
+        role=role,
+        businessId=business_id,
+        subId=None,
+        description=None,
+        password="hashedpassword",
+        verifiedBy=None,
+        createdAt=datetime.datetime.now(),
+        updatedAt=datetime.datetime.now(),
+        deletedAt=None,
+        latitude=None,
+        longitude=None,
+        receiveTheftAlerts=False,
+        business=None,
+        notifications=[],
+        tags=[],
+        availabilityPreferences=[],
+        notificationPreferences=[],
+        shiftAssignments=[],
+        shiftResponses=[],
+        requestedReplacements=[],
+        providedReplacements=[],
+        botConversations=[],
+        formSubmissions=[],
+        scheduleGenerationRequests=[],
+        alertRecipients=[]
+    )
 
 
 class TestAuthRoot:
@@ -32,11 +64,9 @@ class TestDevLogin:
         mock_db_instance.business.find_first = AsyncMock(return_value=MagicMock(id="biz-1"))
         mock_db_instance.user = MagicMock()
         mock_db_instance.user.find_unique = AsyncMock(return_value=None)
-        mock_db_instance.user.create = AsyncMock(return_value=MagicMock(
-            id="user-1",
+        mock_db_instance.user.create = AsyncMock(return_value=create_mock_user(
             email="dev_store_manager@example.com",
-            role="STORE_MANAGER",
-            businessId="biz-1"
+            role="STORE_MANAGER"
         ))
 
         app.dependency_overrides[get_db] = lambda: mock_db_instance
@@ -46,7 +76,7 @@ class TestDevLogin:
                 
                 response = await client.post("/api/v1/auth/dev-login", json={"role": "STORE_MANAGER"})
                 assert response.status_code == 200
-                assert "access_token" in response.json()
+                assert "token" in response.json()
         finally:
             app.dependency_overrides.clear()
 
@@ -61,8 +91,10 @@ class TestDevLogin:
         mock_db_instance.business = MagicMock()
         mock_db_instance.business.find_first = AsyncMock(return_value=MagicMock(id="biz-1"))
         mock_db_instance.user = MagicMock()
-        mock_db_instance.user.find_unique = AsyncMock(return_value=MagicMock(
-            id="user-admin", email="dev_admin@example.com", role="SUPER_ADMIN", businessId="biz-1"
+        mock_db_instance.user.find_unique = AsyncMock(return_value=create_mock_user(
+            id="user-admin",
+            email="dev_admin@example.com",
+            role="SUPER_ADMIN"
         ))
         
         app.dependency_overrides[get_db] = lambda: mock_db_instance
@@ -82,8 +114,10 @@ class TestDevLogin:
         mock_db_instance.business = MagicMock()
         mock_db_instance.business.find_first = AsyncMock(return_value=MagicMock(id="biz-1"))
         mock_db_instance.user = MagicMock()
-        mock_db_instance.user.find_unique = AsyncMock(return_value=MagicMock(
-            id="user-customer", email="dev_customer@example.com", role="CUSTOMER", businessId="biz-1"
+        mock_db_instance.user.find_unique = AsyncMock(return_value=create_mock_user(
+            id="user-customer",
+            email="dev_customer@example.com",
+            role="CUSTOMER"
         ))
         
         app.dependency_overrides[get_db] = lambda: mock_db_instance
@@ -121,9 +155,7 @@ class TestGetMe:
         from app.api.dependencies.auth import get_current_user
         from app.main import app
         
-        mock_user = MagicMock()
-        mock_user.id = "user-1"
-        mock_user.email = "test@example.com"
+        mock_user = create_mock_user()
         
         app.dependency_overrides[get_current_user] = lambda: mock_user
         try:
@@ -199,18 +231,16 @@ class TestLoginWithGoogle:
                     "email": "test@example.com",
                     "sub": "google-sub-123"
                 }
-                mock_get_user.return_value = MagicMock(
+                mock_get_user.return_value = create_mock_user(
                     id="user-1",
                     email="test@example.com",
-                    role="CUSTOMER",
-                    subId=None,
-                    businessId="biz-1"
+                    role="CUSTOMER"
                 )
                 mock_update.return_value = None
 
                 response = await client.post("/api/v1/auth/google", json={"token": "valid_google_token"})
                 assert response.status_code == 200
-                assert "access_token" in response.json()
+                assert "token" in response.json()
         finally:
             app.dependency_overrides.clear()
 
@@ -218,9 +248,15 @@ class TestLoginWithGoogle:
     @pytest.mark.asyncio
     async def test_login_with_google_no_client_id(self, client):
         """Test Google login when GOOGLE_CLIENT_ID is not configured."""
-        with patch("app.api.v1.endpoints.auth.GOOGLE_CLIENT_ID", None):
-            response = await client.post("/api/v1/auth/google", json={"token": "some_token"})
-            assert response.status_code == 500
+        from app.db.dependencies import get_db
+        from app.main import app
+        app.dependency_overrides[get_db] = lambda: MagicMock()
+        try:
+            with patch("app.api.v1.endpoints.auth.GOOGLE_CLIENT_ID", None):
+                response = await client.post("/api/v1/auth/google", json={"token": "some_token"})
+                assert response.status_code == 500
+        finally:
+            app.dependency_overrides.clear()
 
 
 class TestLoginWithEmail:
@@ -256,19 +292,14 @@ class TestLoginWithEmail:
         
         try:
             with patch("app.api.v1.endpoints.auth.authenticate_user") as mock_auth:
-                mock_auth.return_value = MagicMock(
-                    id="user-1",
-                    email="test@example.com",
-                    role="CUSTOMER",
-                    businessId="biz-1"
-                )
+                mock_auth.return_value = create_mock_user()
 
                 response = await client.post("/api/v1/auth/login", json={
                     "email": "test@example.com",
                     "password": "correctpassword"
                 })
                 assert response.status_code == 200
-                assert "access_token" in response.json()
+                assert "token" in response.json()
         finally:
             app.dependency_overrides.clear()
 
@@ -276,11 +307,20 @@ class TestLoginWithEmail:
     @pytest.mark.asyncio
     async def test_login_with_email_empty_password(self, client):
         """Test email login with empty password."""
-        response = await client.post("/api/v1/auth/login", json={
-            "email": "test@example.com",
-            "password": ""
-        })
-        assert response.status_code in [401, 422]
+        from app.db.dependencies import get_db
+        from app.main import app
+        app.dependency_overrides[get_db] = lambda: MagicMock()
+        try:
+            with patch("app.api.v1.endpoints.auth.authenticate_user") as mock_auth:
+                mock_auth.return_value = None
+                response = await client.post("/api/v1/auth/login", json={
+                    "email": "test@example.com",
+                    "password": ""
+                })
+                # It might be 401 (Unauthorized) or 422 (Validation Error if schema enforces length)
+                assert response.status_code == 401
+        finally:
+            app.dependency_overrides.clear()
 
 
 class TestRegisterUser:
@@ -300,17 +340,20 @@ class TestRegisterUser:
                  patch("app.api.v1.endpoints.auth.create_user") as mock_create:
                 
                 mock_get.return_value = None
-                mock_create.return_value = MagicMock(
+                mock_create.return_value = create_mock_user(
                     id="new-user-1",
                     email="newuser@example.com",
                     role="CUSTOMER",
-                    businessId=None
+                    business_id=None
                 )
 
                 response = await client.post("/api/v1/auth/register", json={
                     "email": "newuser@example.com",
                     "password": "password123",
                     "name": "Test User",
+                    "phone": "000-000-0000",
+                    "address": "123 Main St",
+                    "businessId": "BIZ-123",
                     "role": "CUSTOMER"
                 })
                 assert response.status_code == 201
@@ -321,13 +364,22 @@ class TestRegisterUser:
     @pytest.mark.asyncio
     async def test_register_user_non_customer_role_rejected(self, client):
         """Test that non-CUSTOMER role registration is rejected."""
-        response = await client.post("/api/v1/auth/register", json={
-            "email": "admin@example.com",
-            "password": "password123",
-            "name": "Admin User",
-            "role": "STORE_MANAGER"
-        })
-        assert response.status_code == 400
+        from app.db.dependencies import get_db
+        from app.main import app
+        app.dependency_overrides[get_db] = lambda: MagicMock()
+        try:
+            response = await client.post("/api/v1/auth/register", json={
+                "email": "admin@example.com",
+                "password": "password123",
+                "name": "Admin User",
+                "phone": "000",
+                "address": "Address",
+                "businessId": "BIZ1",
+                "role": "STORE_MANAGER"
+            })
+            assert response.status_code == 400
+        finally:
+            app.dependency_overrides.clear()
 
     @pytest.mark.asyncio
     async def test_register_user_email_exists(self, client):
@@ -345,6 +397,9 @@ class TestRegisterUser:
                     "email": "existing@example.com",
                     "password": "password123",
                     "name": "Test User",
+                    "phone": "000-000-0000",
+                    "address": "123 Main St",
+                    "businessId": "BIZ-123",
                     "role": "CUSTOMER"
                 })
                 assert response.status_code == 400
@@ -354,9 +409,15 @@ class TestRegisterUser:
     @pytest.mark.asyncio
     async def test_register_user_missing_fields(self, client):
         """Test registration with missing required fields."""
-        response = await client.post("/api/v1/auth/register", json={
-            "email": "test@example.com"
-            # Missing password, name, role
-        })
-        assert response.status_code == 422
+        from app.db.dependencies import get_db
+        from app.main import app
+        app.dependency_overrides[get_db] = lambda: MagicMock()
+        try:
+            response = await client.post("/api/v1/auth/register", json={
+                "email": "test@example.com"
+                # Missing password, name, role
+            })
+            assert response.status_code == 422
+        finally:
+            app.dependency_overrides.clear()
 
