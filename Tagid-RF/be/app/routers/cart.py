@@ -15,7 +15,7 @@ from app.schemas.cart import (
 )
 from app.services.database import get_db
 from app.services.payment.base import PaymentRequest, PaymentStatus
-from app.services.payment.factory import get_available_providers, get_gateway
+from app.services.payment.factory import get_gateway
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

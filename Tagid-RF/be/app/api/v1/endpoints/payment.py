@@ -190,7 +190,7 @@ async def confirm_payment(request: PaymentConfirmRequest, current_user=Depends(g
                 status_val = PaymentStatusEnum.FAILED
 
         # Update payment in database
-        updated_payment = await prisma_client.client.payment.update(
+        await prisma_client.client.payment.update(
             where={"id": payment.id},
             data={
                 "status": status_val.value,

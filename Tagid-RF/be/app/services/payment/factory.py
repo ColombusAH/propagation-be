@@ -3,6 +3,7 @@
 import logging
 import os
 
+from app.core.config import settings
 from .base import PaymentGateway
 
 logger = logging.getLogger(__name__)
@@ -29,9 +30,6 @@ def get_gateway(provider: str = "stripe") -> PaymentGateway:
 
     _gateways[provider] = gateway
     return gateway
-
-
-from app.core.config import settings
 
 
 def _create_stripe_gateway() -> PaymentGateway:
