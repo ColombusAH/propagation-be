@@ -47,27 +47,35 @@ async def test_create_tag(client: AsyncClient):
     async def override_get_db():
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = None
-        mock_db.add = MagicMock()
-        mock_db.commit = MagicMock()
-        mock_db.refresh = MagicMock()
+        def mock_refresh(obj):
+            obj.id = 1
+            obj.read_count = 1
+            obj.is_active = True
+            obj.is_paid = False
+            obj.first_seen = now
+            obj.last_seen = now
+            obj.created_at = now
+            obj.updated_at = now
+            # Copy other attributes from mock_tag if they exist
+            for key in ["epc", "product_name", "product_sku", "price_cents", "meta"]:
+                if hasattr(mock_tag, key):
+                    setattr(obj, key, getattr(mock_tag, key))
+        mock_db.refresh = MagicMock(side_effect=mock_refresh)
         yield mock_db
 
     app.dependency_overrides[get_db] = override_get_db
     try:
-        from app.routers.tags import RFIDTag
-
-        with patch("app.routers.tags.RFIDTag", return_value=mock_tag):
-            response = await client.post(
-                "/api/v1/tags/",
-                json={
-                    "epc": "E280681000001234",
-                    "product_name": "Test Product",
-                    "product_sku": "SKU-123",
-                    "price_cents": 1000,
-                },
-            )
-            assert response.status_code == 201
-            assert response.json()["epc"] == "E280681000001234"
+        response = await client.post(
+            "/api/v1/tags/",
+            json={
+                "epc": "E280681000001234",
+                "product_name": "Test Product",
+                "product_sku": "SKU-123",
+                "price_cents": 1000,
+            },
+        )
+        assert response.status_code == 201
+        assert response.json()["epc"] == "E280681000001234"
     finally:
         app.dependency_overrides.clear()
 

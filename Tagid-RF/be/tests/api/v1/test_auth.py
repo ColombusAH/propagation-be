@@ -18,7 +18,10 @@ async def test_google_login_invalid_token(client: AsyncClient):
     from app.db.dependencies import get_db
     from app.main import app
 
-    app.dependency_overrides[get_db] = lambda: MagicMock()
+    async def override_get_db():
+        return MagicMock()
+
+    app.dependency_overrides[get_db] = override_get_db
     try:
         payload = {"token": "invalid-token-123"}
 

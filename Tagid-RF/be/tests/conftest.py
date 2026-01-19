@@ -116,8 +116,14 @@ async def db_setup():
 
 
 @pytest_asyncio.fixture()
+async def client(async_client):
+    """Alias for async_client to support tests using 'client'."""
+    yield async_client
+
+
+@pytest_asyncio.fixture()
 async def async_client() -> AsyncGenerator:
-    """Async test client for FastAPI, aliased to async_client."""
+    """Async test client for FastAPI."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
