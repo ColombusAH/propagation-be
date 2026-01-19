@@ -11,6 +11,7 @@ router = APIRouter()
 
 class QRResponse(BaseModel):
     """QR code data response."""
+
     slug: str
     entry_url: str
     name: str
@@ -19,6 +20,7 @@ class QRResponse(BaseModel):
 
 class StoreListItem(BaseModel):
     """Store item in list."""
+
     id: str
     name: str
     slug: str
@@ -37,23 +39,18 @@ async def get_network_qr(
         async with prisma_client.client as db:
             if not current_user.businessId:
                 raise HTTPException(status_code=400, detail="User not part of a business")
-                
-            business = await db.business.find_unique(
-                where={"id": current_user.businessId}
-            )
-            
+
+            business = await db.business.find_unique(where={"id": current_user.businessId})
+
             if not business:
                 raise HTTPException(status_code=404, detail="Business not found")
-            
+
             entry_url = f"https://app.tagid.com/enter/{business.slug}"
-            
+
             return QRResponse(
-                slug=business.slug,
-                entry_url=entry_url,
-                name=business.name,
-                qr_type="network"
+                slug=business.slug, entry_url=entry_url, name=business.name, qr_type="network"
             )
-            
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -69,22 +66,22 @@ async def get_stores_list(
         async with prisma_client.client as db:
             if not current_user.businessId:
                 raise HTTPException(status_code=400, detail="User not part of a business")
-                
+
             stores = await db.store.find_many(
                 where={"businessId": current_user.businessId, "isActive": True}
             )
-            
+
             return [
                 StoreListItem(
                     id=store.id,
                     name=store.name,
                     slug=store.slug,
                     address=store.address,
-                    entry_url=f"https://app.tagid.com/store/{store.slug}"
+                    entry_url=f"https://app.tagid.com/store/{store.slug}",
                 )
                 for store in stores
             ]
-            
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -100,22 +97,19 @@ async def get_store_qr(
     try:
         async with prisma_client.client as db:
             store = await db.store.find_unique(where={"id": store_id})
-            
+
             if not store:
                 raise HTTPException(status_code=404, detail="Store not found")
-            
+
             # Verify user has access to this store's business
             if current_user.businessId != store.businessId:
                 raise HTTPException(status_code=403, detail="Access denied")
-            
+
             entry_url = f"https://app.tagid.com/store/{store.slug}"
-            
+
             return QRResponse(
-                slug=store.slug,
-                entry_url=entry_url,
-                name=store.name,
-                qr_type="store"
+                slug=store.slug, entry_url=entry_url, name=store.name, qr_type="store"
             )
-            
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -20,8 +20,11 @@ from httpx import AsyncClient
 from app.core.config import settings
 from app.db.prisma import prisma_client
 
+
 @pytest.mark.asyncio
-async def test_full_rfid_flow(async_client: AsyncClient, normal_user_token_headers: dict, db_session):
+async def test_full_rfid_flow(
+    async_client: AsyncClient, normal_user_token_headers: dict, db_session
+):
     """End‑to‑end test of the RFID core flow.
     Steps:
     1. Create Business and Store.
@@ -36,7 +39,9 @@ async def test_full_rfid_flow(async_client: AsyncClient, normal_user_token_heade
     # 1. Business & Store creation
     async with prisma_client.client as db:
         business = await db.business.create(data={"name": "TestBiz", "slug": "testbiz"})
-        store = await db.store.create(data={"name": "Main Store", "businessId": business.id, "slug": "mainstore"})
+        store = await db.store.create(
+            data={"name": "Main Store", "businessId": business.id, "slug": "mainstore"}
+        )
 
         # 2. Reader creation (GATE type)
         reader = await db.rfidreader.create(
@@ -81,7 +86,9 @@ async def test_full_rfid_flow(async_client: AsyncClient, normal_user_token_heade
 
     # 6. Verify inventory snapshot was created (using service directly)
     async with prisma_client.client as db:
-        snapshot = await db.inventorysnapshot.find_first(where={"readerId": reader.id}, order={"timestamp": "desc"})
+        snapshot = await db.inventorysnapshot.find_first(
+            where={"readerId": reader.id}, order={"timestamp": "desc"}
+        )
         assert snapshot is not None
         assert snapshot.itemCount >= 1
 

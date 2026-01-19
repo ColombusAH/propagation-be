@@ -14,12 +14,14 @@ router = APIRouter()
 
 class NotificationSetting(BaseModel):
     """Single notification channel setting."""
+
     channel: str  # PUSH, SMS, EMAIL
     enabled: bool
 
 
 class NotificationSettingsResponse(BaseModel):
     """Response for notification settings."""
+
     push: bool = True
     sms: bool = False
     email: bool = True
@@ -28,6 +30,7 @@ class NotificationSettingsResponse(BaseModel):
 
 class NotificationSettingsUpdate(BaseModel):
     """Request to update notification settings."""
+
     push: bool | None = None
     sms: bool | None = None
     email: bool | None = None
@@ -45,28 +48,26 @@ async def get_notification_settings(
     print(f"DEBUG: get_notification_settings called for user {current_user.id}")
     try:
         # Check if NotificationPreference records exist for user
-        preferences = await db.notificationpreference.find_many(
-            where={"userId": current_user.id}
-        )
-        
+        preferences = await db.notificationpreference.find_many(where={"userId": current_user.id})
+
         # Default values
         settings = {
             "push": True,
-            "sms": False, 
+            "sms": False,
             "email": True,
         }
-        
+
         # Update from database if found
         for pref in preferences:
             channel = pref.channelType.lower()
             if channel in settings:
                 settings[channel] = pref.enabled
-        
+
         # Add darkMode from User model
         settings["darkMode"] = getattr(current_user, "darkMode", False)
-                
+
         return NotificationSettingsResponse(**settings)
-            
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -80,7 +81,9 @@ async def update_notification_settings(
     """
     Update notification settings for the current user.
     """
-    print(f"DEBUG: update_notification_settings called for user {current_user.id} with data {settings}")
+    print(
+        f"DEBUG: update_notification_settings called for user {current_user.id} with data {settings}"
+    )
     try:
         # Map of channel name to update value
         updates = {
@@ -88,13 +91,12 @@ async def update_notification_settings(
             "SMS": settings.sms,
             "EMAIL": settings.email,
         }
-        
+
         # Update darkMode if provided
         if settings.darkMode is not None:
             try:
                 await db.user.update(
-                    where={"id": current_user.id},
-                    data={"darkMode": settings.darkMode}
+                    where={"id": current_user.id}, data={"darkMode": settings.darkMode}
                 )
             except Exception as e:
                 # Log error but don't fail the whole request
@@ -111,11 +113,10 @@ async def update_notification_settings(
                         "notificationType": None,
                     }
                 )
-                
+
                 if existing:
                     await db.notificationpreference.update(
-                        where={"id": existing.id},
-                        data={"enabled": enabled}
+                        where={"id": existing.id}, data={"enabled": enabled}
                     )
                 else:
                     await db.notificationpreference.create(
@@ -126,12 +127,12 @@ async def update_notification_settings(
                             "notificationType": None,
                         }
                     )
-        
+
         # Fetch fresh user data to include updated darkMode
         fresh_user = await db.user.find_unique(where={"id": current_user.id})
-        
+
         # Return updated settings
         return await get_notification_settings(db, fresh_user or current_user)
-            
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

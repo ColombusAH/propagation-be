@@ -105,10 +105,7 @@ async def dev_login(request: DevLoginRequest, db: Prisma = Depends(get_db)):
                 logger.info("Creating fresh dev business")
                 business_slug = f"dev-business-{uuid.uuid4().hex[:8]}"
                 business = await local_db.business.create(
-                    data={
-                        "name": "Dev Business",
-                        "slug": business_slug
-                    }
+                    data={"name": "Dev Business", "slug": business_slug}
                 )
                 logger.info(f"Business created successfully: {business.id}")
         except Exception as bus_err:
@@ -139,7 +136,8 @@ async def dev_login(request: DevLoginRequest, db: Prisma = Depends(get_db)):
     except Exception as e:
         logger.error(f"Dev login failed: {e}", exc_info=True)
         # Re-raise so it's caught outside if needed, or handle here
-        if isinstance(e, HTTPException): raise e
+        if isinstance(e, HTTPException):
+            raise e
         raise HTTPException(status_code=500, detail=f"Dev login internal error: {str(e)}")
     finally:
         if local_db.is_connected():

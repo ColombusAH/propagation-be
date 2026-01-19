@@ -13,24 +13,28 @@ router = APIRouter()
 
 class TagData(BaseModel):
     """Tag data for snapshot."""
+
     epc: str
     rssi: Optional[int] = None
 
 
 class SnapshotRequest(BaseModel):
     """Request to create inventory snapshot."""
+
     reader_id: str
     tags: List[TagData]
 
 
 class SnapshotResponse(BaseModel):
     """Response after creating snapshot."""
+
     snapshot_id: str
     item_count: int
 
 
 class StockSummary(BaseModel):
     """Current stock summary."""
+
     totalItems: int
     readerCount: int
     readers: List[dict]
@@ -45,15 +49,15 @@ async def create_inventory_snapshot(
     Create an inventory snapshot for a reader.
     """
     tags = [{"epc": t.epc, "rssi": t.rssi} for t in request.tags]
-    
+
     snapshot_id = await inventory_service.take_snapshot(
         reader_id=request.reader_id,
         tags=tags,
     )
-    
+
     if not snapshot_id:
         raise HTTPException(status_code=500, detail="Failed to create snapshot")
-    
+
     return SnapshotResponse(
         snapshot_id=snapshot_id,
         item_count=len(request.tags),
@@ -81,10 +85,10 @@ async def get_latest_snapshot(
     Get the latest inventory snapshot for a reader.
     """
     snapshot = await inventory_service.get_latest_snapshot(reader_id)
-    
+
     if not snapshot:
         raise HTTPException(status_code=404, detail="No snapshot found")
-    
+
     return snapshot
 
 

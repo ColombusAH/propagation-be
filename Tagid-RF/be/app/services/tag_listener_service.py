@@ -149,7 +149,7 @@ class TagListenerService:
             from app.db.prisma import prisma_client
             from app.services.tag_encryption import get_encryption_service
             from app.services.theft_detection import TheftDetectionService
-            
+
             theft_service = TheftDetectionService()
             epc = tag_data.get("epc")
             tag_id = tag_data.get("tag_id")
@@ -163,19 +163,18 @@ class TagListenerService:
                 # 1. Fetch Reader Info
                 if reader_ip != "Unknown":
                     reader_db = await db.rfidreader.find_unique(where={"ipAddress": reader_ip})
-                
+
                 # 2. Fetch Tag Info
                 if epc:
                     try:
                         # Fetch tag with relations
                         rfid_tag = await db.rfidtag.find_unique(
-                            where={"epc": epc},
-                            include={"payment": True}
+                            where={"epc": epc}, include={"payment": True}
                         )
 
                         if rfid_tag:
                             existing_tag_db = rfid_tag
-                            
+
                             # Handle QR Decryption...
                             if rfid_tag.encryptedQr:
                                 # (Encryption logic remains)
@@ -203,7 +202,7 @@ class TagListenerService:
                 # Product Info from Prisma
                 "product_name": existing_tag_db.productDescription if existing_tag_db else None,
                 "product_sku": existing_tag_db.productId if existing_tag_db else None,
-                "price": 0, # TODO: Link to Product model for actual price
+                "price": 0,  # TODO: Link to Product model for actual price
                 "is_paid": existing_tag_db.isPaid if existing_tag_db else False,
                 **encryption_status,
             }
@@ -219,8 +218,10 @@ class TagListenerService:
             # Use the dedicated service for comprehensive theft detection and notification
             if epc and reader_db and reader_db.type == "GATE":
                 # Only check for theft at exit gates
-                is_paid = await theft_service.check_tag_payment_status(epc, location=f"{reader_db.name} ({reader_ip})")
-                
+                is_paid = await theft_service.check_tag_payment_status(
+                    epc, location=f"{reader_db.name} ({reader_ip})"
+                )
+
                 if not is_paid:
                     # Additional real-time notification via WebSocket (Service handles DB/SMS/Push)
                     await manager.broadcast(

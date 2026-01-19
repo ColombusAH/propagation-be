@@ -6,6 +6,7 @@ import pytest
 from httpx import AsyncClient
 from app.core.config import settings
 
+
 @pytest.mark.asyncio
 async def test_create_rfid_tag(async_client: AsyncClient, normal_user_token_headers: dict):
     tag_payload = {

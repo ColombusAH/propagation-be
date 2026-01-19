@@ -41,14 +41,15 @@ async def add_to_cart(
     """
     user_id = current_user.id
     cart = get_user_cart(user_id)
-    
+
     qr_data = request.qr_data
     epc = None
-    
+
     # Logic to identify tag from QR
     # 1. Check if it's an encrypted QR (starts with something specific or decryptable)
     try:
         from app.services.tag_encryption import get_encryption_service
+
         encrypt_svc = get_encryption_service()
         epc = encrypt_svc.decrypt_qr(qr_data)
     except Exception:
@@ -71,13 +72,13 @@ async def add_to_cart(
     # Verify tag exists and is available
     async with prisma_client.client as db:
         tag = await db.rfidtag.find_unique(where={"epc": epc})
-        
+
         if not tag:
             raise HTTPException(status_code=404, detail="Product not found")
-        
+
         if tag.isPaid:
             raise HTTPException(status_code=400, detail="This item has already been paid for")
-            
+
         if any(item.epc == epc for item in cart):
             raise HTTPException(status_code=400, detail="Item already in cart")
 
@@ -86,7 +87,7 @@ async def add_to_cart(
             epc=tag.epc,
             product_name=tag.productDescription or "Unknown Product",
             product_sku=tag.productId or "UNKNOWN",
-            price_cents=0, # TODO: Add price to RfidTag model
+            price_cents=0,  # TODO: Add price to RfidTag model
         )
         cart.append(new_item)
 
@@ -104,17 +105,19 @@ async def sync_bath_cart(
     """
     user_id = current_user.id
     new_cart: List[CartItem] = []
-    
+
     async with prisma_client.client as db:
         for epc in epcs:
             tag = await db.rfidtag.find_unique(where={"epc": epc})
             if tag and not tag.isPaid:
-                new_cart.append(CartItem(
-                    epc=tag.epc,
-                    product_name=tag.productDescription or "Unknown Product",
-                    product_sku=tag.productId or "UNKNOWN",
-                    price_cents=0,
-                ))
+                new_cart.append(
+                    CartItem(
+                        epc=tag.epc,
+                        product_name=tag.productDescription or "Unknown Product",
+                        product_sku=tag.productId or "UNKNOWN",
+                        price_cents=0,
+                    )
+                )
             elif tag and tag.isPaid:
                 logger.warning(f"Scanned paid tag in bath: {epc}")
             else:
@@ -144,9 +147,4 @@ async def clear_cart(
 
 def _calculate_summary(cart: List[CartItem]) -> CartSummary:
     total = sum(i.price_cents for i in cart)
-    return CartSummary(
-        items=cart,
-        total_items=len(cart),
-        total_price_cents=total,
-        currency="ILS"
-    )
+    return CartSummary(items=cart, total_items=len(cart), total_price_cents=total, currency="ILS")

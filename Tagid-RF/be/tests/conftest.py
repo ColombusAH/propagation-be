@@ -66,7 +66,16 @@ mock_prisma_instance.connect = AsyncMock()
 mock_prisma_instance.disconnect = AsyncMock()
 
 # Setup model mocks on the instance
-for model in ["user", "business", "store", "rfidtag", "rfidreader", "inventorysnapshot", "theftalert", "notificationpreference"]:
+for model in [
+    "user",
+    "business",
+    "store",
+    "rfidtag",
+    "rfidreader",
+    "inventorysnapshot",
+    "theftalert",
+    "notificationpreference",
+]:
     model_mock = MagicMock()
     model_mock.create = AsyncMock()
     model_mock.update = AsyncMock()
@@ -99,10 +108,10 @@ async def db_setup():
     # Ensure prisma_client.client is also mocked if it's already instantiated
     if not hasattr(app.state, "prisma") or app.state.prisma is None:
         app.state.prisma = prisma_client
-    
+
     # Force use of mock instance
     prisma_client._client = mock_prisma_instance
-    
+
     yield prisma_client
 
 

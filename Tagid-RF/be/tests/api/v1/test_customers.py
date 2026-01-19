@@ -6,6 +6,7 @@ import pytest
 from httpx import AsyncClient
 from app.core.config import settings
 
+
 @pytest.mark.asyncio
 async def test_register_and_login(async_client: AsyncClient):
     """Register a new customer and then login with the credentials.
