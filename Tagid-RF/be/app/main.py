@@ -6,8 +6,16 @@ from app.api.v1.api import api_router
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.db.prisma import init_db, shutdown_db
-from app.routers import (cart, exit_scan, inventory, products, stores, tags,
-                         users, websocket)
+from app.routers import (
+    cart,
+    exit_scan,
+    inventory,
+    products,
+    stores,
+    tags,
+    users,
+    websocket,
+)
 from app.services.database import init_db as init_rfid_db
 from app.services.rfid_reader import rfid_reader_service
 from app.services.tag_listener_service import tag_listener_service

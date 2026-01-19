@@ -19,8 +19,7 @@ class TestPushNotificationService:
             mock_firebase.initialize_app = MagicMock()
 
             with patch("app.services.push_notifications.credentials"):
-                from app.services.push_notifications import \
-                    PushNotificationService
+                from app.services.push_notifications import PushNotificationService
 
                 return PushNotificationService()
 
@@ -97,8 +96,7 @@ class TestPushNotificationServiceInit:
             mock_firebase._apps = {"default": MagicMock()}  # Already initialized
 
             with patch("app.services.push_notifications.settings"):
-                from app.services.push_notifications import \
-                    PushNotificationService
+                from app.services.push_notifications import PushNotificationService
 
                 service = PushNotificationService()
 
@@ -115,8 +113,7 @@ class TestPushNotificationServiceInit:
                 side_effect=Exception("Invalid credentials"),
             ):
                 # Should not raise, just log error
-                from app.services.push_notifications import \
-                    PushNotificationService
+                from app.services.push_notifications import PushNotificationService
 
                 service = PushNotificationService()
                 assert service is not None

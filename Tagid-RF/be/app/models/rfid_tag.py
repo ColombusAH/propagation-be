@@ -3,8 +3,17 @@ SQLAlchemy models for RFID tag tracking system.
 """
 
 from app.services.database import Base
-from sqlalchemy import (JSON, Boolean, Column, DateTime, Float, Index, Integer,
-                        String, Text)
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    Index,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.sql import func
 
 

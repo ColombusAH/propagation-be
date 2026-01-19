@@ -4,8 +4,14 @@ import logging
 import uuid
 from typing import Optional
 
-from .base import (PaymentGateway, PaymentProvider, PaymentRequest,
-                   PaymentResult, PaymentStatus, RefundResult)
+from .base import (
+    PaymentGateway,
+    PaymentProvider,
+    PaymentRequest,
+    PaymentResult,
+    PaymentStatus,
+    RefundResult,
+)
 
 logger = logging.getLogger(__name__)
 

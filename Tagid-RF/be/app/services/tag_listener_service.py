@@ -23,8 +23,13 @@ logger = logging.getLogger(__name__)
 # Import from standalone listener (if run as module)
 # Import from standalone listener (if run as module)
 try:
-    from tag_listener_server import (set_tag_callback, start_inventory,
-                                     start_server, stop_inventory, tag_store)
+    from tag_listener_server import (
+        set_tag_callback,
+        start_inventory,
+        start_server,
+        stop_inventory,
+        tag_store,
+    )
 except ImportError:
     # Fallback - define minimal storage here
     def set_tag_callback(cb):

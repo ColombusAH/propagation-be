@@ -7,25 +7,38 @@ from typing import Any, Dict  # For type hints
 
 # Import auth dependency
 from app.api.dependencies.auth import get_current_user
+
 # Get Google Client ID and JWT settings from config
 from app.core.config import get_settings
+
 # Import security functions (JWT)
 from app.core.security import create_access_token
+
 # Import user CRUD operations
-from app.crud.user import (authenticate_user, create_user, get_user_by_email,
-                           update_user_google_info)
+from app.crud.user import (
+    authenticate_user,
+    create_user,
+    get_user_by_email,
+    update_user_google_info,
+)
+
 # Import database dependency
 from app.db.dependencies import get_db
+
 # Import user schemas
 from app.schemas.user import TokenResponse, UserLogin, UserRegister
 from fastapi import APIRouter, Depends, HTTPException, status
-from google.auth.transport import \
-    requests as google_requests  # Alias to avoid name clash
+from google.auth.transport import (
+    requests as google_requests,
+)  # Alias to avoid name clash
+
 # Import necessary Google libraries and verification logic
 from google.oauth2 import id_token
+
 # Import Prisma client and dependency
 from prisma import Prisma
 from prisma.errors import TableNotFoundError
+
 # Import User model for type hints
 from prisma.models import User
 from pydantic import BaseModel

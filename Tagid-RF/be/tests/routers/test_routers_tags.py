@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from app.models.rfid_tag import RFIDScanHistory, RFIDTag
+
 # Import the router to test
 from app.routers.tags import router
 from app.services.database import get_db

@@ -41,8 +41,10 @@ class TestM200ProtocolImports:
 
     def test_import_parse_functions(self):
         """Test parser functions import."""
-        from app.services.m200_protocol import (parse_device_info,
-                                                parse_inventory_response)
+        from app.services.m200_protocol import (
+            parse_device_info,
+            parse_inventory_response,
+        )
 
         assert parse_inventory_response is not None
         assert parse_device_info is not None

@@ -1,7 +1,21 @@
-from app.api.v1.endpoints import (alerts, auth, bath_cart, cart, inventory,
-                                  network, notifications, payment,
-                                  reader_config, rfid_scan, schedules, shifts,
-                                  tag_mapping, tag_registration, users, verify)
+from app.api.v1.endpoints import (
+    alerts,
+    auth,
+    bath_cart,
+    cart,
+    inventory,
+    network,
+    notifications,
+    payment,
+    reader_config,
+    rfid_scan,
+    schedules,
+    shifts,
+    tag_mapping,
+    tag_registration,
+    users,
+    verify,
+)
 from fastapi import APIRouter
 
 api_router = APIRouter()

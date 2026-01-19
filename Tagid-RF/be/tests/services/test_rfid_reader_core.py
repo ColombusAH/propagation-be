@@ -9,10 +9,16 @@ import struct
 from unittest.mock import MagicMock, patch
 
 import pytest
-from app.services.m200_protocol import (HEAD, M200Command, M200Commands,
-                                        M200ResponseParser, calculate_crc16,
-                                        parse_device_info, parse_gate_status,
-                                        parse_inventory_response)
+from app.services.m200_protocol import (
+    HEAD,
+    M200Command,
+    M200Commands,
+    M200ResponseParser,
+    calculate_crc16,
+    parse_device_info,
+    parse_gate_status,
+    parse_inventory_response,
+)
 from app.services.rfid_reader import RFIDReaderService
 
 

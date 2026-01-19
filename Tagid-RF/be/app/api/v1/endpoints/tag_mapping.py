@@ -13,8 +13,7 @@ from typing import List, Optional
 from app.api.dependencies.auth import get_current_user
 from app.core.permissions import requires_any_role
 from app.db.prisma import prisma_client
-from app.services.tag_encryption import (TagEncryptionService,
-                                         get_encryption_service)
+from app.services.tag_encryption import TagEncryptionService, get_encryption_service
 from fastapi import APIRouter, Depends, HTTPException
 from prisma.models import User
 from pydantic import BaseModel

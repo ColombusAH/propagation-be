@@ -6,8 +6,14 @@ from urllib.parse import urlencode
 
 import httpx
 
-from .base import (PaymentGateway, PaymentProvider, PaymentRequest,
-                   PaymentResult, PaymentStatus, RefundResult)
+from .base import (
+    PaymentGateway,
+    PaymentProvider,
+    PaymentRequest,
+    PaymentResult,
+    PaymentStatus,
+    RefundResult,
+)
 
 logger = logging.getLogger(__name__)
 

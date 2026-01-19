@@ -7,9 +7,13 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from app.models.rfid_tag import RFIDScanHistory, RFIDTag
-from app.schemas.rfid_tag import (RFIDScanHistoryResponse, RFIDTagCreate,
-                                  RFIDTagResponse, RFIDTagStatsResponse,
-                                  RFIDTagUpdate)
+from app.schemas.rfid_tag import (
+    RFIDScanHistoryResponse,
+    RFIDTagCreate,
+    RFIDTagResponse,
+    RFIDTagStatsResponse,
+    RFIDTagUpdate,
+)
 from app.services.database import get_db
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc, func

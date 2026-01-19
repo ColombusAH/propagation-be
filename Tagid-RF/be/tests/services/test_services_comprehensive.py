@@ -350,8 +350,12 @@ class TestCoreSecurity:
 
     def test_import_security(self):
         """Test that security module can be imported."""
-        from app.core.security import (create_access_token, get_password_hash,
-                                       verify_access_token, verify_password)
+        from app.core.security import (
+            create_access_token,
+            get_password_hash,
+            verify_access_token,
+            verify_password,
+        )
 
         assert create_access_token is not None
         assert verify_password is not None

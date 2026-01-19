@@ -12,8 +12,12 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-from app.services.m200_protocol import (HEAD, M200Command, M200Commands,
-                                        build_get_device_info_command)
+from app.services.m200_protocol import (
+    HEAD,
+    M200Command,
+    M200Commands,
+    build_get_device_info_command,
+)
 
 
 def hex_dump(data: bytes, prefix="") -> str:

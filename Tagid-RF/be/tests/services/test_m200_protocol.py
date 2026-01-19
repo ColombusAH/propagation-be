@@ -5,19 +5,26 @@ Tests for M200 Protocol - CRC calculation, command building, response parsing.
 import struct
 
 import pytest
-from app.services.m200_protocol import (BROADCAST_ADDR, HEAD, M200Command,
-                                        M200Commands, M200Response,
-                                        M200ResponseParser, M200Status,
-                                        build_get_device_info_command,
-                                        build_inventory_command,
-                                        build_relay1_command,
-                                        build_relay2_command,
-                                        build_set_network_command,
-                                        build_set_power_command,
-                                        build_stop_inventory_command,
-                                        calculate_crc16, parse_device_info,
-                                        parse_inventory_response,
-                                        parse_network_response)
+from app.services.m200_protocol import (
+    BROADCAST_ADDR,
+    HEAD,
+    M200Command,
+    M200Commands,
+    M200Response,
+    M200ResponseParser,
+    M200Status,
+    build_get_device_info_command,
+    build_inventory_command,
+    build_relay1_command,
+    build_relay2_command,
+    build_set_network_command,
+    build_set_power_command,
+    build_stop_inventory_command,
+    calculate_crc16,
+    parse_device_info,
+    parse_inventory_response,
+    parse_network_response,
+)
 
 
 class TestCRC16:
