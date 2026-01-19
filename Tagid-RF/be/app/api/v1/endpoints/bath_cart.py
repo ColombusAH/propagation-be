@@ -13,9 +13,9 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from prisma import Prisma
 
 from app.db.dependencies import get_db
+from prisma import Prisma
 
 logger = logging.getLogger(__name__)
 

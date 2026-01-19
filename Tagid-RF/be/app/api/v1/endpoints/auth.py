@@ -1,6 +1,8 @@
 """API endpoints for user authentication, including Google OAuth."""
 
+import asyncio
 import logging
+import uuid
 from typing import Any, Dict  # For type hints
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -9,8 +11,6 @@ from google.auth.transport import requests as google_requests  # Alias to avoid 
 # Import necessary Google libraries and verification logic
 from google.oauth2 import id_token
 from prisma.errors import TableNotFoundError
-import uuid
-import asyncio
 
 # Import User model for type hints
 from prisma.models import User

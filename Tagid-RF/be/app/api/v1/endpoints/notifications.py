@@ -5,8 +5,8 @@ from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from app.db.dependencies import get_db
 from app.api.dependencies.auth import get_current_user
+from app.db.dependencies import get_db
 from prisma import Prisma
 
 router = APIRouter()

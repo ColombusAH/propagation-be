@@ -17,6 +17,7 @@ TODO: Adjust fixture names if they differ in the project.
 
 import pytest
 from httpx import AsyncClient
+
 from app.core.config import settings
 from app.db.prisma import prisma_client
 

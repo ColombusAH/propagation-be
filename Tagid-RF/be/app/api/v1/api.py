@@ -3,20 +3,20 @@ from fastapi import APIRouter
 from app.api.v1.endpoints import (
     alerts,
     auth,
+    bath_cart,
+    cart,
+    inventory,
+    network,
+    notifications,
     payment,
+    reader_config,
     rfid_scan,
     schedules,
     shifts,
     tag_mapping,
-    users,
-    network,
-    notifications,
-    inventory,
-    verify,
-    cart,
     tag_registration,
-    reader_config,
-    bath_cart,
+    users,
+    verify,
 )
 
 api_router = APIRouter()
