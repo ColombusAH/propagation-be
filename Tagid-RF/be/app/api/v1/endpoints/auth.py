@@ -9,6 +9,8 @@ from google.auth.transport import requests as google_requests  # Alias to avoid 
 # Import necessary Google libraries and verification logic
 from google.oauth2 import id_token
 from prisma.errors import TableNotFoundError
+import uuid
+import asyncio
 
 # Import User model for type hints
 from prisma.models import User
@@ -73,40 +75,75 @@ async def dev_login(request: DevLoginRequest, db: Prisma = Depends(get_db)):
     email = f"dev_{request.role.lower()}@example.com"
     role = request.role.upper()
 
-    # Map Frontend Roles to Prisma Schema Roles
-    role_mapping = {
-        "ADMIN": "SUPER_ADMIN",
-        "MANAGER": "STORE_MANAGER",
-        "CASHIER": "EMPLOYEE",
-        "CUSTOMER": "CUSTOMER",
-    }
-    prisma_role = role_mapping.get(role, "EMPLOYEE")
+    logger.info(f"Dev login attempt for role: {role}")
 
-    # Ensure a dummy business exists
-    business = await db.business.find_first(where={"name": "Dev Business"})
-    if not business:
-        business = await db.business.create(data={"name": "Dev Business"})
+    # Use a fresh connection for dev-login to avoid staleness issues
+    local_db = Prisma()
+    await local_db.connect()
+    try:
+        # Map Frontend Roles to Prisma Schema Roles
+        role_mapping = {
+            "SUPER_ADMIN": "SUPER_ADMIN",
+            "NETWORK_ADMIN": "NETWORK_MANAGER",
+            "STORE_MANAGER": "STORE_MANAGER",
+            "SELLER": "EMPLOYEE",
+            "CUSTOMER": "CUSTOMER",
+            "ADMIN": "SUPER_ADMIN",
+            "MANAGER": "STORE_MANAGER",
+            "CASHIER": "EMPLOYEE",
+        }
+        prisma_role = role_mapping.get(role, "EMPLOYEE")
+        logger.info(f"Mapped role {role} to prisma_role: {prisma_role}")
 
-    # Try to find existing dev user
-    user = await get_user_by_email(db, email)
-
-    if not user:
-        logger.info(f"Creating new dev user for role: {prisma_role}")
-        # Create new dev user
+        # Ensure a dummy business exists
+        logger.info("Checking for existing dev business")
         try:
-            user = await create_user(
-                db=db,
-                email=email,
-                password="devpassword",
-                name=f"Dev {role.title()}",
-                phone="000-000-0000",
-                address="Dev Environment",
-                business_id=business.id,
-                role=prisma_role,
-            )
-        except Exception as e:
-            logger.error(f"Failed to create dev user: {e}")
-            raise HTTPException(status_code=500, detail=f"Failed to create dev user: {str(e)}")
+            business = await local_db.business.find_first(where={"name": "Dev Business"})
+            if business:
+                logger.info(f"Found existing dev business: {business.id}")
+            else:
+                logger.info("Creating fresh dev business")
+                business_slug = f"dev-business-{uuid.uuid4().hex[:8]}"
+                business = await local_db.business.create(
+                    data={
+                        "name": "Dev Business",
+                        "slug": business_slug
+                    }
+                )
+                logger.info(f"Business created successfully: {business.id}")
+        except Exception as bus_err:
+            logger.error(f"Business operation failed: {bus_err}")
+            raise HTTPException(status_code=500, detail=f"Business operation error: {str(bus_err)}")
+
+        # Try to find existing dev user
+        user = await get_user_by_email(local_db, email)
+
+        if not user:
+            logger.info(f"Creating new dev user: {email}")
+            try:
+                # Create new dev user
+                user = await create_user(
+                    db=local_db,
+                    email=email,
+                    password="devpassword",
+                    name=f"Dev {role.title()}",
+                    phone="000-000-0000",
+                    address="Dev Environment",
+                    business_id=business.id,
+                    role=prisma_role,
+                )
+                logger.info(f"User created: {user.id}")
+            except Exception as user_err:
+                logger.error(f"User creation failed: {user_err}")
+                raise HTTPException(status_code=500, detail=f"User creation error: {str(user_err)}")
+    except Exception as e:
+        logger.error(f"Dev login failed: {e}", exc_info=True)
+        # Re-raise so it's caught outside if needed, or handle here
+        if isinstance(e, HTTPException): raise e
+        raise HTTPException(status_code=500, detail=f"Dev login internal error: {str(e)}")
+    finally:
+        if local_db.is_connected():
+            await local_db.disconnect()
 
     # Generate Token
     jwt_payload = {

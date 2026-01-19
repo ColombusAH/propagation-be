@@ -40,3 +40,12 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
     return user
+
+
+async def get_current_active_user(
+    current_user: dict = Depends(get_current_user),
+) -> dict:
+    """Get current active user."""
+    # Logic for active check can go here (e.g., checking is_active flag)
+    # For now, we return the user if they were successfully authenticated
+    return current_user

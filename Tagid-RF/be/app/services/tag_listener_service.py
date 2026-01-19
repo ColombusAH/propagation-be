@@ -144,50 +144,53 @@ class TagListenerService:
                 logger.error(f"Tag callback error: {e}")
 
     async def _broadcast_tag(self, tag_data: Dict[str, Any]):
-        """Broadcast tag data to WebSocket clients."""
+        """Broadcast tag data to WebSocket clients and check for theft."""
         try:
             from app.db.prisma import prisma_client
-            from app.models.rfid_tag import RFIDTag
-            from app.services.database import SessionLocal
             from app.services.tag_encryption import get_encryption_service
-
+            from app.services.theft_detection import TheftDetectionService
+            
+            theft_service = TheftDetectionService()
             epc = tag_data.get("epc")
             tag_id = tag_data.get("tag_id")
+            reader_ip = tag_data.get("reader_ip", "Unknown")
 
             existing_tag_db = None
+            reader_db = None
             encryption_status = {"is_encrypted": False, "decrypted_qr": None}
 
-            if epc:
-                # 1. Check Prisma for Encryption Mapping (Anti-Counterfeit)
-                try:
-                    async with prisma_client.client as db:
-                        mapping = await db.tagmapping.find_unique(where={"epc": epc})
-                        if mapping and mapping.encryptedQr:
-                            encryption_status["is_encrypted"] = True
-                            try:
-                                encrypt_svc = get_encryption_service()
-                                encryption_status["decrypted_qr"] = encrypt_svc.decrypt_qr(
-                                    mapping.encryptedQr
-                                )
-                            except Exception as e:
-                                logger.error(f"Error decrypting QR code for EPC {epc}: {e}")
-                                encryption_status["decrypted_qr"] = "Decryption Failed"
-                except Exception as e:
-                    logger.error(f"Prisma check error: {e}")
+            async with prisma_client.client as db:
+                # 1. Fetch Reader Info
+                if reader_ip != "Unknown":
+                    reader_db = await db.rfidreader.find_unique(where={"ipAddress": reader_ip})
+                
+                # 2. Fetch Tag Info
+                if epc:
+                    try:
+                        # Fetch tag with relations
+                        rfid_tag = await db.rfidtag.find_unique(
+                            where={"epc": epc},
+                            include={"payment": True}
+                        )
 
-                # 2. Check SQLAlchemy for Product/Payment Info (Inventory/Theft)
-                try:
+                        if rfid_tag:
+                            existing_tag_db = rfid_tag
+                            
+                            # Handle QR Decryption...
+                            if rfid_tag.encryptedQr:
+                                # (Encryption logic remains)
+                                encryption_status["is_encrypted"] = True
+                                try:
+                                    encrypt_svc = get_encryption_service()
+                                    encryption_status["decrypted_qr"] = encrypt_svc.decrypt_qr(
+                                        rfid_tag.encryptedQr
+                                    )
+                                except Exception as e:
+                                    logger.error(f"Error decrypting QR code for EPC {epc}: {e}")
+                                    encryption_status["decrypted_qr"] = "Decryption Failed"
 
-                    def get_tag_info():
-                        db = SessionLocal()
-                        try:
-                            return db.query(RFIDTag).filter(RFIDTag.epc == epc).first()
-                        finally:
-                            db.close()
-
-                    existing_tag_db = await asyncio.to_thread(get_tag_info)
-                except Exception as e:
-                    logger.error(f"SQLAlchemy check error: {e}")
+                    except Exception as e:
+                        logger.error(f"Prisma check error: {e}")
 
             # Broadcast to WebSocket
             tag_payload = {
@@ -196,11 +199,12 @@ class TagListenerService:
                 "rssi": tag_data.get("rssi"),
                 "antenna_port": tag_data.get("antenna_port"),
                 "timestamp": tag_data.get("timestamp"),
-                # Product Info from SQLAlchemy
-                "product_name": existing_tag_db.product_name if existing_tag_db else None,
-                "product_sku": existing_tag_db.product_sku if existing_tag_db else None,
-                "price": existing_tag_db.price_cents if existing_tag_db else None,
-                "is_paid": existing_tag_db.is_paid if existing_tag_db else False,
+                "reader_ip": reader_ip,
+                # Product Info from Prisma
+                "product_name": existing_tag_db.productDescription if existing_tag_db else None,
+                "product_sku": existing_tag_db.productId if existing_tag_db else None,
+                "price": 0, # TODO: Link to Product model for actual price
+                "is_paid": existing_tag_db.isPaid if existing_tag_db else False,
                 **encryption_status,
             }
 
@@ -212,23 +216,28 @@ class TagListenerService:
             )
 
             # THEFT ALERT LOGIC
-            # If tag exists, has a product mapped, and is NOT paid
-            if existing_tag_db and existing_tag_db.product_name and not existing_tag_db.is_paid:
-                logger.warning(
-                    f"🚨 THEFT ALERT: Unpaid item scanned! EPC: {epc}, Product: {existing_tag_db.product_name}"
-                )
-                await manager.broadcast(
-                    {
-                        "type": "theft_alert",
-                        "data": {
-                            "message": f"Unpaid item detected: {existing_tag_db.product_name}",
-                            "tag": tag_payload,
-                            "severity": "critical",
-                            "timestamp": datetime.now().isoformat(),
-                            "location": "Gate",  # Assuming getting scanned here means passing the gate
-                        },
-                    }
-                )
+            # Use the dedicated service for comprehensive theft detection and notification
+            if epc and reader_db and reader_db.type == "GATE":
+                # Only check for theft at exit gates
+                is_paid = await theft_service.check_tag_payment_status(epc, location=f"{reader_db.name} ({reader_ip})")
+                
+                if not is_paid:
+                    # Additional real-time notification via WebSocket (Service handles DB/SMS/Push)
+                    await manager.broadcast(
+                        {
+                            "type": "theft_alert",
+                            "data": {
+                                "message": f"Unpaid item detected at {reader_db.name}: {existing_tag_db.productDescription if existing_tag_db else epc}",
+                                "tag": tag_payload,
+                                "severity": "critical",
+                                "timestamp": datetime.now().isoformat(),
+                                "location": reader_db.location or reader_db.name,
+                            },
+                        }
+                    )
+            elif epc and reader_db and reader_db.type == "FIXED":
+                # Logic for shelf movement or inventory updates can go here
+                pass
 
         except Exception as e:
             logger.error(f"Error broadcasting tag: {e}", exc_info=True)

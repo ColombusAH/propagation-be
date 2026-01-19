@@ -2,7 +2,6 @@ import { ReactNode } from 'react';
 import styled from 'styled-components';
 import { TopBar } from './TopBar';
 import { Sidebar } from './Sidebar';
-import { theme } from '@/styles/theme';
 
 interface LayoutProps {
   children: ReactNode;
@@ -13,7 +12,7 @@ const LayoutContainer = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: ${theme.colors.background};
+  background-color: ${props => props.theme.colors.background};
 `;
 
 const ContentWrapper = styled.div`
@@ -25,12 +24,12 @@ const Main = styled.main`
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: ${theme.spacing.lg};
+  padding: ${props => props.theme.spacing.lg};
   max-width: calc(100% - 240px);
   
-  @media (max-width: ${theme.breakpoints.tablet}) {
+  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     max-width: 100%;
-    padding: ${theme.spacing.md};
+    padding: ${props => props.theme.spacing.md};
   }
 `;
 

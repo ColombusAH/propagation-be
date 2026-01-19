@@ -1,5 +1,4 @@
 import { createGlobalStyle } from 'styled-components';
-import { theme } from './theme';
 
 export const GlobalStyles = createGlobalStyle`
   * {
@@ -15,10 +14,10 @@ export const GlobalStyles = createGlobalStyle`
   }
 
   body {
-    font-family: 'Heebo', ${theme.typography.fontFamily.base};
-    font-size: ${theme.typography.fontSize.base};
-    color: ${theme.colors.text};
-    background-color: ${theme.colors.backgroundAlt};
+    font-family: 'Heebo', ${props => props.theme.typography.fontFamily.base};
+    font-size: ${props => props.theme.typography.fontSize.base};
+    color: ${props => props.theme.colors.text};
+    background-color: ${props => props.theme.colors.backgroundAlt};
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -47,20 +46,20 @@ export const GlobalStyles = createGlobalStyle`
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-weight: ${theme.typography.fontWeight.semibold};
+    font-weight: ${props => props.theme.typography.fontWeight.semibold};
     line-height: 1.2;
   }
 
   h1 {
-    font-size: ${theme.typography.fontSize['3xl']};
+    font-size: ${props => props.theme.typography.fontSize['3xl']};
   }
 
   h2 {
-    font-size: ${theme.typography.fontSize['2xl']};
+    font-size: ${props => props.theme.typography.fontSize['2xl']};
   }
 
   h3 {
-    font-size: ${theme.typography.fontSize.xl};
+    font-size: ${props => props.theme.typography.fontSize.xl};
   }
 
   button {

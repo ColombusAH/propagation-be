@@ -36,7 +36,7 @@ class TheftDetectionService:
         """
         try:
             # Get tag mapping
-            tag = await prisma_client.client.tagmapping.find_unique(
+            tag = await prisma_client.client.rfidtag.find_unique(
                 where={"epc": epc}, include={"payment": True}
             )
 
@@ -64,7 +64,7 @@ class TheftDetectionService:
         Create a theft alert and notify stakeholders.
 
         Args:
-            tag: TagMapping object
+            tag: RfidTag object
             location: Where the tag was detected
         """
         try:

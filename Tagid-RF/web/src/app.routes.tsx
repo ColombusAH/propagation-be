@@ -18,6 +18,11 @@ import { ContainerPage } from './pages/ContainerPage';
 import { TagMappingPage } from './pages/TagMappingPage';
 import ReaderSettingsPage from './pages/ReaderSettingsPage';
 import { StoreBIPage } from './pages/StoreBIPage';
+import { TagScannerPage } from './pages/TagScannerPage';
+import { TagLinkingPage } from './pages/TagLinkingPage';
+import { BathSetupPage } from './pages/BathSetupPage';
+import { CustomerCartPage } from './pages/CustomerCartPage';
+import { ExitGatePage } from './pages/ExitGatePage.tsx';
 
 export function AppRoutes() {
   return (
@@ -42,6 +47,11 @@ export function AppRoutes() {
       <Route path="/tag-mapping" element={<TagMappingPage />} />
       <Route path="/reader-settings" element={<ReaderSettingsPage />} />
       <Route path="/store-bi" element={<StoreBIPage />} />
+      <Route path="/tag-scanner" element={<TagScannerPage />} />
+      <Route path="/tag-linking" element={<TagLinkingPage />} />
+      <Route path="/bath-setup" element={<BathSetupPage />} />
+      <Route path="/customer-cart" element={<CustomerCartPage />} />
+      <Route path="/exit-gate" element={<ExitGatePage />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );

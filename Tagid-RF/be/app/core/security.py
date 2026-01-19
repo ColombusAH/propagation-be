@@ -52,12 +52,14 @@ def get_password_hash(password: str) -> str:
 def verify_access_token(token: str) -> Optional[Dict[str, Any]]:
     """Verifies a JWT access token and returns its payload if valid."""
     try:
+        logger.debug(f"Decoding token with algorithm {ALGORITHM}")
+        # Use simple decode for debugging
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         logger.debug("Token decoded successfully.")
         return payload
     except JWTError as e:
-        logger.error(f"Could not validate credentials: {e}")
+        logger.warning(f"JWT Validation Error: {e}")
         return None
     except Exception as e:
-        logger.error(f"An unexpected error occurred during token verification: {e}")
+        logger.error(f"Unexpected token verification error: {e}", exc_info=True)
         return None

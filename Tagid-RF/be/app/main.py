@@ -1,3 +1,4 @@
+# Server reload trigger - debugging prisma connection
 import logging
 from contextlib import asynccontextmanager
 
@@ -15,7 +16,6 @@ from app.routers import (
     cart,
     exit_scan,
     inventory,
-    notifications,
     products,
     stores,
     tags,
@@ -170,7 +170,6 @@ app.include_router(websocket.router, prefix="/ws", tags=["WebSocket"])
 # Include Store Management routers
 app.include_router(stores.router, prefix=f"{settings.API_V1_STR}", tags=["Stores"])
 app.include_router(users.router, prefix=f"{settings.API_V1_STR}", tags=["Users"])
-app.include_router(notifications.router, prefix=f"{settings.API_V1_STR}", tags=["Notifications"])
 app.include_router(exit_scan.router, prefix=f"{settings.API_V1_STR}", tags=["Exit Scan"])
 
 app.include_router(inventory.router, prefix=f"{settings.API_V1_STR}/inventory", tags=["Inventory"])

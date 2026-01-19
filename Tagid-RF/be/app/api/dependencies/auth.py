@@ -43,13 +43,15 @@ async def get_current_user(
         raise credentials_exception
 
     token = authorization.credentials
-    logger.info(f"Verifying token from Authorization header, length: {len(token)}")
+    logger.info(f"Verifying token. Length: {len(token)}")
 
     # Verify token
     payload = verify_access_token(token)
     if payload is None:
-        logger.warning("Token verification failed")
+        logger.warning("Token verification FAILED (returned None)")
         raise credentials_exception
+
+    logger.debug(f"Token payload: {payload}")
 
     # Extract user_id from payload
     user_id = payload.get("user_id")
@@ -59,10 +61,18 @@ async def get_current_user(
 
     # Get user from database
     logger.debug(f"Attempting to fetch user from DB with ID: {user_id}")
-    user = await get_user_by_id(db, user_id=user_id)
+    try:
+        user = await get_user_by_id(db, user_id=user_id)
+    except Exception as db_err:
+        logger.error(f"Error fetching user {user_id} from DB: {db_err}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal database error during authentication",
+        )
+
     if user is None:
-        logger.warning(f"User with ID {user_id} from token not found in database")
+        logger.warning(f"User with ID {user_id} from token NOT FOUND in database")
         raise credentials_exception
 
-    logger.info(f"Authenticated user retrieved: {user.id} ({user.email})")
+    logger.info(f"Authenticated user: {user.id} ({user.email})")
     return user

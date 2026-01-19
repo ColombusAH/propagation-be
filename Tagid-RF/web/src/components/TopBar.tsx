@@ -1,20 +1,19 @@
 import { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { theme } from '@/styles/theme';
 import { LanguageSwitch } from './LanguageSwitch';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 
 const Header = styled.header`
-  background: ${theme.colors.surface};
-  color: ${theme.colors.text};
+  background: ${props => props.theme.colors.surface};
+  color: ${props => props.theme.colors.text};
   padding: 0 1.5rem;
   height: 56px;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid ${theme.colors.border};
+  border-bottom: 1px solid ${props => props.theme.colors.border};
   position: sticky;
   top: 0;
-  z-index: ${theme.zIndex.header};
+  z-index: ${props => props.theme.zIndex.header};
 `;
 
 const NavContainer = styled.div`
@@ -27,13 +26,13 @@ const NavContainer = styled.div`
 const LeftSection = styled.div`
   display: flex;
   align-items: center;
-  gap: ${theme.spacing.md};
+  gap: ${props => props.theme.spacing.md};
 `;
 
 const PageTitle = styled.h1`
-  font-size: ${theme.typography.fontSize.lg};
-  font-weight: ${theme.typography.fontWeight.semibold};
-  color: ${theme.colors.text};
+  font-size: ${props => props.theme.typography.fontSize.lg};
+  font-weight: ${props => props.theme.typography.fontWeight.semibold};
+  color: ${props => props.theme.colors.text};
   margin: 0;
 `;
 
@@ -49,16 +48,16 @@ const RoleSwitcher = styled.div`
 
 const RoleBadge = styled.button`
   font-size: 0.75rem;
-  color: ${theme.colors.primary};
+  color: ${props => props.theme.colors.primary};
   padding: 0.375rem 0.625rem;
   background: rgba(31, 78, 121, 0.08);
-  border-radius: ${theme.borderRadius.md};
-  border: 1px solid ${theme.colors.primary};
+  border-radius: ${props => props.theme.borderRadius.md};
+  border: 1px solid ${props => props.theme.colors.primary};
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 0.375rem;
-  transition: all ${theme.transitions.fast};
+  transition: all ${props => props.theme.transitions.fast};
 
   &:hover {
     background: rgba(31, 78, 121, 0.15);
@@ -73,17 +72,17 @@ const RoleDropdown = styled.div<{ $open: boolean }>`
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  background: ${theme.colors.surface};
-  border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.borderRadius.lg};
-  box-shadow: ${theme.shadows.lg};
+  background: ${props => props.theme.colors.surface};
+  border: 1px solid ${props => props.theme.colors.border};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  box-shadow: ${props => props.theme.shadows.lg};
   min-width: 180px;
   padding: 4px;
   opacity: ${props => props.$open ? 1 : 0};
   visibility: ${props => props.$open ? 'visible' : 'hidden'};
   transform: ${props => props.$open ? 'translateY(0)' : 'translateY(-8px)'};
-  transition: all ${theme.transitions.fast};
-  z-index: ${theme.zIndex.dropdown};
+  transition: all ${props => props.theme.transitions.fast};
+  z-index: ${props => props.theme.zIndex.dropdown};
 `;
 
 const RoleOption = styled.button<{ $active: boolean }>`
@@ -92,18 +91,18 @@ const RoleOption = styled.button<{ $active: boolean }>`
   gap: 0.5rem;
   width: 100%;
   padding: 0.5rem 0.75rem;
-  color: ${props => props.$active ? theme.colors.primary : theme.colors.textSecondary};
+  color: ${props => props.$active ? props.theme.colors.primary : props.theme.colors.textSecondary};
   background: ${props => props.$active ? 'rgba(31, 78, 121, 0.08)' : 'transparent'};
   border: none;
-  border-radius: ${theme.borderRadius.md};
+  border-radius: ${props => props.theme.borderRadius.md};
   font-size: 0.875rem;
   cursor: pointer;
   text-align: right;
-  transition: all ${theme.transitions.fast};
+  transition: all ${props => props.theme.transitions.fast};
 
   &:hover {
-    background: ${theme.colors.surfaceHover};
-    color: ${theme.colors.text};
+    background: ${props => props.theme.colors.surfaceHover};
+    color: ${props => props.theme.colors.text};
   }
 
   .material-symbols-outlined {
@@ -114,20 +113,20 @@ const RoleOption = styled.button<{ $active: boolean }>`
 const LogoutButton = styled.button`
   padding: 0.375rem 0.625rem;
   background: transparent;
-  color: ${theme.colors.textSecondary};
-  border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.borderRadius.md};
+  color: ${props => props.theme.colors.textSecondary};
+  border: 1px solid ${props => props.theme.colors.border};
+  border-radius: ${props => props.theme.borderRadius.md};
   font-size: 0.8rem;
   cursor: pointer;
-  transition: all ${theme.transitions.fast};
+  transition: all ${props => props.theme.transitions.fast};
   display: flex;
   align-items: center;
   gap: 0.25rem;
 
   &:hover {
-    background: ${theme.colors.surfaceHover};
-    color: ${theme.colors.text};
-    border-color: ${theme.colors.borderDark};
+    background: ${props => props.theme.colors.surfaceHover};
+    color: ${props => props.theme.colors.text};
+    border-color: ${props => props.theme.colors.borderDark};
   }
 `;
 

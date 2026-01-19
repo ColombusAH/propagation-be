@@ -321,8 +321,8 @@ const ProgressBarContainer = styled.div`
 const ProgressBarFill = styled.div<{ $percent: number }>`
   height: 100%;
   width: ${props => props.$percent}%;
-  background: ${props => props.$percent === 100 
-    ? theme.colors.success 
+  background: ${props => props.$percent === 100
+    ? theme.colors.success
     : `linear-gradient(90deg, ${theme.colors.primary}, ${theme.colors.primary}CC)`};
   border-radius: ${theme.borderRadius.full};
   transition: width 0.5s ease;
@@ -375,7 +375,7 @@ const DeleteLogoButton = styled.button`
  * - Admin: System configuration
  */
 export function SettingsPage() {
-  const { userRole } = useAuth();
+  const { userRole, token } = useAuth();
   const { t } = useTranslation();
 
   // Connect to store for language and currency
@@ -409,6 +409,42 @@ export function SettingsPage() {
   const canSeeReceiptSettings = userRole && ['SELLER', 'STORE_MANAGER', 'NETWORK_ADMIN', 'SUPER_ADMIN'].includes(userRole);
   const canSeeReportSettings = userRole && ['STORE_MANAGER', 'NETWORK_ADMIN', 'SUPER_ADMIN'].includes(userRole);
   const canSeeSystemSettings = userRole === 'SUPER_ADMIN' || userRole === 'NETWORK_ADMIN';
+
+  // Function to update notification settings in backend
+  const handleNotificationToggle = async (
+    channel: 'push' | 'sms' | 'email',
+    newValue: boolean
+  ) => {
+    // Update local state first for immediate UI feedback
+    if (channel === 'push') setPushNotifications(newValue);
+    if (channel === 'sms') setSmsNotifications(newValue);
+    if (channel === 'email') setEmailNotifications(newValue);
+
+    if (!token) {
+      console.warn('No token, cannot persist notification setting');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/v1/notifications/settings', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          [channel]: newValue,
+        }),
+      });
+      if (!res.ok) {
+        console.error(`Failed to save ${channel} setting: ${res.status}`);
+      } else {
+        console.log(`${channel} setting saved successfully`);
+      }
+    } catch (err) {
+      console.error(`Error saving ${channel} setting:`, err);
+    }
+  };
 
   const handleSave = () => {
     alert(t('settings.settingsSaved'));
@@ -487,7 +523,7 @@ export function SettingsPage() {
               <ToggleInput
                 type="checkbox"
                 checked={pushNotifications}
-                onChange={(e) => setPushNotifications(e.target.checked)}
+                onChange={(e) => handleNotificationToggle('push', e.target.checked)}
               />
               <ToggleSlider />
             </ToggleSwitch>
@@ -502,7 +538,7 @@ export function SettingsPage() {
               <ToggleInput
                 type="checkbox"
                 checked={smsNotifications}
-                onChange={(e) => setSmsNotifications(e.target.checked)}
+                onChange={(e) => handleNotificationToggle('sms', e.target.checked)}
               />
               <ToggleSlider />
             </ToggleSwitch>
@@ -517,7 +553,7 @@ export function SettingsPage() {
               <ToggleInput
                 type="checkbox"
                 checked={emailNotifications}
-                onChange={(e) => setEmailNotifications(e.target.checked)}
+                onChange={(e) => handleNotificationToggle('email', e.target.checked)}
               />
               <ToggleSlider />
             </ToggleSwitch>
@@ -699,8 +735,8 @@ export function SettingsPage() {
                 <SettingLabel>שם הבנק</SettingLabel>
                 <SettingDescription>הבנק בו מנוהל חשבון העסק</SettingDescription>
               </SettingInfo>
-              <Select 
-                value={bankName} 
+              <Select
+                value={bankName}
                 onChange={(e) => setBankName(e.target.value)}
                 style={{ minWidth: '200px' }}
               >

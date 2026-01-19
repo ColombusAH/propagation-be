@@ -45,9 +45,9 @@ patch("app.services.tag_listener_service.tag_listener_service.start", return_val
 patch("app.services.tag_listener_service.tag_listener_service.stop", return_value=None).start()
 
 # Mock DB initializations to prevent hangs in lifespan
-patch("app.main.init_db", new_callable=AsyncMock).start()
-patch("app.main.shutdown_db", new_callable=AsyncMock).start()
-patch("app.main.init_rfid_db", return_value=None).start()
+patch("app.db.prisma.init_db", new_callable=AsyncMock).start()
+patch("app.db.prisma.shutdown_db", new_callable=AsyncMock).start()
+patch("app.services.database.init_db", return_value=None).start()
 
 # Mock firebase_admin
 mock_firebase = MagicMock()
@@ -59,6 +59,27 @@ from prisma import Prisma
 
 patch.object(Prisma, "connect", new_callable=AsyncMock).start()
 patch.object(Prisma, "disconnect", new_callable=AsyncMock).start()
+
+# Create a robust mock for the Prisma instance
+mock_prisma_instance = MagicMock()
+mock_prisma_instance.connect = AsyncMock()
+mock_prisma_instance.disconnect = AsyncMock()
+
+# Setup model mocks on the instance
+for model in ["user", "business", "store", "rfidtag", "rfidreader", "inventorysnapshot", "theftalert", "notificationpreference"]:
+    model_mock = MagicMock()
+    model_mock.create = AsyncMock()
+    model_mock.update = AsyncMock()
+    model_mock.delete = AsyncMock()
+    model_mock.find_unique = AsyncMock()
+    model_mock.find_first = AsyncMock()
+    model_mock.find_many = AsyncMock()
+    model_mock.upsert = AsyncMock()
+    model_mock.count = AsyncMock()
+    setattr(mock_prisma_instance, model, model_mock)
+
+# Patch the Prisma class to return our mock instance
+patch("prisma.Prisma", return_value=mock_prisma_instance).start()
 
 from app.db.prisma import prisma_client
 from app.main import app
@@ -74,15 +95,31 @@ def event_loop():
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def db_setup():
-    """Ensure Prisma client is mocked or connected."""
-    # Initialize app state if not already set (needed for dependencies)
+    """Ensure Prisma client is mocked."""
+    # Ensure prisma_client.client is also mocked if it's already instantiated
     if not hasattr(app.state, "prisma") or app.state.prisma is None:
         app.state.prisma = prisma_client
+    
+    # Force use of mock instance
+    prisma_client._client = mock_prisma_instance
+    
     yield prisma_client
 
 
 @pytest_asyncio.fixture()
-async def client() -> AsyncGenerator:
-    """Async test client for FastAPI."""
+async def async_client() -> AsyncGenerator:
+    """Async test client for FastAPI, aliased to async_client."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
+
+
+@pytest.fixture()
+def db_session():
+    """Fixture for mocked Prisma client session."""
+    return prisma_client
+
+
+@pytest.fixture()
+def normal_user_token_headers():
+    """Fixture for authenticated user headers (mocked)."""
+    return {"Authorization": "Bearer test-token"}

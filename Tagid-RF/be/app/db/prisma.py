@@ -27,11 +27,16 @@ class PrismaClient:
 
     async def connect(self) -> None:
         """Connect to the database."""
+        logger.info("PrismaClient.connect() called")
         try:
-            await self.client.connect()
-            logger.info("Successfully connected to the database")
-        except PrismaError as e:
-            logger.error(f"Failed to connect to the database: {e}")
+            if not self.client.is_connected():
+                logger.info("Attempting to connect Prisma client...")
+                await self.client.connect()
+                logger.info("Successfully connected to the database")
+            else:
+                logger.info("Prisma client already connected")
+        except Exception as e:
+            logger.error(f"Failed to connect to the database: {str(e)}", exc_info=True)
             raise
 
     async def disconnect(self) -> None:

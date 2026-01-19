@@ -187,9 +187,29 @@ interface LoginPageProps {
 export function LoginPage({ onLogin }: LoginPageProps) {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (selectedRole) {
-      onLogin(selectedRole);
+      try {
+        const response = await fetch('/api/v1/auth/dev-login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ role: selectedRole }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          onLogin(selectedRole, data.token);
+        } else {
+          // Fallback to demo login if API fails (useful for UI only testing)
+          console.error('API login failed, falling back to demo mode');
+          onLogin(selectedRole);
+        }
+      } catch (error) {
+        console.error('Connection error during login:', error);
+        onLogin(selectedRole);
+      }
     }
   };
 

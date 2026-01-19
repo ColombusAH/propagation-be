@@ -1,58 +1,35 @@
-import logging
-from sqlalchemy import text, inspect
-from app.services.database import engine
+import re
+import os
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+SCHEMA_PATH = "prisma/schema.prisma"
+BACKUP_PATH = "prisma/schema.prisma.bak"
 
-
-def fix_schema():
-    logger.info("Starting schema verification and fix...")
-
-    inspector = inspect(engine)
-    table_name = "rfid_tags"
-
-    if not inspector.has_table(table_name):
-        logger.error(f"Table {table_name} does not exist! Run init_db() first.")
+def clean_schema():
+    if not os.path.exists(SCHEMA_PATH):
+        print(f"Error: {SCHEMA_PATH} not found.")
         return
 
-    existing_columns = [c["name"] for c in inspector.get_columns(table_name)]
-    logger.info(f"Existing columns: {existing_columns}")
+    # Read the file (forcing utf-8 to ensure we read it correctly first)
+    try:
+        with open(SCHEMA_PATH, 'r', encoding='utf-8') as f:
+            content = f.read()
+            
+        # Create backup
+        with open(BACKUP_PATH, 'w', encoding='utf-8') as f:
+            f.write(content)
+        print(f"Backup created at {BACKUP_PATH}")
 
-    # Define missing columns to check and adding logic
-    # Column mapping: Name -> SQL Type & Constraints
-    new_columns = {
-        "is_paid": "BOOLEAN DEFAULT FALSE NOT NULL",
-        "product_name": "VARCHAR(255)",
-        "product_sku": "VARCHAR(50)",
-        "price_cents": "INTEGER",
-        "store_id": "INTEGER",
-        "paid_at": "TIMESTAMP WITH TIME ZONE",
-        "read_count": "INTEGER DEFAULT 1 NOT NULL",
-        "user_memory": "TEXT",
-        "pc": "VARCHAR(16)",
-        "crc": "VARCHAR(16)",
-        "frequency": "FLOAT",
-        "metadata": "JSON",
-    }
+        # Remove non-ascii characters but keep newlines and standard symbols
+        # This regex matches any character that is NOT in the ASCII range (0-127)
+        clean_content = re.sub(r'[^\x00-\x7F]+', '', content)
 
-    with engine.connect() as conn:
-        with conn.begin():  # Transaction
-            for col, definition in new_columns.items():
-                if col not in existing_columns:
-                    logger.info(f"Adding missing column: {col}")
-                    try:
-                        sql = f'ALTER TABLE {table_name} ADD COLUMN "{col}" {definition}'
-                        conn.execute(text(sql))
-                        logger.info(f"Successfully added column {col}")
-                    except Exception as e:
-                        logger.error(f"Failed to add column {col}: {e}")
-                else:
-                    logger.info(f"Column {col} already exists.")
-
-    logger.info("Schema fix complete.")
-
+        with open(SCHEMA_PATH, 'w', encoding='utf-8') as f:
+            f.write(clean_content)
+            
+        print("Successfully removed non-ASCII characters from schema.prisma")
+        
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
-    fix_schema()
+    clean_schema()

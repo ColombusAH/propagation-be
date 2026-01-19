@@ -31,7 +31,7 @@ model Business {
   @@index([name])
 }
 
-// Store () - belongs to a Network/Business
+// Store (סניף) - belongs to a Network/Business
 model Store {
   id           String       @id @default(uuid())
   name         String
@@ -57,7 +57,7 @@ model Store {
   @@index([name])
 }
 
-// Product () - for tag-product linking
+// Product (מוצר) - for tag-product linking
 model Product {
   id           String       @id @default(uuid())
   name         String
