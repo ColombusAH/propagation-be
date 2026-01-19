@@ -6,10 +6,9 @@ from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
-
 from app.main import app
 from app.services.database import get_db
+from fastapi.testclient import TestClient
 
 client = TestClient(app)
 API_V1 = "/api/v1"
@@ -65,7 +64,8 @@ def test_create_tag_new(mock_db):
 
     with patch("app.routers.tags.RFIDTag", return_value=new_tag):
         response = client.post(
-            f"{API_V1}/tags/", json={"epc": "E200NEWTAG", "rssi": -50, "antenna_port": 1}
+            f"{API_V1}/tags/",
+            json={"epc": "E200NEWTAG", "rssi": -50, "antenna_port": 1},
         )
 
     # Should succeed or fail validation - depends on mocking

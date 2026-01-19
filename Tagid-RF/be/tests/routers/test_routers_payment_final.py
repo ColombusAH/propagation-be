@@ -2,14 +2,13 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi import FastAPI
-from httpx import ASGITransport, AsyncClient
-
 from app.api.dependencies.auth import get_current_user as auth_get_user
 from app.api.v1.endpoints.payment import router
 from app.core.deps import get_current_user as core_get_user
 from app.schemas.payment import PaymentProviderEnum, PaymentStatusEnum
 from app.services.payment.base import PaymentStatus
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 
 
 @pytest.fixture
@@ -32,7 +31,9 @@ def test_app(mock_user):
 
 @pytest.fixture
 async def client(test_app):
-    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+    async with AsyncClient(
+        transport=ASGITransport(app=test_app), base_url="http://test"
+    ) as ac:
         yield ac
 
 
@@ -57,7 +58,10 @@ async def test_create_payment_intent_nexi_success(client, mock_gateway):
         payment = MagicMock()
         payment.id = "p1"
         mock_p.client.payment.create = AsyncMock(return_value=payment)
-        with patch("app.api.v1.endpoints.payment.get_provider_gateway", return_value=mock_gateway):
+        with patch(
+            "app.api.v1.endpoints.payment.get_provider_gateway",
+            return_value=mock_gateway,
+        ):
             response = await client.post(
                 "/create-intent",
                 json={
@@ -80,7 +84,10 @@ async def test_create_payment_intent_stripe_success(client, mock_gateway):
         payment = MagicMock()
         payment.id = "p2"
         mock_p.client.payment.create = AsyncMock(return_value=payment)
-        with patch("app.api.v1.endpoints.payment.get_provider_gateway", return_value=mock_gateway):
+        with patch(
+            "app.api.v1.endpoints.payment.get_provider_gateway",
+            return_value=mock_gateway,
+        ):
             response = await client.post(
                 "/create-intent",
                 json={
@@ -107,9 +114,13 @@ async def test_confirm_payment_success(client, mock_gateway):
         mock_payment.externalId = "ext_confirm_1"
         mock_p.client.payment.find_unique = AsyncMock(return_value=mock_payment)
         mock_p.client.payment.update = AsyncMock(return_value=mock_payment)
-        with patch("app.api.v1.endpoints.payment.get_provider_gateway", return_value=mock_gateway):
+        with patch(
+            "app.api.v1.endpoints.payment.get_provider_gateway",
+            return_value=mock_gateway,
+        ):
             with patch(
-                "app.api.v1.endpoints.payment.mark_order_tags_as_paid", new_callable=AsyncMock
+                "app.api.v1.endpoints.payment.mark_order_tags_as_paid",
+                new_callable=AsyncMock,
             ):
                 response = await client.post("/confirm", json={"payment_id": "p4"})
                 assert response.status_code == 200
@@ -127,10 +138,12 @@ async def test_create_cash_payment_success(client):
             res.payment_id = "CASH_123"
             mock_factory.return_value.create_payment = AsyncMock(return_value=res)
             with patch(
-                "app.api.v1.endpoints.payment.mark_order_tags_as_paid", new_callable=AsyncMock
+                "app.api.v1.endpoints.payment.mark_order_tags_as_paid",
+                new_callable=AsyncMock,
             ):
                 response = await client.post(
-                    "/cash", json={"order_id": "o5", "amount": 500, "received_amount": 500}
+                    "/cash",
+                    json={"order_id": "o5", "amount": 500, "received_amount": 500},
                 )
                 assert response.status_code == 200
 
@@ -152,11 +165,17 @@ async def test_refund_payment_success(client, mock_gateway):
         res.amount = 500
         res.status = PaymentStatusEnum.REFUNDED
         mock_gateway.refund_payment.return_value = res
-        with patch("app.api.v1.endpoints.payment.get_provider_gateway", return_value=mock_gateway):
+        with patch(
+            "app.api.v1.endpoints.payment.get_provider_gateway",
+            return_value=mock_gateway,
+        ):
             with patch(
-                "app.api.v1.endpoints.payment.unmark_order_tags_as_paid", new_callable=AsyncMock
+                "app.api.v1.endpoints.payment.unmark_order_tags_as_paid",
+                new_callable=AsyncMock,
             ):
-                response = await client.post("/refund", json={"payment_id": "p6", "amount": 500})
+                response = await client.post(
+                    "/refund", json={"payment_id": "p6", "amount": 500}
+                )
                 assert response.status_code == 200
 
 

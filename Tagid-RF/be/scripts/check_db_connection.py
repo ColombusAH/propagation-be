@@ -2,6 +2,7 @@
 """
 Simple database connection checker for troubleshooting.
 """
+
 import asyncio
 import os
 import socket

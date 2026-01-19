@@ -1,21 +1,18 @@
 """
 REST API endpoints for RFID tag management.
 """
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
-from sqlalchemy import func, desc, and_
-from typing import Optional, List
-from datetime import datetime, timedelta
+
+from datetime import datetime, timedelta, timezone
+from typing import List, Optional
+
+from app.models.rfid_tag import RFIDScanHistory, RFIDTag
+from app.schemas.rfid_tag import (RFIDScanHistoryResponse, RFIDTagCreate,
+                                  RFIDTagResponse, RFIDTagStatsResponse,
+                                  RFIDTagUpdate)
 from app.services.database import get_db
-from app.models.rfid_tag import RFIDTag, RFIDScanHistory
-from app.schemas.rfid_tag import (
-    RFIDTagCreate,
-    RFIDTagUpdate,
-    RFIDTagResponse,
-    RFIDScanHistoryResponse,
-    RFIDTagStatsResponse,
-)
-from datetime import timezone
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import and_, desc, func
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -24,14 +21,14 @@ router = APIRouter()
 async def create_or_update_tag(tag: RFIDTagCreate, db: Session = Depends(get_db)):
     """
     Create or update a tag.
-    
+
     If EPC already exists, update the existing record (increment read_count,
     update last_seen, etc.). Otherwise, create a new tag.
     Always creates a new entry in scan history.
     """
     # Check if tag with this EPC already exists
     existing = db.query(RFIDTag).filter(RFIDTag.epc == tag.epc).first()
-    
+
     if existing:
         # Update existing tag
         existing.read_count += 1
@@ -54,10 +51,10 @@ async def create_or_update_tag(tag: RFIDTagCreate, db: Session = Depends(get_db)
             existing.user_memory = tag.user_memory
         if tag.tag_metadata:
             existing.tag_metadata = tag.tag_metadata
-        
+
         db.commit()
         db.refresh(existing)
-        
+
         # Record in history
         history = RFIDScanHistory(
             epc=tag.epc,
@@ -71,7 +68,7 @@ async def create_or_update_tag(tag: RFIDTagCreate, db: Session = Depends(get_db)
         )
         db.add(history)
         db.commit()
-        
+
         return existing
     else:
         # Create new tag
@@ -91,7 +88,7 @@ async def create_or_update_tag(tag: RFIDTagCreate, db: Session = Depends(get_db)
         db.add(new_tag)
         db.commit()
         db.refresh(new_tag)
-        
+
         # Record in history
         history = RFIDScanHistory(
             epc=tag.epc,
@@ -105,7 +102,7 @@ async def create_or_update_tag(tag: RFIDTagCreate, db: Session = Depends(get_db)
         )
         db.add(history)
         db.commit()
-        
+
         return new_tag
 
 
@@ -119,25 +116,30 @@ async def list_tags(
 ):
     """
     List all tags with pagination.
-    
+
     Supports filtering by active status and searching by EPC or TID.
     """
     query = db.query(RFIDTag)
-    
+
     # Filter by active status
     if is_active is not None:
         query = query.filter(RFIDTag.is_active == is_active)
-    
+
     # Search by EPC or TID
     if search:
         query = query.filter(
             (RFIDTag.epc.ilike(f"%{search}%")) | (RFIDTag.tid.ilike(f"%{search}%"))
         )
-    
+
     # Pagination
     total = query.count()
-    tags = query.order_by(desc(RFIDTag.last_seen)).offset((page - 1) * page_size).limit(page_size).all()
-    
+    tags = (
+        query.order_by(desc(RFIDTag.last_seen))
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+
     return tags
 
 
@@ -164,16 +166,18 @@ async def get_tag_by_epc(epc: str, db: Session = Depends(get_db)):
 
 
 @router.put("/{tag_id}", response_model=RFIDTagResponse)
-async def update_tag(tag_id: int, tag_update: RFIDTagUpdate, db: Session = Depends(get_db)):
+async def update_tag(
+    tag_id: int, tag_update: RFIDTagUpdate, db: Session = Depends(get_db)
+):
     """
     Update tag metadata (location, notes, etc.).
-    
+
     Note: This does NOT increment read_count. Use POST /tags/ for scanning.
     """
     tag = db.query(RFIDTag).filter(RFIDTag.id == tag_id).first()
     if not tag:
         raise HTTPException(status_code=404, detail="Tag not found")
-    
+
     # Update fields if provided
     if tag_update.location is not None:
         tag.location = tag_update.location
@@ -185,7 +189,7 @@ async def update_tag(tag_id: int, tag_update: RFIDTagUpdate, db: Session = Depen
         tag.tag_metadata = tag_update.tag_metadata
     if tag_update.is_active is not None:
         tag.is_active = tag_update.is_active
-    
+
     db.commit()
     db.refresh(tag)
     return tag
@@ -199,7 +203,7 @@ async def delete_tag(tag_id: int, db: Session = Depends(get_db)):
     tag = db.query(RFIDTag).filter(RFIDTag.id == tag_id).first()
     if not tag:
         raise HTTPException(status_code=404, detail="Tag not found")
-    
+
     tag.is_active = False
     db.commit()
     return None
@@ -213,7 +217,7 @@ async def get_recent_scans(
 ):
     """
     Get recent scan history.
-    
+
     Returns scans from the last N hours.
     """
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
@@ -231,7 +235,7 @@ async def get_recent_scans(
 async def get_tag_stats(db: Session = Depends(get_db)):
     """
     Get tag statistics.
-    
+
     Returns:
     - Total tags
     - Active tags
@@ -244,21 +248,25 @@ async def get_tag_stats(db: Session = Depends(get_db)):
     # Total and active tags
     total_tags = db.query(RFIDTag).count()
     active_tags = db.query(RFIDTag).filter(RFIDTag.is_active == True).count()
-    
+
     # Scans today
-    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    scans_today = db.query(RFIDScanHistory).filter(RFIDScanHistory.scanned_at >= today_start).count()
-    
+    today_start = datetime.now(timezone.utc).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    scans_today = (
+        db.query(RFIDScanHistory)
+        .filter(RFIDScanHistory.scanned_at >= today_start)
+        .count()
+    )
+
     # Scans last hour
     hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
-    scans_last_hour = db.query(RFIDScanHistory).filter(RFIDScanHistory.scanned_at >= hour_ago).count()
-    
-    # Most scanned tag
-    most_scanned = (
-        db.query(RFIDTag)
-        .order_by(desc(RFIDTag.read_count))
-        .first()
+    scans_last_hour = (
+        db.query(RFIDScanHistory).filter(RFIDScanHistory.scanned_at >= hour_ago).count()
     )
+
+    # Most scanned tag
+    most_scanned = db.query(RFIDTag).order_by(desc(RFIDTag.read_count)).first()
     most_scanned_data = None
     if most_scanned:
         most_scanned_data = {
@@ -266,11 +274,13 @@ async def get_tag_stats(db: Session = Depends(get_db)):
             "epc": most_scanned.epc,
             "read_count": most_scanned.read_count,
         }
-    
+
     # Average RSSI
-    avg_rssi_result = db.query(func.avg(RFIDTag.rssi)).filter(RFIDTag.rssi.isnot(None)).scalar()
+    avg_rssi_result = (
+        db.query(func.avg(RFIDTag.rssi)).filter(RFIDTag.rssi.isnot(None)).scalar()
+    )
     average_rssi = float(avg_rssi_result) if avg_rssi_result else None
-    
+
     # Tags by location
     location_counts = (
         db.query(RFIDTag.location, func.count(RFIDTag.id))
@@ -279,7 +289,7 @@ async def get_tag_stats(db: Session = Depends(get_db)):
         .all()
     )
     tags_by_location = {loc: count for loc, count in location_counts if loc}
-    
+
     return RFIDTagStatsResponse(
         total_tags=total_tags,
         active_tags=active_tags,
@@ -289,5 +299,3 @@ async def get_tag_stats(db: Session = Depends(get_db)):
         average_rssi=average_rssi,
         tags_by_location=tags_by_location,
     )
-
-

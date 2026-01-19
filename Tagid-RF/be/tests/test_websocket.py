@@ -2,15 +2,16 @@ import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
-
 from app.main import app
 from app.routers.websocket import manager
+from fastapi.testclient import TestClient
 
 
 def test_websocket_connection():
     """Test WebSocket connection and welcome message."""
-    with patch("app.db.prisma.prisma_client.connect", new_callable=AsyncMock) as mock_connect:
+    with patch(
+        "app.db.prisma.prisma_client.connect", new_callable=AsyncMock
+    ) as mock_connect:
         with TestClient(app) as client:
             with client.websocket_connect("/ws/rfid") as websocket:
                 data = websocket.receive_json()

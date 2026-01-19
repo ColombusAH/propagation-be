@@ -6,12 +6,11 @@ Covers inventory summary aggregation.
 from unittest.mock import MagicMock
 
 import pytest
+from app.routers.inventory import router
+from app.services.database import get_db
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.orm import Session
-
-from app.routers.inventory import router
-from app.services.database import get_db
 
 
 @pytest.fixture
@@ -34,7 +33,9 @@ def mock_db():
 @pytest.fixture
 async def client(test_app, mock_db):
     test_app.dependency_overrides[get_db] = lambda: mock_db[0]
-    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+    async with AsyncClient(
+        transport=ASGITransport(app=test_app), base_url="http://test"
+    ) as ac:
         yield ac
     test_app.dependency_overrides.clear()
 

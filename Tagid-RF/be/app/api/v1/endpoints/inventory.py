@@ -2,11 +2,10 @@
 
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
-
 from app.api import deps
 from app.services import inventory as inventory_service
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 
 router = APIRouter()
 

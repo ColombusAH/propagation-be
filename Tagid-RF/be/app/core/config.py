@@ -44,7 +44,9 @@ class Settings(BaseSettings):
     RFID_READER_IP: str = "169.254.128.161"  # CF-001-548 TCP/IP address
     RFID_READER_PORT: int = 4001  # Default RFID reader port
     RFID_CONNECTION_TYPE: str = "tcp"  # tcp or serial
-    RFID_SERIAL_DEVICE: Optional[str] = None  # Serial device path (e.g., /dev/ttyUSB0 or COM3)
+    RFID_SERIAL_DEVICE: Optional[str] = (
+        None  # Serial device path (e.g., /dev/ttyUSB0 or COM3)
+    )
     RFID_READER_ID: str = "M-200"  # Unique identifier for this reader
     LOG_LEVEL: str = "INFO"  # Logging level: DEBUG, INFO, WARNING, ERROR
 
@@ -74,7 +76,11 @@ class Settings(BaseSettings):
 
     # Theft Alerts
     ENABLE_THEFT_DETECTION: bool = True
-    ALERT_STAKEHOLDER_ROLES: List[str] = ["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"]
+    ALERT_STAKEHOLDER_ROLES: List[str] = [
+        "SUPER_ADMIN",
+        "NETWORK_MANAGER",
+        "STORE_MANAGER",
+    ]
 
     model_config = {"env_file": ".env", "case_sensitive": True, "extra": "ignore"}
 

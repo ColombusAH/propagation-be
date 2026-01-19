@@ -17,7 +17,10 @@ class TestPaymentBase:
         from app.services.payment.base import PaymentRequest
 
         req = PaymentRequest(
-            order_id="order-123", amount=1000, currency="ILS", customer_email="test@example.com"
+            order_id="order-123",
+            amount=1000,
+            currency="ILS",
+            customer_email="test@example.com",
         )
 
         assert req.order_id == "order-123"
@@ -38,7 +41,9 @@ class TestPaymentBase:
         """Test creating PaymentResult."""
         from app.services.payment.base import PaymentResult, PaymentStatus
 
-        result = PaymentResult(success=True, payment_id="pay-123", external_id="ext-456")
+        result = PaymentResult(
+            success=True, payment_id="pay-123", external_id="ext-456"
+        )
 
         assert result.success is True
         assert result.payment_id == "pay-123"

@@ -24,7 +24,9 @@ def calculate_crc16(data: bytes) -> int:
 
 def build_command(cmd_code: int, data: bytes = b"", addr: int = 0xFF) -> bytes:
     head = 0xCF
-    frame_body = struct.pack(">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF)
+    frame_body = struct.pack(
+        ">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF
+    )
     frame_body += struct.pack("B", len(data))
     frame_body += data
     crc = calculate_crc16(frame_body)
@@ -96,7 +98,10 @@ def main():
                 epcs = extract_epcs_from_raw(chunk)
                 for epc in epcs:
                     if epc not in all_tags:
-                        all_tags[epc] = {"count": 0, "first_seen": time.time() - start_time}
+                        all_tags[epc] = {
+                            "count": 0,
+                            "first_seen": time.time() - start_time,
+                        }
                         print(f"🆕 TAG #{len(all_tags)}: {epc}")
                     all_tags[epc]["count"] += 1
 
@@ -108,7 +113,10 @@ def main():
                         epcs = extract_epcs_from_raw(buffer[:100])
                         for epc in epcs:
                             if epc not in all_tags:
-                                all_tags[epc] = {"count": 0, "first_seen": time.time() - start_time}
+                                all_tags[epc] = {
+                                    "count": 0,
+                                    "first_seen": time.time() - start_time,
+                                }
                                 print(f"🆕 TAG #{len(all_tags)}: {epc} (raw)")
                             all_tags[epc]["count"] += 1
 
@@ -132,7 +140,10 @@ def main():
                     epcs = extract_epcs_from_raw(payload)
                     for epc in epcs:
                         if epc not in all_tags:
-                            all_tags[epc] = {"count": 0, "first_seen": time.time() - start_time}
+                            all_tags[epc] = {
+                                "count": 0,
+                                "first_seen": time.time() - start_time,
+                            }
                             print(f"🆕 TAG #{len(all_tags)}: {epc} (frame)")
                         all_tags[epc]["count"] += 1
 

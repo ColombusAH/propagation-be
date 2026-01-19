@@ -14,11 +14,10 @@ import logging
 from typing import Optional
 
 import qrcode
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
-
 from app.db.dependencies import get_db
+from fastapi import APIRouter, Depends, HTTPException, status
 from prisma import Prisma
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +97,9 @@ async def list_readers(store_id: Optional[str] = None, db: Prisma = Depends(get_
     if store_id:
         where_clause["storeId"] = store_id
 
-    readers = await db.rfidreader.find_many(where=where_clause if where_clause else None)
+    readers = await db.rfidreader.find_many(
+        where=where_clause if where_clause else None
+    )
 
     return [
         ReaderResponse(
@@ -121,7 +122,9 @@ async def get_reader(reader_id: str, db: Prisma = Depends(get_db)):
     reader = await db.rfidreader.find_unique(where={"id": reader_id})
 
     if not reader:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reader not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Reader not found"
+        )
 
     return ReaderResponse(
         id=reader.id,
@@ -136,7 +139,9 @@ async def get_reader(reader_id: str, db: Prisma = Depends(get_db)):
 
 
 @router.put("/{reader_id}/set-bath", response_model=BathQrResponse)
-async def set_reader_as_bath(reader_id: str, request: SetBathRequest, db: Prisma = Depends(get_db)):
+async def set_reader_as_bath(
+    reader_id: str, request: SetBathRequest, db: Prisma = Depends(get_db)
+):
     """
     Configure a reader as a bath (basket) reader.
     Generates a unique QR code for bath identification.
@@ -144,7 +149,9 @@ async def set_reader_as_bath(reader_id: str, request: SetBathRequest, db: Prisma
     reader = await db.rfidreader.find_unique(where={"id": reader_id})
 
     if not reader:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reader not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Reader not found"
+        )
 
     # Generate unique QR for this bath
     qr_data = generate_bath_qr_data(reader_id)
@@ -156,7 +163,9 @@ async def set_reader_as_bath(reader_id: str, request: SetBathRequest, db: Prisma
     if request.name:
         update_data["name"] = request.name
 
-    updated_reader = await db.rfidreader.update(where={"id": reader_id}, data=update_data)
+    updated_reader = await db.rfidreader.update(
+        where={"id": reader_id}, data=update_data
+    )
 
     logger.info(f"Reader {reader_id} configured as BATH with QR: {qr_data}")
 
@@ -174,10 +183,13 @@ async def set_reader_as_gate(reader_id: str, db: Prisma = Depends(get_db)):
     reader = await db.rfidreader.find_unique(where={"id": reader_id})
 
     if not reader:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reader not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Reader not found"
+        )
 
     updated_reader = await db.rfidreader.update(
-        where={"id": reader_id}, data={"type": "GATE", "qrCode": None}  # Gates don't need QR
+        where={"id": reader_id},
+        data={"type": "GATE", "qrCode": None},  # Gates don't need QR
     )
 
     logger.info(f"Reader {reader_id} configured as GATE")
@@ -194,7 +206,9 @@ async def get_reader_qr(reader_id: str, db: Prisma = Depends(get_db)):
     reader = await db.rfidreader.find_unique(where={"id": reader_id})
 
     if not reader:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reader not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Reader not found"
+        )
 
     if reader.type != "BATH":
         raise HTTPException(

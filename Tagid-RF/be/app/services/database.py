@@ -4,10 +4,9 @@ SQLAlchemy database setup for RFID tracking system.
 
 from typing import Generator
 
+from app.core.config import get_settings
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
-
-from app.core.config import get_settings
 
 settings = get_settings()
 
@@ -19,7 +18,9 @@ RFID_DATABASE_URL = settings.RFID_DATABASE_URL or settings.DATABASE_URL
 
 # Replace postgresql:// with postgresql+psycopg:// for SQLAlchemy if needed
 if RFID_DATABASE_URL and RFID_DATABASE_URL.startswith("postgresql://"):
-    RFID_DATABASE_URL = RFID_DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
+    RFID_DATABASE_URL = RFID_DATABASE_URL.replace(
+        "postgresql://", "postgresql+psycopg://", 1
+    )
 
 engine = create_engine(
     RFID_DATABASE_URL,

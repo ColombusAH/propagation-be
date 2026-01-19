@@ -38,7 +38,9 @@ def test_public_registration_with_admin_role():
     }
 
     response = requests.post(url, json=payload)
-    print_response(response, "TEST: Public Registration with SUPER_ADMIN Role (Should Fail)")
+    print_response(
+        response, "TEST: Public Registration with SUPER_ADMIN Role (Should Fail)"
+    )
     return response.status_code == 400
 
 
@@ -46,7 +48,11 @@ def test_customer_cannot_create_tag_mapping(customer_token: str):
     """Test that customers cannot create tag mappings."""
     url = f"{BASE_URL}/tag-mapping/create"
     headers = {"Authorization": f"Bearer {customer_token}"}
-    payload = {"epc": "E2806810000000001234TEST", "product_id": None, "container_id": None}
+    payload = {
+        "epc": "E2806810000000001234TEST",
+        "product_id": None,
+        "container_id": None,
+    }
 
     response = requests.post(url, json=payload, headers=headers)
     print_response(response, "TEST: Customer Creating Tag Mapping (Should Fail - 403)")
@@ -74,7 +80,10 @@ def main():
     # Test 1: Public registration with admin role
     print("\n\n### TEST 1: Prevent Admin Role in Public Registration ###")
     results.append(
-        ("Public registration blocks admin roles", test_public_registration_with_admin_role())
+        (
+            "Public registration blocks admin roles",
+            test_public_registration_with_admin_role(),
+        )
     )
 
     # Test 2: Register a customer to get a token

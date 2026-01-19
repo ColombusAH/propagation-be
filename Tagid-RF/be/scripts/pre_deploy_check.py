@@ -2,6 +2,7 @@
 """
 Simple pre-deployment check script for Python Prisma backend.
 """
+
 import importlib.util
 import os
 import sys
@@ -94,7 +95,8 @@ def main():
     checks = [
         (
             "Critical Files",
-            lambda: check_file_exists("app/main.py") and check_file_exists("requirements.txt"),
+            lambda: check_file_exists("app/main.py")
+            and check_file_exists("requirements.txt"),
         ),
         ("Prisma Schema", check_prisma_schema),
         (
@@ -104,7 +106,9 @@ def main():
         ),
         (
             "Python Dependencies",
-            lambda: check_import("prisma") and check_import("fastapi") and check_import("uvicorn"),
+            lambda: check_import("prisma")
+            and check_import("fastapi")
+            and check_import("uvicorn"),
         ),
         ("Environment Variables", check_environment_variables),
     ]

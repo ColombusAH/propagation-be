@@ -3,9 +3,8 @@ Tests for user registration and login (customer flow).
 """
 
 import pytest
-from httpx import AsyncClient
-
 from app.core.config import settings
+from httpx import AsyncClient
 
 
 @pytest.mark.asyncio

@@ -6,7 +6,6 @@ Covers start/stop scan, tag storage, and callback mechanics.
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from app.services.tag_listener_service import TagListenerService
 
 
@@ -25,7 +24,9 @@ def test_service_initialization(service):
 
 def test_start_scan(service):
     """Test start_scan calls underlying start_inventory."""
-    with patch("app.services.tag_listener_service.start_inventory", return_value=True) as mock:
+    with patch(
+        "app.services.tag_listener_service.start_inventory", return_value=True
+    ) as mock:
         result = service.start_scan()
         mock.assert_called_once()
         assert result is True
@@ -33,7 +34,9 @@ def test_start_scan(service):
 
 def test_stop_scan(service):
     """Test stop_scan calls underlying stop_inventory."""
-    with patch("app.services.tag_listener_service.stop_inventory", return_value=True) as mock:
+    with patch(
+        "app.services.tag_listener_service.stop_inventory", return_value=True
+    ) as mock:
         result = service.stop_scan()
         mock.assert_called_once()
         assert result is True

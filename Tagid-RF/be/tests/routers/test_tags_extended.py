@@ -8,12 +8,11 @@ from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
-from httpx import AsyncClient
-from sqlalchemy.orm import Session
-
 from app.main import app
 from app.models.rfid_tag import RFIDScanHistory, RFIDTag
 from app.services.database import get_db
+from httpx import AsyncClient
+from sqlalchemy.orm import Session
 
 
 def _create_mock_tag_obj(id=1, epc="EPC123"):
@@ -55,7 +54,9 @@ def _create_mock_history_obj():
     hist.frequency = 915.0
     hist.location = "Warehouse"
     hist.reader_id = "READER1"
-    hist.metadata = {}  # Pydantic looks for 'metadata' (alias) for RFIDScanHistoryResponse
+    hist.metadata = (
+        {}
+    )  # Pydantic looks for 'metadata' (alias) for RFIDScanHistoryResponse
     hist.meta = {}
     hist.scanned_at = datetime.now(timezone.utc)
     return hist
@@ -88,7 +89,9 @@ async def test_list_tags_with_filters(client: AsyncClient, mock_db, override_db)
     mock_query.count.return_value = 1
     mock_query.all.return_value = [_create_mock_tag_obj()]
 
-    response = await client.get("/api/v1/tags/?search=TEST&is_active=true&page=2&page_size=10")
+    response = await client.get(
+        "/api/v1/tags/?search=TEST&is_active=true&page=2&page_size=10"
+    )
 
     assert response.status_code == 200
     assert len(response.json()) == 1
@@ -216,7 +219,9 @@ async def test_delete_tag_success(client: AsyncClient, mock_db, override_db):
 async def test_reader_connect_success(client: AsyncClient):
     """Test reader connect endpoint."""
     with (
-        patch("app.services.rfid_reader.rfid_reader_service.connect", return_value=True),
+        patch(
+            "app.services.rfid_reader.rfid_reader_service.connect", return_value=True
+        ),
         patch(
             "app.services.rfid_reader.rfid_reader_service.get_reader_info",
             new_callable=AsyncMock,
@@ -257,7 +262,8 @@ async def test_reader_read_single_success(client: AsyncClient):
 async def test_reader_stop_scanning_success(client: AsyncClient):
     """Test stopping the reader."""
     with patch(
-        "app.services.rfid_reader.rfid_reader_service.stop_scanning", new_callable=AsyncMock
+        "app.services.rfid_reader.rfid_reader_service.stop_scanning",
+        new_callable=AsyncMock,
     ):
         response = await client.post("/api/v1/tags/reader/stop-scanning")
         assert response.status_code == 200

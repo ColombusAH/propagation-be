@@ -7,7 +7,6 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.services.m200_protocol import M200Commands, M200Status
 from app.services.rfid_reader import RFIDReaderService
 
@@ -107,10 +106,15 @@ async def test_get_reader_info_success():
     service.is_connected = True
 
     mock_response = MockM200Response(
-        status=M200Status.SUCCESS, data=b"\x00" * 152, cmd=M200Commands.RFM_GET_DEVICE_INFO
+        status=M200Status.SUCCESS,
+        data=b"\x00" * 152,
+        cmd=M200Commands.RFM_GET_DEVICE_INFO,
     )
 
-    with patch("app.services.m200_protocol.M200ResponseParser.parse", return_value=mock_response):
+    with patch(
+        "app.services.m200_protocol.M200ResponseParser.parse",
+        return_value=mock_response,
+    ):
         # We assume parse_device_info is called if success.
         with patch(
             "app.services.rfid_reader.parse_device_info",
@@ -133,7 +137,10 @@ async def test_set_power_success():
 
     mock_response = MockM200Response(status=M200Status.SUCCESS)
 
-    with patch("app.services.m200_protocol.M200ResponseParser.parse", return_value=mock_response):
+    with patch(
+        "app.services.m200_protocol.M200ResponseParser.parse",
+        return_value=mock_response,
+    ):
         result = await service.set_power(26)
         assert result is True
 
@@ -145,9 +152,13 @@ async def test_get_network_config():
 
     mock_response = MockM200Response(status=M200Status.SUCCESS, data=b"net")
 
-    with patch("app.services.m200_protocol.M200ResponseParser.parse", return_value=mock_response):
+    with patch(
+        "app.services.m200_protocol.M200ResponseParser.parse",
+        return_value=mock_response,
+    ):
         with patch(
-            "app.services.rfid_reader.parse_network_response", return_value={"ip": "1.2.3.4"}
+            "app.services.rfid_reader.parse_network_response",
+            return_value={"ip": "1.2.3.4"},
         ):
 
             config = await service.get_network_config()
@@ -163,7 +174,10 @@ async def test_read_single_tag_success():
     # Create mock response
     mock_response = MockM200Response(status=M200Status.SUCCESS, data=b"tag")
 
-    with patch("app.services.m200_protocol.M200ResponseParser.parse", return_value=mock_response):
+    with patch(
+        "app.services.m200_protocol.M200ResponseParser.parse",
+        return_value=mock_response,
+    ):
         with patch(
             "app.services.rfid_reader.parse_inventory_response",
             return_value=[{"epc": "E200", "rssi": -50, "antenna_port": 1}],
@@ -182,6 +196,9 @@ async def test_initialize_device():
 
     mock_response = MockM200Response(status=M200Status.SUCCESS)
 
-    with patch("app.services.m200_protocol.M200ResponseParser.parse", return_value=mock_response):
+    with patch(
+        "app.services.m200_protocol.M200ResponseParser.parse",
+        return_value=mock_response,
+    ):
         result = await service.initialize_device()
         assert result is True

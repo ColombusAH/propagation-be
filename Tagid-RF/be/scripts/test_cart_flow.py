@@ -61,7 +61,10 @@ async def test_cart_flow():
         logger.info("\n--- Step 3: Checkout ---")
         response = await client.post(
             f"{BASE_URL}/cart/checkout",
-            json={"payment_method_id": "pm_card_visa", "email": "customer@example.com"},  # Mock ID
+            json={
+                "payment_method_id": "pm_card_visa",
+                "email": "customer@example.com",
+            },  # Mock ID
         )
 
         if response.status_code == 200:

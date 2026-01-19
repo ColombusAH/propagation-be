@@ -74,7 +74,8 @@ class PaymentIntentRequest(BaseModel):
         examples=["ILS", "USD", "EUR"],
     )
     payment_provider: PaymentProviderEnum = Field(
-        default=PaymentProviderEnum.STRIPE, description="Payment provider to use for processing"
+        default=PaymentProviderEnum.STRIPE,
+        description="Payment provider to use for processing",
     )
     metadata: Optional[dict] = Field(
         default=None, description="Additional metadata to store with payment"
@@ -97,7 +98,9 @@ class PaymentConfirmRequest(BaseModel):
     """Request to confirm a payment."""
 
     payment_id: str = Field(..., description="Payment ID")
-    payment_method_id: Optional[str] = Field(None, description="Payment method ID (for Stripe)")
+    payment_method_id: Optional[str] = Field(
+        None, description="Payment method ID (for Stripe)"
+    )
 
 
 class PaymentConfirmResponse(BaseModel):
@@ -145,4 +148,6 @@ class PaymentStatusResponse(BaseModel):
     currency: str = Field(..., description="Currency code")
     provider: PaymentProviderEnum = Field(..., description="Payment provider")
     created_at: datetime = Field(..., description="Creation timestamp")
-    paid_at: Optional[datetime] = Field(None, description="Payment completion timestamp")
+    paid_at: Optional[datetime] = Field(
+        None, description="Payment completion timestamp"
+    )

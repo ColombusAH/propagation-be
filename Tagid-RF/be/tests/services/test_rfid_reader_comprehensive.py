@@ -9,7 +9,6 @@ import struct
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.services.m200_protocol import M200Command, calculate_crc16
 from app.services.rfid_reader import HEAD, RFIDReaderService
 
@@ -48,7 +47,9 @@ async def test_connect_success(reader):
         mock_socket_cls.return_value = mock_sock
         mock_sock.recv.side_effect = BlockingIOError()  # No buffered data
 
-        with patch.object(reader, "get_reader_info", new_callable=AsyncMock) as mock_info:
+        with patch.object(
+            reader, "get_reader_info", new_callable=AsyncMock
+        ) as mock_info:
             mock_info.return_value = {"connected": True, "serial_number": "SN123"}
             result = await reader.connect()
 
@@ -167,7 +168,9 @@ async def test_set_network_alias(reader):
     """Test set_network alias calls set_network_config."""
     with patch.object(reader, "set_network_config", new_callable=AsyncMock) as mock:
         mock.return_value = True
-        result = await reader.set_network("192.168.1.50", "255.255.255.0", "192.168.1.1", 4001)
+        result = await reader.set_network(
+            "192.168.1.50", "255.255.255.0", "192.168.1.1", 4001
+        )
         mock.assert_called_once()
         assert result is True
 

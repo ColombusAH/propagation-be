@@ -2,7 +2,6 @@ import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
-
 from app.routers.websocket import websocket_endpoint
 
 
@@ -11,7 +10,10 @@ async def test_websocket_ping():
     """Test WebSocket ping command logic with correct command key."""
     mock_ws = AsyncMock()
     # Mock receive_text to return JSON string with 'command' key
-    mock_ws.receive_text.side_effect = [json.dumps({"command": "ping"}), RuntimeError("StopLoop")]
+    mock_ws.receive_text.side_effect = [
+        json.dumps({"command": "ping"}),
+        RuntimeError("StopLoop"),
+    ]
 
     try:
         await websocket_endpoint(mock_ws)

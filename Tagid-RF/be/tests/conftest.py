@@ -39,10 +39,19 @@ patch(
     new_callable=AsyncMock,
     return_value=True,
 ).start()
-patch("app.services.rfid_reader.rfid_reader_service.start_scanning", new_callable=AsyncMock).start()
-patch("app.services.rfid_reader.rfid_reader_service.disconnect", new_callable=AsyncMock).start()
-patch("app.services.tag_listener_service.tag_listener_service.start", return_value=None).start()
-patch("app.services.tag_listener_service.tag_listener_service.stop", return_value=None).start()
+patch(
+    "app.services.rfid_reader.rfid_reader_service.start_scanning",
+    new_callable=AsyncMock,
+).start()
+patch(
+    "app.services.rfid_reader.rfid_reader_service.disconnect", new_callable=AsyncMock
+).start()
+patch(
+    "app.services.tag_listener_service.tag_listener_service.start", return_value=None
+).start()
+patch(
+    "app.services.tag_listener_service.tag_listener_service.stop", return_value=None
+).start()
 
 # Mock DB initializations to prevent hangs in lifespan
 patch("app.db.prisma.init_db", new_callable=AsyncMock).start()
@@ -124,7 +133,9 @@ async def client(async_client):
 @pytest_asyncio.fixture()
 async def async_client() -> AsyncGenerator:
     """Async test client for FastAPI."""
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
         yield ac
 
 

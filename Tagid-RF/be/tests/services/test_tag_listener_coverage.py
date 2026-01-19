@@ -3,7 +3,6 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.services.tag_listener_service import TagListenerService
 
 
@@ -43,13 +42,17 @@ async def test_broadcast_tag_success_with_encryption(service):
         mock_p.client.__aenter__.return_value = mock_db
         with patch("app.services.database.SessionLocal") as mock_session_cls:
             mock_session = mock_session_cls.return_value
-            mock_session.query.return_value.filter.return_value.first.return_value = mock_tag_db
+            mock_session.query.return_value.filter.return_value.first.return_value = (
+                mock_tag_db
+            )
 
             with patch(
-                "app.services.tag_encryption.get_encryption_service", return_value=mock_encrypt_svc
+                "app.services.tag_encryption.get_encryption_service",
+                return_value=mock_encrypt_svc,
             ):
                 with patch(
-                    "app.services.tag_listener_service.manager.broadcast", new_callable=AsyncMock
+                    "app.services.tag_listener_service.manager.broadcast",
+                    new_callable=AsyncMock,
                 ) as mock_broadcast:
 
                     await service._broadcast_tag(tag_data)
@@ -74,10 +77,13 @@ async def test_broadcast_tag_theft_alert(service):
         mock_p.client.__aenter__.return_value = MagicMock()
         with patch("app.services.database.SessionLocal") as mock_session_cls:
             mock_session = mock_session_cls.return_value
-            mock_session.query.return_value.filter.return_value.first.return_value = mock_tag_db
+            mock_session.query.return_value.filter.return_value.first.return_value = (
+                mock_tag_db
+            )
 
             with patch(
-                "app.services.tag_listener_service.manager.broadcast", new_callable=AsyncMock
+                "app.services.tag_listener_service.manager.broadcast",
+                new_callable=AsyncMock,
             ) as mock_broadcast:
                 await service._broadcast_tag(tag_data)
 
@@ -94,7 +100,8 @@ async def test_broadcast_tag_prisma_error(service):
         mock_p.client.__aenter__.side_effect = Exception("Prisma Error")
         with patch("app.services.database.SessionLocal"):
             with patch(
-                "app.services.tag_listener_service.manager.broadcast", new_callable=AsyncMock
+                "app.services.tag_listener_service.manager.broadcast",
+                new_callable=AsyncMock,
             ) as mock_broadcast:
                 await service._broadcast_tag(tag_data)
                 mock_broadcast.assert_called()
@@ -115,10 +122,12 @@ async def test_broadcast_tag_decryption_error(service):
     with patch("app.db.prisma.prisma_client") as mock_p:
         mock_p.client.__aenter__.return_value = mock_db
         with patch(
-            "app.services.tag_encryption.get_encryption_service", return_value=mock_encrypt_svc
+            "app.services.tag_encryption.get_encryption_service",
+            return_value=mock_encrypt_svc,
         ):
             with patch(
-                "app.services.tag_listener_service.manager.broadcast", new_callable=AsyncMock
+                "app.services.tag_listener_service.manager.broadcast",
+                new_callable=AsyncMock,
             ) as mock_broadcast:
                 await service._broadcast_tag(tag_data)
 

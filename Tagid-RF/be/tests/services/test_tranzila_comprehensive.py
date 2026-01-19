@@ -13,7 +13,9 @@ def test_tranzila_gateway_init():
     """Test TranzilaGateway initialization."""
     from app.services.payment.tranzila import TranzilaGateway
 
-    gateway = TranzilaGateway(terminal_name="test_terminal", terminal_password="pass123")
+    gateway = TranzilaGateway(
+        terminal_name="test_terminal", terminal_password="pass123"
+    )
     assert gateway.terminal == "test_terminal"
     assert gateway.password == "pass123"
     assert gateway.use_redirect is True

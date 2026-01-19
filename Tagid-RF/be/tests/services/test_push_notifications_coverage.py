@@ -19,7 +19,8 @@ class TestPushNotificationService:
             mock_firebase.initialize_app = MagicMock()
 
             with patch("app.services.push_notifications.credentials"):
-                from app.services.push_notifications import PushNotificationService
+                from app.services.push_notifications import \
+                    PushNotificationService
 
                 return PushNotificationService()
 
@@ -27,7 +28,10 @@ class TestPushNotificationService:
     async def test_send_notification_success(self, service):
         """Test successful notification sending."""
         result = await service.send_notification(
-            user_id="user-123", title="Test Title", body="Test Body", data={"key": "value"}
+            user_id="user-123",
+            title="Test Title",
+            body="Test Body",
+            data={"key": "value"},
         )
 
         assert result is True
@@ -44,7 +48,9 @@ class TestPushNotificationService:
     @pytest.mark.asyncio
     async def test_send_notification_error(self, service):
         """Test handling error during notification."""
-        with patch.object(service, "send_notification", side_effect=Exception("FCM Error")):
+        with patch.object(
+            service, "send_notification", side_effect=Exception("FCM Error")
+        ):
             with pytest.raises(Exception):
                 await service.send_notification("user-123", "Title", "Body")
 
@@ -63,7 +69,9 @@ class TestPushNotificationService:
     @pytest.mark.asyncio
     async def test_send_bulk_notifications_empty_list(self, service):
         """Test bulk notifications with empty list."""
-        results = await service.send_bulk_notifications(user_ids=[], title="Title", body="Body")
+        results = await service.send_bulk_notifications(
+            user_ids=[], title="Title", body="Body"
+        )
 
         assert results == {}
 
@@ -89,7 +97,8 @@ class TestPushNotificationServiceInit:
             mock_firebase._apps = {"default": MagicMock()}  # Already initialized
 
             with patch("app.services.push_notifications.settings"):
-                from app.services.push_notifications import PushNotificationService
+                from app.services.push_notifications import \
+                    PushNotificationService
 
                 service = PushNotificationService()
 
@@ -106,7 +115,8 @@ class TestPushNotificationServiceInit:
                 side_effect=Exception("Invalid credentials"),
             ):
                 # Should not raise, just log error
-                from app.services.push_notifications import PushNotificationService
+                from app.services.push_notifications import \
+                    PushNotificationService
 
                 service = PushNotificationService()
                 assert service is not None

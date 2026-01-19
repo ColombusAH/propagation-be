@@ -2,14 +2,13 @@
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from prisma.models import User
-
 from app.api.dependencies.auth import get_current_user
 from app.crud.user import create_user, get_user_by_id
 from app.db.dependencies import get_db
 from app.schemas.user import UserRegister, UserResponse
+from fastapi import APIRouter, Depends, HTTPException, status
 from prisma import Prisma
+from prisma.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -23,14 +22,18 @@ async def users_root():
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_current_user_info(current_user: User = Depends(get_current_user)) -> UserResponse:
+async def get_current_user_info(
+    current_user: User = Depends(get_current_user),
+) -> UserResponse:
     """Get current user information."""
     return UserResponse.model_validate(current_user)
 
 
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user(
-    user_id: str, db: Prisma = Depends(get_db), current_user: User = Depends(get_current_user)
+    user_id: str,
+    db: Prisma = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> UserResponse:
     """
     Get user by ID.
@@ -38,14 +41,20 @@ async def get_user(
     Requires authentication. Users can only view their own info unless they are admin.
     """
     # Check permissions: users can view themselves, admins can view anyone
-    if current_user.id != user_id and current_user.role not in ["SUPER_ADMIN", "NETWORK_MANAGER"]:
+    if current_user.id != user_id and current_user.role not in [
+        "SUPER_ADMIN",
+        "NETWORK_MANAGER",
+    ]:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this user"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view this user",
         )
 
     user = await get_user_by_id(db, user_id)
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
 
     return UserResponse.model_validate(user)
 
@@ -67,14 +76,21 @@ async def create_new_user(
     """
     # Check permissions
     allowed_roles = {
-        "SUPER_ADMIN": ["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE", "CUSTOMER"],
+        "SUPER_ADMIN": [
+            "SUPER_ADMIN",
+            "NETWORK_MANAGER",
+            "STORE_MANAGER",
+            "EMPLOYEE",
+            "CUSTOMER",
+        ],
         "NETWORK_MANAGER": ["STORE_MANAGER", "EMPLOYEE", "CUSTOMER"],
         "STORE_MANAGER": ["EMPLOYEE", "CUSTOMER"],
     }
 
     if current_user.role not in allowed_roles:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to create users"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to create users",
         )
 
     if user_data.role not in allowed_roles[current_user.role]:
@@ -104,5 +120,6 @@ async def create_new_user(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exists"
             )
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create user"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create user",
         )

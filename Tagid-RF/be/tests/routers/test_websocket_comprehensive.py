@@ -6,7 +6,6 @@ Covers connection, disconnection, broadcasting, and message handling.
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.routers.websocket import ConnectionManager
 
 

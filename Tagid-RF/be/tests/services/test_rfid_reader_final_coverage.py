@@ -3,7 +3,6 @@ import socket
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.services.m200_protocol import M200Command, M200Status
 from app.services.rfid_reader import RFIDReaderService
 
@@ -66,7 +65,9 @@ async def test_get_reader_info_failure_status(reader):
     mock_resp.success = False
     mock_resp.status = 0x01  # General error
 
-    with patch("app.services.rfid_reader.M200ResponseParser.parse", return_value=mock_resp):
+    with patch(
+        "app.services.rfid_reader.M200ResponseParser.parse", return_value=mock_resp
+    ):
         with patch.object(reader, "_send_command", return_value=b"\xcf..."):
             info = await reader.get_reader_info()
             assert "error" in info
@@ -83,7 +84,9 @@ async def test_read_single_tag_various_errors(reader):
     mock_resp.success = False
     mock_resp.status = 0x01
 
-    with patch("app.services.rfid_reader.M200ResponseParser.parse", return_value=mock_resp):
+    with patch(
+        "app.services.rfid_reader.M200ResponseParser.parse", return_value=mock_resp
+    ):
         with patch.object(reader, "_send_command", return_value=b"data"):
             tags = await reader.read_single_tag()
             assert tags == []

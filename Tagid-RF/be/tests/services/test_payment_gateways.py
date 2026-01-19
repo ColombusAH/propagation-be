@@ -37,7 +37,10 @@ class TestPaymentBase:
         from app.services.payment.base import PaymentRequest
 
         request = PaymentRequest(
-            order_id="order_123", amount=1000, currency="ILS", customer_email="test@test.com"
+            order_id="order_123",
+            amount=1000,
+            currency="ILS",
+            customer_email="test@test.com",
         )
         assert request.order_id == "order_123"
         assert request.amount == 1000
@@ -265,7 +268,9 @@ class TestStripeGateway:
 
         with patch("stripe.PaymentIntent.create") as mock_create:
             mock_create.return_value = MagicMock(
-                id="pi_123", client_secret="secret_123", status="requires_payment_method"
+                id="pi_123",
+                client_secret="secret_123",
+                status="requires_payment_method",
             )
 
             result = await gateway.create_payment(request)
@@ -327,7 +332,9 @@ class TestTranzilaGateway:
         """Test creating gateway with password."""
         from app.services.payment.tranzila import TranzilaGateway
 
-        gateway = TranzilaGateway(terminal_name="tagid_test", terminal_password="secret")
+        gateway = TranzilaGateway(
+            terminal_name="tagid_test", terminal_password="secret"
+        )
         assert gateway is not None
 
     def test_provider_property(self):
@@ -358,6 +365,8 @@ class TestTranzilaGateway:
 
             # Mock the async context manager
             async_mock = AsyncMock(return_value=mock_response)
-            with patch("httpx.AsyncClient.__aenter__", return_value=MagicMock(post=async_mock)):
+            with patch(
+                "httpx.AsyncClient.__aenter__", return_value=MagicMock(post=async_mock)
+            ):
                 # Test may need adjustment based on actual implementation
                 pass

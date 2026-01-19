@@ -23,7 +23,9 @@ class TheftDetectionService:
         self.push_service = PushNotificationService()
         logger.info("Theft detection service initialized")
 
-    async def check_tag_payment_status(self, epc: str, location: Optional[str] = None) -> bool:
+    async def check_tag_payment_status(
+        self, epc: str, location: Optional[str] = None
+    ) -> bool:
         """
         Check if a scanned tag is paid. If not, create theft alert.
 
@@ -103,7 +105,15 @@ class TheftDetectionService:
             stakeholders = await prisma_client.client.user.find_many(
                 where={
                     "AND": [
-                        {"role": {"in": ["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"]}},
+                        {
+                            "role": {
+                                "in": [
+                                    "SUPER_ADMIN",
+                                    "NETWORK_MANAGER",
+                                    "STORE_MANAGER",
+                                ]
+                            }
+                        },
                         {"receiveTheftAlerts": True},
                     ]
                 }
@@ -138,7 +148,11 @@ class TheftDetectionService:
                     user_id=user.id,
                     title="🚨 התראת גניבה - Theft Alert",
                     body=message,
-                    data={"alert_id": alert.id, "tag_epc": tag.epc, "type": "theft_alert"},
+                    data={
+                        "alert_id": alert.id,
+                        "tag_epc": tag.epc,
+                        "type": "theft_alert",
+                    },
                 )
 
                 # Update delivery status
@@ -166,7 +180,9 @@ class TheftDetectionService:
         product_desc = tag.productDescription or "לא ידוע"
         return f"זוהה תג לא משולם!\nתג: {tag.epc}\nמוצר: {product_desc}"
 
-    async def resolve_alert(self, alert_id: str, resolved_by: str, notes: Optional[str] = None):
+    async def resolve_alert(
+        self, alert_id: str, resolved_by: str, notes: Optional[str] = None
+    ):
         """
         Mark a theft alert as resolved.
 

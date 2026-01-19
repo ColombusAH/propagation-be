@@ -36,7 +36,10 @@ class TestNexiProvider:
         with patch("app.services.nexi_provider.httpx.AsyncClient") as mock_client:
             mock_response = MagicMock()
             mock_response.status_code = 200
-            mock_response.json.return_value = {"transaction_id": "nexi_123", "status": "pending"}
+            mock_response.json.return_value = {
+                "transaction_id": "nexi_123",
+                "status": "pending",
+            }
             mock_cm = MagicMock()
             mock_cm.__aenter__ = AsyncMock(
                 return_value=MagicMock(post=AsyncMock(return_value=mock_response))

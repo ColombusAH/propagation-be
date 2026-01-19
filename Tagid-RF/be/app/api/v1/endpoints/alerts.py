@@ -7,13 +7,12 @@ import logging
 from datetime import datetime
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel
-
 from app.core.deps import get_current_user
 from app.core.permissions import requires_any_role
 from app.db.prisma import prisma_client
 from app.services.theft_detection import TheftDetectionService
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -47,7 +46,9 @@ async def list_theft_alerts(
     resolved: Optional[bool] = Query(None, description="Filter by resolved status"),
     limit: int = Query(50, le=100),
     offset: int = Query(0),
-    current_user=Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    current_user=Depends(
+        requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])
+    ),
 ):
     """
     List theft alerts (STORE_MANAGER+ only).
@@ -138,7 +139,9 @@ async def get_my_alerts(
 @router.get("/{alert_id}", response_model=TheftAlertResponse)
 async def get_alert_details(
     alert_id: str,
-    current_user=Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    current_user=Depends(
+        requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])
+    ),
 ):
     """
     Get theft alert details (STORE_MANAGER+ only).
@@ -146,10 +149,14 @@ async def get_alert_details(
     - **alert_id**: Alert ID
     """
     try:
-        alert = await prisma_client.client.theftalert.find_unique(where={"id": alert_id})
+        alert = await prisma_client.client.theftalert.find_unique(
+            where={"id": alert_id}
+        )
 
         if not alert:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alert not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Alert not found"
+            )
 
         return TheftAlertResponse(
             id=alert.id,
@@ -177,7 +184,9 @@ async def get_alert_details(
 async def resolve_alert(
     alert_id: str,
     request: ResolveAlertRequest,
-    current_user=Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    current_user=Depends(
+        requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])
+    ),
 ):
     """
     Mark theft alert as resolved (STORE_MANAGER+ only).
@@ -215,7 +224,8 @@ async def mark_alert_read(alert_id: str, current_user=Depends(get_current_user))
 
         if not recipient:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Alert not found for this user"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Alert not found for this user",
             )
 
         # Mark as read

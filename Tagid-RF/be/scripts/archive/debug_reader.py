@@ -46,7 +46,9 @@ async def test_reader():
 
         # Attempt connection to configured port
         print("\nChecking configured port...")
-        if await check_port(rfid_reader_service.reader_ip, rfid_reader_service.reader_port):
+        if await check_port(
+            rfid_reader_service.reader_ip, rfid_reader_service.reader_port
+        ):
             print("Port is open, establishing service connection...")
             connected = await rfid_reader_service.connect()
         else:

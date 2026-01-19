@@ -1,10 +1,9 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from jose import JWTError, jwt
-
 from app.core.config import get_settings
 from app.core.security import create_access_token, verify_access_token
+from jose import JWTError, jwt
 
 settings = get_settings()
 
@@ -33,7 +32,10 @@ def test_verify_access_token_expired():
     import datetime
     from datetime import timedelta, timezone
 
-    data = {"sub": "test", "exp": datetime.datetime.now(timezone.utc) - timedelta(minutes=1)}
+    data = {
+        "sub": "test",
+        "exp": datetime.datetime.now(timezone.utc) - timedelta(minutes=1),
+    }
     token = jwt.encode(data, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
     assert verify_access_token(token) is None

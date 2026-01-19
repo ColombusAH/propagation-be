@@ -2,6 +2,7 @@
 """
 Diagnostic script to inspect raw M-200 responses
 """
+
 import os
 import socket
 import sys
@@ -11,12 +12,8 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-from app.services.m200_protocol import (
-    HEAD,
-    M200Command,
-    M200Commands,
-    build_get_device_info_command,
-)
+from app.services.m200_protocol import (HEAD, M200Command, M200Commands,
+                                        build_get_device_info_command)
 
 
 def hex_dump(data: bytes, prefix="") -> str:
@@ -101,7 +98,9 @@ def test_connection(ip: str, port: int, timeout: int = 10):
         # Check if it looks like HTTP
         if response_2.startswith(b"HTTP") or response_2.startswith(b"C"):
             print("\n⚠️  Response appears to be text-based (HTTP or text protocol)")
-            print("   The M-200 might be using HTTP/REST API instead of binary protocol")
+            print(
+                "   The M-200 might be using HTTP/REST API instead of binary protocol"
+            )
 
         sock.close()
         print("\n✓ Connection closed")
@@ -131,9 +130,14 @@ if __name__ == "__main__":
         help="M-200 IP address",
     )
     parser.add_argument(
-        "--port", type=int, default=int(os.getenv("RFID_READER_PORT", "2022")), help="M-200 port"
+        "--port",
+        type=int,
+        default=int(os.getenv("RFID_READER_PORT", "2022")),
+        help="M-200 port",
     )
-    parser.add_argument("--timeout", type=int, default=10, help="Socket timeout in seconds")
+    parser.add_argument(
+        "--timeout", type=int, default=10, help="Socket timeout in seconds"
+    )
 
     args = parser.parse_args()
     test_connection(args.ip, args.port, args.timeout)

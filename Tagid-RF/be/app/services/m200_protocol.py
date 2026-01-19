@@ -159,7 +159,9 @@ class M200ResponseParser:
         # So: expected_len = 5 + len_field + 2 = 7 + len_field
         expected_len = 5 + len_field + 2
         if len(frame) != expected_len:
-            raise ValueError(f"Invalid frame length: expected {expected_len}, got {len(frame)}")
+            raise ValueError(
+                f"Invalid frame length: expected {expected_len}, got {len(frame)}"
+            )
 
         # Data starts after STATUS (byte 6) and is LEN-1 bytes (LEN includes STATUS)
         data_len = len_field - 1  # Subtract STATUS byte
@@ -169,9 +171,7 @@ class M200ResponseParser:
         # Verify CRC
         crc_calculated = calculate_crc16(frame[:-2])
         if crc_received != crc_calculated:
-            error_msg = (
-                f"CRC mismatch: received 0x{crc_received:04X}, calculated 0x{crc_calculated:04X}"
-            )
+            error_msg = f"CRC mismatch: received 0x{crc_received:04X}, calculated 0x{crc_calculated:04X}"
             if strict_crc:
                 raise ValueError(error_msg)
             else:
@@ -179,7 +179,9 @@ class M200ResponseParser:
                     f"{error_msg} - Device may use proprietary CRC variant, continuing anyway"
                 )
 
-        return M200Response(addr=addr, cmd=cmd, status=status, data=data, crc=crc_received)
+        return M200Response(
+            addr=addr, cmd=cmd, status=status, data=data, crc=crc_received
+        )
 
 
 # Command Codes (from manual Section 2.1 - Table A-7)
@@ -282,12 +284,20 @@ def parse_device_info(data: bytes) -> Dict[str, Any]:
     offset = 0
 
     # CPHardVer (32 bytes)
-    cp_hw_ver = data[offset : offset + 32].rstrip(b"\x00").decode("ascii", errors="ignore").strip()
+    cp_hw_ver = (
+        data[offset : offset + 32]
+        .rstrip(b"\x00")
+        .decode("ascii", errors="ignore")
+        .strip()
+    )
     offset += 32
 
     # CPFirmVer (32 bytes)
     cp_fw_ver = (
-        data[offset : offset + 32].rstrip(b"\x00").decode("ascii", errors="ignore").strip()
+        data[offset : offset + 32]
+        .rstrip(b"\x00")
+        .decode("ascii", errors="ignore")
+        .strip()
         if len(data) >= offset + 32
         else ""
     )
@@ -295,7 +305,10 @@ def parse_device_info(data: bytes) -> Dict[str, Any]:
 
     # CPSN_code (12 bytes)
     cp_sn = (
-        data[offset : offset + 12].rstrip(b"\x00").decode("ascii", errors="ignore").strip()
+        data[offset : offset + 12]
+        .rstrip(b"\x00")
+        .decode("ascii", errors="ignore")
+        .strip()
         if len(data) >= offset + 12
         else ""
     )
@@ -303,7 +316,10 @@ def parse_device_info(data: bytes) -> Dict[str, Any]:
 
     # RFIDModeVer (32 bytes)
     rfid_hw_ver = (
-        data[offset : offset + 32].rstrip(b"\x00").decode("ascii", errors="ignore").strip()
+        data[offset : offset + 32]
+        .rstrip(b"\x00")
+        .decode("ascii", errors="ignore")
+        .strip()
         if len(data) >= offset + 32
         else ""
     )
@@ -311,7 +327,10 @@ def parse_device_info(data: bytes) -> Dict[str, Any]:
 
     # RFIDModeName (32 bytes)
     rfid_module_name = (
-        data[offset : offset + 32].rstrip(b"\x00").decode("ascii", errors="ignore").strip()
+        data[offset : offset + 32]
+        .rstrip(b"\x00")
+        .decode("ascii", errors="ignore")
+        .strip()
         if len(data) >= offset + 32
         else ""
     )
@@ -319,7 +338,10 @@ def parse_device_info(data: bytes) -> Dict[str, Any]:
 
     # RFIDMode_SNCode (12 bytes)
     rfid_sn = (
-        data[offset : offset + 12].rstrip(b"\x00").decode("ascii", errors="ignore").strip()
+        data[offset : offset + 12]
+        .rstrip(b"\x00")
+        .decode("ascii", errors="ignore")
+        .strip()
         if len(data) >= offset + 12
         else ""
     )
@@ -395,7 +417,9 @@ def build_inventory_command(inv_type: int = 0x00, inv_param: int = 0) -> M200Com
         M200Command for tag inventory
     """
     data = struct.pack("BB", inv_type, inv_param)
-    return M200Command(M200Commands.RFM_INVENTORYISO_CONTINUE, data, addr=BROADCAST_ADDR)
+    return M200Command(
+        M200Commands.RFM_INVENTORYISO_CONTINUE, data, addr=BROADCAST_ADDR
+    )
 
 
 def build_stop_inventory_command() -> M200Command:
@@ -436,7 +460,9 @@ def build_set_power_command(power_dbm: int) -> M200Command:
     return M200Command(M200Commands.RFM_SET_PWR, data, addr=BROADCAST_ADDR)
 
 
-def build_read_tag_command(mem_bank: int, start_addr: int, word_count: int) -> M200Command:
+def build_read_tag_command(
+    mem_bank: int, start_addr: int, word_count: int
+) -> M200Command:
     """
     Build read tag data command (Section 2.3.3).
 
@@ -493,7 +519,10 @@ def build_get_rf_protocol_command() -> M200Command:
 
 
 def build_set_network_command(
-    ip: str, subnet: str = "255.255.255.0", gateway: str = "192.168.1.1", port: int = 4001
+    ip: str,
+    subnet: str = "255.255.255.0",
+    gateway: str = "192.168.1.1",
+    port: int = 4001,
 ) -> M200Command:
     """
     Build set network parameters command (Section 2.2.5).
@@ -541,13 +570,17 @@ def build_set_rssi_filter_command(antenna: int, rssi_threshold: int) -> M200Comm
         rssi_threshold: Minimum RSSI value (0-255, typically 30-80)
     """
     data = struct.pack("BBB", 0x01, antenna, rssi_threshold)  # 0x01 = Set
-    return M200Command(M200Commands.RFM_SET_GET_AntN_RSSI_Filter, data, addr=BROADCAST_ADDR)
+    return M200Command(
+        M200Commands.RFM_SET_GET_AntN_RSSI_Filter, data, addr=BROADCAST_ADDR
+    )
 
 
 def build_get_rssi_filter_command(antenna: int) -> M200Command:
     """Build get RSSI filter command."""
     data = struct.pack("BB", 0x02, antenna)  # 0x02 = Get
-    return M200Command(M200Commands.RFM_SET_GET_AntN_RSSI_Filter, data, addr=BROADCAST_ADDR)
+    return M200Command(
+        M200Commands.RFM_SET_GET_AntN_RSSI_Filter, data, addr=BROADCAST_ADDR
+    )
 
 
 def build_set_all_params_command(config: Dict[str, Any]) -> M200Command:
@@ -613,7 +646,9 @@ def build_get_query_param_command() -> M200Command:
     return M200Command(M200Commands.RFM_GET_QUERY_PARAM, addr=BROADCAST_ADDR)
 
 
-def build_set_select_param_command(select_flag: int = 0x00, truncate: int = 0x00) -> M200Command:
+def build_set_select_param_command(
+    select_flag: int = 0x00, truncate: int = 0x00
+) -> M200Command:
     """Build set Select parameters command (Section 2.3.5)."""
     data = struct.pack("BB", select_flag, truncate)
     return M200Command(M200Commands.RFM_SET_SELPRM, data, addr=BROADCAST_ADDR)
@@ -641,13 +676,17 @@ def build_set_gpio_param_command(
         level: Initial output level (0x00 = Low, 0x01 = High)
     """
     data = struct.pack("BBBB", 0x01, pin, direction, level)  # 0x01 = Set
-    return M200Command(M200Commands.RFM_SET_GET_G_PIO_WORKPARAM, data, addr=BROADCAST_ADDR)
+    return M200Command(
+        M200Commands.RFM_SET_GET_G_PIO_WORKPARAM, data, addr=BROADCAST_ADDR
+    )
 
 
 def build_get_gpio_param_command(pin: int) -> M200Command:
     """Build get GPIO parameters command."""
     data = struct.pack("BB", 0x02, pin)  # 0x02 = Get
-    return M200Command(M200Commands.RFM_SET_GET_G_PIO_WORKPARAM, data, addr=BROADCAST_ADDR)
+    return M200Command(
+        M200Commands.RFM_SET_GET_G_PIO_WORKPARAM, data, addr=BROADCAST_ADDR
+    )
 
 
 def build_get_gpio_levels_command() -> M200Command:
@@ -759,7 +798,9 @@ def build_get_eas_mask_command() -> M200Command:
 # =============================================================================
 
 
-def build_set_remote_server_command(ip: str, port: int = 4001, enable: bool = True) -> M200Command:
+def build_set_remote_server_command(
+    ip: str, port: int = 4001, enable: bool = True
+) -> M200Command:
     """
     Build set remote server command (Section 2.2.6).
     Device will forward tag data to this server.
@@ -774,16 +815,22 @@ def build_set_remote_server_command(ip: str, port: int = 4001, enable: bool = Tr
     data += ip_bytes
     data += struct.pack(">H", port)
     data += struct.pack("B", 0x01 if enable else 0x00)
-    return M200Command(M200Commands.RFM_SET_GET_REMOTE_NETPARA, data, addr=BROADCAST_ADDR)
+    return M200Command(
+        M200Commands.RFM_SET_GET_REMOTE_NETPARA, data, addr=BROADCAST_ADDR
+    )
 
 
 def build_get_remote_server_command() -> M200Command:
     """Build get remote server command."""
     data = struct.pack("B", 0x02)
-    return M200Command(M200Commands.RFM_SET_GET_REMOTE_NETPARA, data, addr=BROADCAST_ADDR)
+    return M200Command(
+        M200Commands.RFM_SET_GET_REMOTE_NETPARA, data, addr=BROADCAST_ADDR
+    )
 
 
-def build_set_wifi_command(ssid: str, password: str, security: int = 0x03) -> M200Command:  # WPA2
+def build_set_wifi_command(
+    ssid: str, password: str, security: int = 0x03
+) -> M200Command:  # WPA2
     """
     Build set WiFi parameters command (Section 2.2.10).
 
@@ -830,10 +877,14 @@ def build_set_permission_command(password: str = "") -> M200Command:
     """Build set permission/password command (Section 2.2.12)."""
     pass_bytes = password.encode("utf-8")[:8].ljust(8, b"\x00")
     data = struct.pack("B", 0x01) + pass_bytes
-    return M200Command(M200Commands.RFM_SET_GET_PERMISSION_PARAM, data, addr=BROADCAST_ADDR)
+    return M200Command(
+        M200Commands.RFM_SET_GET_PERMISSION_PARAM, data, addr=BROADCAST_ADDR
+    )
 
 
 def build_get_permission_command() -> M200Command:
     """Build get permission status command."""
     data = struct.pack("B", 0x02)
-    return M200Command(M200Commands.RFM_SET_GET_PERMISSION_PARAM, data, addr=BROADCAST_ADDR)
+    return M200Command(
+        M200Commands.RFM_SET_GET_PERMISSION_PARAM, data, addr=BROADCAST_ADDR
+    )

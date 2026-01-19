@@ -1,4 +1,3 @@
-
 import json
 
 import requests
@@ -13,6 +12,7 @@ def test_login():
         print(f"Body: {response.text}")
     except Exception as e:
         print(f"Request failed: {e}")
+
 
 if __name__ == "__main__":
     test_login()

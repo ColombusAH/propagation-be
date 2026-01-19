@@ -25,7 +25,12 @@ async def test_product_mapping():
         except Exception:
             pass
 
-        create_payload = {"epc": epc, "rssi": -50, "antenna_port": 1, "location": "Test Bench"}
+        create_payload = {
+            "epc": epc,
+            "rssi": -50,
+            "antenna_port": 1,
+            "location": "Test Bench",
+        }
 
         response = await client.post(f"{BASE_URL}/tags/", json=create_payload)
         if response.status_code != 201:
@@ -78,7 +83,9 @@ async def test_product_mapping():
         scan_payload = {"epc": epc, "rssi": -45, "antenna_port": 1}  # Changed RSSI
 
         response = await client.post(f"{BASE_URL}/tags/", json=scan_payload)
-        if response.status_code == 201:  # 201 is returned for both create and update in our API
+        if (
+            response.status_code == 201
+        ):  # 201 is returned for both create and update in our API
             scanned_tag = response.json()
             if scanned_tag.get("product_name") == update_payload["product_name"]:
                 print("✅ Product info preserved after re-scan!")

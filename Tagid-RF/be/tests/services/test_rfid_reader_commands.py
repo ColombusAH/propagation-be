@@ -7,7 +7,6 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.services.m200_protocol import M200Commands, M200Status
 from app.services.rfid_reader import RFIDReaderService
 
@@ -27,7 +26,9 @@ async def test_initialize_device_success(reader):
     mock_parsed = MagicMock()
     mock_parsed.success = True
 
-    with patch("app.services.rfid_reader.M200ResponseParser.parse", return_value=mock_parsed):
+    with patch(
+        "app.services.rfid_reader.M200ResponseParser.parse", return_value=mock_parsed
+    ):
         with patch.object(reader, "_send_command", return_value=b"raw_bytes"):
             result = await reader.initialize_device()
             assert result is True
@@ -39,7 +40,9 @@ async def test_initialize_device_failure(reader):
     mock_parsed = MagicMock()
     mock_parsed.success = False
 
-    with patch("app.services.rfid_reader.M200ResponseParser.parse", return_value=mock_parsed):
+    with patch(
+        "app.services.rfid_reader.M200ResponseParser.parse", return_value=mock_parsed
+    ):
         with patch.object(reader, "_send_command", return_value=b"raw_bytes"):
             result = await reader.initialize_device()
             assert result is False
@@ -51,7 +54,9 @@ async def test_set_power_success(reader):
     mock_parsed = MagicMock()
     mock_parsed.success = True
 
-    with patch("app.services.rfid_reader.M200ResponseParser.parse", return_value=mock_parsed):
+    with patch(
+        "app.services.rfid_reader.M200ResponseParser.parse", return_value=mock_parsed
+    ):
         with patch.object(reader, "_send_command", return_value=b"raw_bytes"):
             result = await reader.set_power(30)
             assert result is True
@@ -64,7 +69,9 @@ async def test_read_tag_memory_success(reader):
     mock_parsed.success = True
     mock_parsed.data = b"\x11\x22"
 
-    with patch("app.services.rfid_reader.M200ResponseParser.parse", return_value=mock_parsed):
+    with patch(
+        "app.services.rfid_reader.M200ResponseParser.parse", return_value=mock_parsed
+    ):
         with patch.object(reader, "_send_command", return_value=b"raw_bytes"):
             result = await reader.read_tag_memory(1, 0, 1)
             assert result == b"\x11\x22"

@@ -45,7 +45,10 @@ async def test_google_login_db_error(client: AsyncClient):
     """Test Google login with database exception."""
     with (
         patch("app.api.v1.endpoints.auth.id_token.verify_oauth2_token") as mock_verify,
-        patch("app.api.v1.endpoints.auth.get_user_by_email", side_effect=Exception("DB Down")),
+        patch(
+            "app.api.v1.endpoints.auth.get_user_by_email",
+            side_effect=Exception("DB Down"),
+        ),
     ):
 
         mock_verify.return_value = {"email": "test@example.com", "sub": "123"}

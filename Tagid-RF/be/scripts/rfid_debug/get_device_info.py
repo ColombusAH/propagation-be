@@ -43,31 +43,52 @@ def parse_device_info(data: bytes) -> dict:
     result = {}
 
     if len(data) < 32:
-        return {"error": f"Data too short: {len(data)} bytes", "raw": data.hex().upper()}
+        return {
+            "error": f"Data too short: {len(data)} bytes",
+            "raw": data.hex().upper(),
+        }
 
     offset = 0
 
     # CPHardVer (32 bytes)
-    cp_hw = data[offset : offset + 32].rstrip(b"\x00").decode("ascii", errors="replace").strip()
+    cp_hw = (
+        data[offset : offset + 32]
+        .rstrip(b"\x00")
+        .decode("ascii", errors="replace")
+        .strip()
+    )
     result["cp_hardware_version"] = cp_hw
     offset += 32
 
     if len(data) >= offset + 32:
         # CPFirmVer (32 bytes)
-        cp_fw = data[offset : offset + 32].rstrip(b"\x00").decode("ascii", errors="replace").strip()
+        cp_fw = (
+            data[offset : offset + 32]
+            .rstrip(b"\x00")
+            .decode("ascii", errors="replace")
+            .strip()
+        )
         result["cp_firmware_version"] = cp_fw
         offset += 32
 
     if len(data) >= offset + 12:
         # CPSN_code (12 bytes)
-        cp_sn = data[offset : offset + 12].rstrip(b"\x00").decode("ascii", errors="replace").strip()
+        cp_sn = (
+            data[offset : offset + 12]
+            .rstrip(b"\x00")
+            .decode("ascii", errors="replace")
+            .strip()
+        )
         result["cp_serial_number"] = cp_sn
         offset += 12
 
     if len(data) >= offset + 32:
         # RFIDModeVer (32 bytes)
         rfid_hw = (
-            data[offset : offset + 32].rstrip(b"\x00").decode("ascii", errors="replace").strip()
+            data[offset : offset + 32]
+            .rstrip(b"\x00")
+            .decode("ascii", errors="replace")
+            .strip()
         )
         result["rfid_hardware_version"] = rfid_hw
         offset += 32
@@ -75,7 +96,10 @@ def parse_device_info(data: bytes) -> dict:
     if len(data) >= offset + 32:
         # RFIDModeName (32 bytes)
         rfid_name = (
-            data[offset : offset + 32].rstrip(b"\x00").decode("ascii", errors="replace").strip()
+            data[offset : offset + 32]
+            .rstrip(b"\x00")
+            .decode("ascii", errors="replace")
+            .strip()
         )
         result["rfid_module_name"] = rfid_name
         offset += 32
@@ -83,7 +107,10 @@ def parse_device_info(data: bytes) -> dict:
     if len(data) >= offset + 12:
         # RFIDMode_SNCode (12 bytes)
         rfid_sn = (
-            data[offset : offset + 12].rstrip(b"\x00").decode("ascii", errors="replace").strip()
+            data[offset : offset + 12]
+            .rstrip(b"\x00")
+            .decode("ascii", errors="replace")
+            .strip()
         )
         result["rfid_serial_number"] = rfid_sn
         offset += 12
@@ -135,7 +162,9 @@ def get_device_info(ip: str, port: int) -> dict:
                     # Check if we have complete frame
                     if len(all_data) >= 6 and all_data[0] == HEAD:
                         data_len = all_data[4]
-                        expected_len = 5 + data_len + 2  # HEAD+ADDR+CMD+LEN + data + CRC
+                        expected_len = (
+                            5 + data_len + 2
+                        )  # HEAD+ADDR+CMD+LEN + data + CRC
                         if len(all_data) >= expected_len:
                             print("Complete frame received")
                             break
@@ -199,7 +228,9 @@ def get_device_info(ip: str, port: int) -> dict:
         try:
             ascii_view = all_data.decode("ascii", errors="replace")
             # Clean up non-printable
-            clean = "".join(c if c.isprintable() or c in "\n\r\t" else "|" for c in ascii_view)
+            clean = "".join(
+                c if c.isprintable() or c in "\n\r\t" else "|" for c in ascii_view
+            )
             print(f"  ASCII: {clean}")
         except:
             pass

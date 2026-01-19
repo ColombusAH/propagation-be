@@ -23,7 +23,11 @@ class PushNotificationService:
         self.db = db
 
     async def send_theft_alert(
-        self, tag_id: str, epc: str, reader_id: Optional[str] = None, location: Optional[str] = None
+        self,
+        tag_id: str,
+        epc: str,
+        reader_id: Optional[str] = None,
+        location: Optional[str] = None,
     ) -> dict:
         """
         Send theft alert when an unpaid item passes through gate.

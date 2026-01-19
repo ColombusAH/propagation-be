@@ -1,6 +1,8 @@
-from pydantic_settings import BaseSettings
 from functools import lru_cache
-from typing import Optional, List
+from typing import List, Optional
+
+from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
     # API Settings
@@ -20,7 +22,7 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     GOOGLE_CLIENT_ID: str
     GOOGLE_TOKEN_TIMEOUT: int = 300  # 5 minutes timeout for Google token verification
-    
+
     # Security Headers
     SECURITY_HEADERS: bool = True  # Enable security headers by default
 
@@ -32,11 +34,13 @@ class Settings(BaseSettings):
         "https://localhost:5173",
         "https://*.railway.app",
         "http://*.railway.app",
-        "*"  # Allow all origins in development - can be restricted in production
+        "*",  # Allow all origins in development - can be restricted in production
     ]
-    
+
     # RFID Settings
-    RFID_DATABASE_URL: Optional[str] = None  # Optional separate DB for RFID, defaults to DATABASE_URL
+    RFID_DATABASE_URL: Optional[str] = (
+        None  # Optional separate DB for RFID, defaults to DATABASE_URL
+    )
     RFID_READER_IP: str = "192.168.1.100"  # CF-H906 WiFi IP address
     RFID_READER_PORT: int = 4001  # Default RFID reader port
     RFID_CONNECTION_TYPE: str = "wifi"  # wifi, bluetooth, or serial
@@ -49,6 +53,7 @@ class Settings(BaseSettings):
         "case_sensitive": True,
     }
 
+
 @lru_cache()
 def get_settings() -> Settings:
-    return Settings() 
+    return Settings()

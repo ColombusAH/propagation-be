@@ -7,9 +7,8 @@ import logging
 from typing import Any, Dict, Optional
 
 import firebase_admin
-from firebase_admin import credentials
-
 from app.core.config import settings
+from firebase_admin import credentials
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +58,8 @@ class PushNotificationService:
 
             # For now, we'll log the notification
             logger.info(
-                f"Sending push notification to user {user_id}: " f"Title: {title}, Body: {body}"
+                f"Sending push notification to user {user_id}: "
+                f"Title: {title}, Body: {body}"
             )
 
             # Example FCM message (uncomment when you have FCM tokens)
@@ -82,7 +82,11 @@ class PushNotificationService:
             return False
 
     async def send_bulk_notifications(
-        self, user_ids: list, title: str, body: str, data: Optional[Dict[str, Any]] = None
+        self,
+        user_ids: list,
+        title: str,
+        body: str,
+        data: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, bool]:
         """
         Send push notifications to multiple users.

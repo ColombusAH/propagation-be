@@ -58,7 +58,9 @@ class TestCreatePaymentIntent:
             )
             mock_gateway.return_value = mock_cash
 
-            mock_prisma.client.payment.create = AsyncMock(return_value=MagicMock(id="payment-1"))
+            mock_prisma.client.payment.create = AsyncMock(
+                return_value=MagicMock(id="payment-1")
+            )
 
             response = await client.post(
                 "/api/v1/payment/create-intent",
@@ -101,7 +103,10 @@ class TestConfirmPayment:
 
             mock_prisma.client.payment.find_unique = AsyncMock(
                 return_value=MagicMock(
-                    id="payment-1", externalId="ext-123", provider="NEXI", orderId="order-1"
+                    id="payment-1",
+                    externalId="ext-123",
+                    provider="NEXI",
+                    orderId="order-1",
                 )
             )
             mock_prisma.client.payment.update = AsyncMock(return_value=MagicMock())
@@ -109,7 +114,9 @@ class TestConfirmPayment:
 
             mock_gw = MagicMock()
             mock_gw.confirm_payment = AsyncMock(
-                return_value=MagicMock(success=True, status=MagicMock(value="COMPLETED"))
+                return_value=MagicMock(
+                    success=True, status=MagicMock(value="COMPLETED")
+                )
             )
             mock_gateway.return_value = mock_gw
 
@@ -151,7 +158,9 @@ class TestCreateCashPayment:
             )
             mock_gateway.return_value = mock_cash
 
-            mock_prisma.client.payment.create = AsyncMock(return_value=MagicMock(id="payment-1"))
+            mock_prisma.client.payment.create = AsyncMock(
+                return_value=MagicMock(id="payment-1")
+            )
 
             response = await client.post(
                 "/api/v1/payment/cash",
@@ -200,7 +209,8 @@ class TestRefundPayment:
             mock_gateway.return_value = mock_gw
 
             response = await client.post(
-                "/api/v1/payment/refund", json={"payment_id": "payment-1", "amount": 500}
+                "/api/v1/payment/refund",
+                json={"payment_id": "payment-1", "amount": 500},
             )
 
             assert response.status_code in [200, 401, 403, 404]
@@ -212,7 +222,8 @@ class TestRefundPayment:
             mock_prisma.client.payment.find_unique = AsyncMock(return_value=None)
 
             response = await client.post(
-                "/api/v1/payment/refund", json={"payment_id": "unknown-payment", "amount": 500}
+                "/api/v1/payment/refund",
+                json={"payment_id": "unknown-payment", "amount": 500},
             )
 
             assert response.status_code in [401, 403, 404]
@@ -226,7 +237,8 @@ class TestRefundPayment:
             )
 
             response = await client.post(
-                "/api/v1/payment/refund", json={"payment_id": "payment-1", "amount": 500}
+                "/api/v1/payment/refund",
+                json={"payment_id": "payment-1", "amount": 500},
             )
 
             assert response.status_code in [400, 401, 403]

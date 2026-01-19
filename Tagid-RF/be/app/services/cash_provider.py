@@ -49,7 +49,9 @@ class CashProvider(PaymentProvider):
 
         self.pending_payments[payment_id] = payment_data
 
-        logger.info(f"Created cash payment intent: {payment_id} for {amount} {currency}")
+        logger.info(
+            f"Created cash payment intent: {payment_id} for {amount} {currency}"
+        )
 
         return {
             "payment_id": payment_id,
@@ -86,7 +88,9 @@ class CashProvider(PaymentProvider):
             "metadata": payment.get("metadata", {}),
         }
 
-    async def refund_payment(self, payment_id: str, amount: Optional[int] = None) -> Dict[str, Any]:
+    async def refund_payment(
+        self, payment_id: str, amount: Optional[int] = None
+    ) -> Dict[str, Any]:
         """
         Refund a cash payment.
 

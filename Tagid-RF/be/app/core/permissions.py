@@ -3,10 +3,9 @@
 from functools import wraps
 from typing import Callable, List
 
+from app.api.dependencies.auth import get_current_user
 from fastapi import Depends, HTTPException, status
 from prisma.models import User
-
-from app.api.dependencies.auth import get_current_user
 
 
 def requires_role(*allowed_roles: str):
@@ -28,7 +27,9 @@ def requires_role(*allowed_roles: str):
 
     def decorator(func: Callable):
         @wraps(func)
-        async def wrapper(*args, current_user: User = Depends(get_current_user), **kwargs):
+        async def wrapper(
+            *args, current_user: User = Depends(get_current_user), **kwargs
+        ):
             if current_user.role not in allowed_roles:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -96,7 +97,13 @@ def can_create_role(user: User, target_role: str) -> bool:
         True if user can create target_role, False otherwise.
     """
     role_hierarchy = {
-        "SUPER_ADMIN": ["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE", "CUSTOMER"],
+        "SUPER_ADMIN": [
+            "SUPER_ADMIN",
+            "NETWORK_MANAGER",
+            "STORE_MANAGER",
+            "EMPLOYEE",
+            "CUSTOMER",
+        ],
         "NETWORK_MANAGER": ["STORE_MANAGER", "EMPLOYEE", "CUSTOMER"],
         "STORE_MANAGER": ["EMPLOYEE", "CUSTOMER"],
     }

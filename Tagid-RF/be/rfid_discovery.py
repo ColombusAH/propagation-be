@@ -15,7 +15,11 @@ COMMANDS_TO_TEST = [
     (0x0007, b"\x00", "Set Select Mask (RFM_SETISO_SELECTMASK)"),
     (0x0010, b"\x00\x00", "Set Select Param (RFM_SET_SELPRM)"),
     (0x0011, b"", "Get Select Param (RFM_GET_SELPRM)"),
-    (0x0012, b"\x01\x00\x00", "Set Query Param (RFM_SET_QUERY_PARAM)"),  # Set to defaults
+    (
+        0x0012,
+        b"\x01\x00\x00",
+        "Set Query Param (RFM_SET_QUERY_PARAM)",
+    ),  # Set to defaults
     (0x0013, b"", "Get Query Param (RFM_GET_QUERY_PARAM)"),
     # --- 2. Module Custom Directives ---
     (0x0050, b"", "Init/Stop Actions (RFM_MODULE_INT)"),  # IMPORTANT for stopping!
@@ -59,7 +63,9 @@ def calculate_crc16(data: bytes) -> int:
 
 def build_command(cmd_code: int, data: bytes = b"", addr: int = 0xFF) -> bytes:
     head = 0xCF
-    frame_body = struct.pack(">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF)
+    frame_body = struct.pack(
+        ">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF
+    )
     frame_body += struct.pack("B", len(data))
     frame_body += data
     crc = calculate_crc16(frame_body)

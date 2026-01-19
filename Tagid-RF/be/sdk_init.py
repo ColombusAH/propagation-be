@@ -23,7 +23,9 @@ def calculate_crc16(data: bytes) -> int:
 
 def build_command(cmd_code: int, data: bytes = b"", addr: int = 0xFF) -> bytes:
     head = 0xCF
-    frame_body = struct.pack(">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF)
+    frame_body = struct.pack(
+        ">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF
+    )
     frame_body += struct.pack("B", len(data))
     frame_body += data
     crc = calculate_crc16(frame_body)
@@ -99,7 +101,9 @@ def main():
     conn.send(build_command(0x0070))
     success, status, data = drain_and_wait(conn, 0x0070)
     if success:
-        print(f"   ✅ Status: {status}, Data: {data.hex().upper()[:40] if data else 'None'}...")
+        print(
+            f"   ✅ Status: {status}, Data: {data.hex().upper()[:40] if data else 'None'}..."
+        )
     else:
         print("   ⚠️ No response")
 
@@ -214,7 +218,9 @@ def main():
                             if epc not in tags:
                                 tags[epc] = 0
                                 print(f"🆕 TAG #{len(tags)}: {epc}")
-                                print(f"   From CMD: 0x{cmd:04X}, Status: 0x{status:02X}")
+                                print(
+                                    f"   From CMD: 0x{cmd:04X}, Status: 0x{status:02X}"
+                                )
                             tags[epc] += 1
                             break
 

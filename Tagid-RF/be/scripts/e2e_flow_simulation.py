@@ -24,8 +24,9 @@ from app.services.inventory import take_snapshot
 from app.services.tag_encryption import get_encryption_service
 from app.services.theft_detection import TheftDetectionService
 
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
+
 
 async def run_simulation():
     await prisma_client.connect()
@@ -35,10 +36,7 @@ async def run_simulation():
         # 1. Create a Business (Network)
         business_name = f"Test Network {os.urandom(2).hex()}"
         business = await prisma_client.client.business.create(
-            data={
-                "name": business_name,
-                "slug": f"network-{os.urandom(2).hex()}"
-            }
+            data={"name": business_name, "slug": f"network-{os.urandom(2).hex()}"}
         )
         logger.info(f"✅ Created Network: {business.name} (ID: {business.id})")
 
@@ -47,7 +45,7 @@ async def run_simulation():
             data={
                 "name": "Main Downtown Store",
                 "businessId": business.id,
-                "slug": f"store-{os.urandom(2).hex()}"
+                "slug": f"store-{os.urandom(2).hex()}",
             }
         )
         logger.info(f"✅ Created Store: {store.name} (Slug: {store.slug})")
@@ -62,7 +60,7 @@ async def run_simulation():
                 "address": "Store St. 1",
                 "role": "STORE_MANAGER",
                 "businessId": business.id,
-                "receiveTheftAlerts": True
+                "receiveTheftAlerts": True,
             }
         )
         logger.info(f"✅ Created Store Manager: {manager.name} ({manager.email})")
@@ -73,17 +71,25 @@ async def run_simulation():
                 "name": "Main Exit Gate",
                 "ipAddress": f"192.168.1.{os.urandom(1)[0]}",
                 "type": "GATE",
-                "storeId": store.id
+                "storeId": store.id,
             }
         )
         logger.info(f"✅ Registered Reader: {reader.name} at {reader.ipAddress}")
 
         # 5. Register Products with RFID Tags
         tags_to_create = [
-            {"epc": f"E280{os.urandom(4).hex().upper()}", "desc": "Premium Nike Sneakers", "price": 45000},
-            {"epc": f"E280{os.urandom(4).hex().upper()}", "desc": "Adidas Running Shirt", "price": 12000}
+            {
+                "epc": f"E280{os.urandom(4).hex().upper()}",
+                "desc": "Premium Nike Sneakers",
+                "price": 45000,
+            },
+            {
+                "epc": f"E280{os.urandom(4).hex().upper()}",
+                "desc": "Adidas Running Shirt",
+                "price": 12000,
+            },
         ]
-        
+
         created_tags = []
         for t in tags_to_create:
             tag = await prisma_client.client.rfidtag.create(
@@ -92,7 +98,7 @@ async def run_simulation():
                     "productDescription": t["desc"],
                     "productId": f"SKU-{os.urandom(2).hex().upper()}",
                     "isPaid": False,
-                    "status": "ACTIVE"
+                    "status": "ACTIVE",
                 }
             )
             created_tags.append(tag)
@@ -100,30 +106,43 @@ async def run_simulation():
 
         # 6. Simulate Inventory Snapshot
         logger.info("📸 Taking initial inventory snapshot...")
-        snapshot_id = await take_snapshot(reader.id, [{"epc": t.epc, "rssi": -45} for t in created_tags])
+        snapshot_id = await take_snapshot(
+            reader.id, [{"epc": t.epc, "rssi": -45} for t in created_tags]
+        )
         logger.info(f"✅ Inventory Snapshot Created: {snapshot_id}")
 
         # 7. Simulate Security Violation (Unpaid item at Gate)
         logger.info("🚨 Simulating security scan (Unpaid item)...")
         theft_service = TheftDetectionService()
-        is_paid = await theft_service.check_tag_payment_status(created_tags[0].epc, location=reader.name)
+        is_paid = await theft_service.check_tag_payment_status(
+            created_tags[0].epc, location=reader.name
+        )
         if not is_paid:
-            logger.warning(f"❌ Security Alert Triggered for {created_tags[0].productDescription}!")
+            logger.warning(
+                f"❌ Security Alert Triggered for {created_tags[0].productDescription}!"
+            )
 
         # 8. Simulate Customer Checkout
         logger.info("💳 Simulating Customer Checkout...")
         for tag in created_tags:
             await prisma_client.client.rfidtag.update(
                 where={"id": tag.id},
-                data={"isPaid": True, "paidAt": asyncio.get_event_loop().time()} # Simplified for mock
+                data={
+                    "isPaid": True,
+                    "paidAt": asyncio.get_event_loop().time(),
+                },  # Simplified for mock
             )
         logger.info("✅ Payment processed for all items.")
 
         # 9. Verify Security (Paid item at Gate)
         logger.info("🛡️ Simulating security scan (Paid item)...")
-        is_paid_after = await theft_service.check_tag_payment_status(created_tags[0].epc, location=reader.name)
+        is_paid_after = await theft_service.check_tag_payment_status(
+            created_tags[0].epc, location=reader.name
+        )
         if is_paid_after:
-            logger.info(f"✅ Security Clearance: {created_tags[0].productDescription} is verified as PAID.")
+            logger.info(
+                f"✅ Security Clearance: {created_tags[0].productDescription} is verified as PAID."
+            )
 
         logger.info("\n🏆 Simulation Finished Successfully!")
         logger.info(f"Network Slug: {business.slug}")
@@ -133,6 +152,7 @@ async def run_simulation():
         logger.error(f"❌ Simulation Failed: {e}", exc_info=True)
     finally:
         await prisma_client.disconnect()
+
 
 if __name__ == "__main__":
     asyncio.run(run_simulation())

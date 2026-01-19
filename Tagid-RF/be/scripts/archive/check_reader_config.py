@@ -54,7 +54,9 @@ def parse_device_param(data: bytes):
     print(f"   Protocol: 0x{data[1]:02X}")
 
     wm = data[2]
-    wm_str = {0: "Answer (Passive)", 1: "Auto (Active)", 2: "Trigger (Gate)"}.get(wm, "Unknown")
+    wm_str = {0: "Answer (Passive)", 1: "Auto (Active)", 2: "Trigger (Gate)"}.get(
+        wm, "Unknown"
+    )
     print(f"   WorkMode: {wm} ({wm_str})  <-- CRITICAL")
 
     print(f"   Interface: 0x{data[3]:02X}")

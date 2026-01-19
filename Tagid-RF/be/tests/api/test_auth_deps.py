@@ -2,11 +2,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import pytest_asyncio
+from app.api.dependencies.auth import get_current_user
 from fastapi import HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
 from prisma.models import User
-
-from app.api.dependencies.auth import get_current_user
 
 
 @pytest.mark.asyncio

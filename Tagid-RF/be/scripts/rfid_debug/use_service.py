@@ -14,7 +14,9 @@ sys.path.insert(0, os.getcwd())
 os.environ.setdefault("DATABASE_URL", "postgresql://test:test@localhost:5432/test_db")
 os.environ.setdefault("SECRET_KEY", "test_secret_key")
 os.environ.setdefault("GOOGLE_CLIENT_ID", "test_google_client_id")
-os.environ.setdefault("RFID_DATABASE_URL", "postgresql://test:test@localhost:5432/test_rfid_db")
+os.environ.setdefault(
+    "RFID_DATABASE_URL", "postgresql://test:test@localhost:5432/test_rfid_db"
+)
 os.environ.setdefault("RFID_READER_IP", "192.168.1.200")
 os.environ.setdefault("RFID_READER_PORT", "2022")
 
@@ -30,7 +32,9 @@ async def main():
     rfid_reader_service.reader_ip = "192.168.1.200"
     rfid_reader_service.reader_port = 2022
 
-    print(f"\nConnecting to {rfid_reader_service.reader_ip}:{rfid_reader_service.reader_port}...")
+    print(
+        f"\nConnecting to {rfid_reader_service.reader_ip}:{rfid_reader_service.reader_port}..."
+    )
 
     connected = await rfid_reader_service.connect()
 

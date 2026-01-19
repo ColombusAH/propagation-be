@@ -6,31 +6,21 @@ Handles payment creation, confirmation, refunds, and status queries.
 import logging
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, status
-
 from app.core.deps import get_current_user
 from app.core.permissions import requires_any_role
 from app.db.prisma import prisma_client
-from app.schemas.payment import (
-    CashPaymentRequest,
-    PaymentConfirmRequest,
-    PaymentConfirmResponse,
-    PaymentIntentRequest,
-    PaymentIntentResponse,
-    PaymentProviderEnum,
-    PaymentStatusEnum,
-    PaymentStatusResponse,
-    RefundRequest,
-    RefundResponse,
-)
-
+from app.schemas.payment import (CashPaymentRequest, PaymentConfirmRequest,
+                                 PaymentConfirmResponse, PaymentIntentRequest,
+                                 PaymentIntentResponse, PaymentProviderEnum,
+                                 PaymentStatusEnum, PaymentStatusResponse,
+                                 RefundRequest, RefundResponse)
 # from app.services.cash_provider import CashProvider # Migrated to factory
 from app.services.nexi_provider import NexiProvider
 from app.services.payment.base import PaymentRequest, PaymentStatus
-
 # from app.services.stripe_provider import StripeProvider # Deleted
 # from app.services.tranzila_provider import TranzilaProvider # Deleted
 from app.services.payment.factory import get_gateway
+from fastapi import APIRouter, Depends, HTTPException, status
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -78,7 +68,9 @@ async def create_payment_intent(
         if request.payment_provider == PaymentProviderEnum.NEXI:
             # Legacy path for Nexi
             intent = await gateway.create_payment_intent(
-                amount=request.amount, currency=request.currency, metadata=request.metadata
+                amount=request.amount,
+                currency=request.currency,
+                metadata=request.metadata,
             )
             external_id = intent["external_id"]
             client_secret = intent.get("client_secret")
@@ -135,7 +127,9 @@ async def create_payment_intent(
 
 
 @router.post("/confirm", response_model=PaymentConfirmResponse)
-async def confirm_payment(request: PaymentConfirmRequest, current_user=Depends(get_current_user)):
+async def confirm_payment(
+    request: PaymentConfirmRequest, current_user=Depends(get_current_user)
+):
     """
     Confirm a payment.
 
@@ -144,10 +138,14 @@ async def confirm_payment(request: PaymentConfirmRequest, current_user=Depends(g
     """
     try:
         # Get payment from database
-        payment = await prisma_client.client.payment.find_unique(where={"id": request.payment_id})
+        payment = await prisma_client.client.payment.find_unique(
+            where={"id": request.payment_id}
+        )
 
         if not payment:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Payment not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Payment not found"
+            )
 
         # Get payment provider
         try:
@@ -165,7 +163,8 @@ async def confirm_payment(request: PaymentConfirmRequest, current_user=Depends(g
 
         if provider_enum == PaymentProviderEnum.NEXI:
             confirmation = await gateway.confirm_payment(
-                payment_id=payment.externalId, payment_method_id=request.payment_method_id
+                payment_id=payment.externalId,
+                payment_method_id=request.payment_method_id,
             )
             status_val = confirmation["status"]
             metadata = confirmation.get("metadata")
@@ -194,7 +193,11 @@ async def confirm_payment(request: PaymentConfirmRequest, current_user=Depends(g
             where={"id": payment.id},
             data={
                 "status": status_val.value,
-                "paidAt": (datetime.now() if status_val == PaymentStatusEnum.COMPLETED else None),
+                "paidAt": (
+                    datetime.now()
+                    if status_val == PaymentStatusEnum.COMPLETED
+                    else None
+                ),
             },
         )
 
@@ -224,7 +227,9 @@ async def confirm_payment(request: PaymentConfirmRequest, current_user=Depends(g
 @router.post("/cash", response_model=PaymentIntentResponse)
 async def create_cash_payment(
     request: CashPaymentRequest,
-    current_user=Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    current_user=Depends(
+        requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])
+    ),
 ):
     """
     Record a cash payment (STORE_MANAGER+ only).
@@ -278,17 +283,23 @@ async def create_cash_payment(
 @router.post("/refund", response_model=RefundResponse)
 async def refund_payment(
     request: RefundRequest,
-    current_user=Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    current_user=Depends(
+        requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])
+    ),
 ):
     """
     Refund a payment (STORE_MANAGER+ only).
     """
     try:
         # Get payment
-        payment = await prisma_client.client.payment.find_unique(where={"id": request.payment_id})
+        payment = await prisma_client.client.payment.find_unique(
+            where={"id": request.payment_id}
+        )
 
         if not payment:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Payment not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Payment not found"
+            )
 
         if payment.status != "COMPLETED":
             raise HTTPException(
@@ -322,7 +333,9 @@ async def refund_payment(
                 payment_id=payment.externalId, amount=request.amount
             )
             if not result.success:
-                raise HTTPException(status_code=400, detail=f"Refund failed: {result.error}")
+                raise HTTPException(
+                    status_code=400, detail=f"Refund failed: {result.error}"
+                )
             refund_id = result.refund_id
             # Assuming full refund if amount not returned
 
@@ -361,10 +374,14 @@ async def get_payment_status(payment_id: str, current_user=Depends(get_current_u
     - **payment_id**: Payment ID
     """
     try:
-        payment = await prisma_client.client.payment.find_unique(where={"id": payment_id})
+        payment = await prisma_client.client.payment.find_unique(
+            where={"id": payment_id}
+        )
 
         if not payment:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Payment not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Payment not found"
+            )
 
         return PaymentStatusResponse(
             payment_id=payment.id,

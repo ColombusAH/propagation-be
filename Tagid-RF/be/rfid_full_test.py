@@ -61,7 +61,9 @@ def send_and_recv(sock, cmd_name, cmd_code, data=b"", timeout=5.0):
             resp_cmd = struct.unpack(">H", response[2:4])[0]
             resp_len = response[4]
             resp_status = response[5]
-            log(f"  Parsed: CMD=0x{resp_cmd:04X}, LEN={resp_len}, STATUS=0x{resp_status:02X}")
+            log(
+                f"  Parsed: CMD=0x{resp_cmd:04X}, LEN={resp_len}, STATUS=0x{resp_status:02X}"
+            )
 
             # Parse tag data if successful inventory
             if resp_status == 0x00 and resp_cmd == 0x0001 and resp_len > 1:

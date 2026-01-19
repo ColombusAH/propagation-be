@@ -8,15 +8,10 @@ import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.services.payment import factory
-from app.services.payment.base import (
-    PaymentProvider,
-    PaymentRequest,
-    PaymentResult,
-    PaymentStatus,
-    RefundResult,
-)
+from app.services.payment.base import (PaymentProvider, PaymentRequest,
+                                       PaymentResult, PaymentStatus,
+                                       RefundResult)
 
 # Mock data
 PAYMENT_REQUEST = PaymentRequest(

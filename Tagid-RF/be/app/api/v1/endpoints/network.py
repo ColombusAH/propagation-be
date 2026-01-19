@@ -1,10 +1,9 @@
 from typing import Any, Dict, List
 
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
-
 from app.api import deps
 from app.db.prisma import prisma_client
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -38,9 +37,13 @@ async def get_network_qr(
     try:
         async with prisma_client.client as db:
             if not current_user.businessId:
-                raise HTTPException(status_code=400, detail="User not part of a business")
+                raise HTTPException(
+                    status_code=400, detail="User not part of a business"
+                )
 
-            business = await db.business.find_unique(where={"id": current_user.businessId})
+            business = await db.business.find_unique(
+                where={"id": current_user.businessId}
+            )
 
             if not business:
                 raise HTTPException(status_code=404, detail="Business not found")
@@ -48,7 +51,10 @@ async def get_network_qr(
             entry_url = f"https://app.tagid.com/enter/{business.slug}"
 
             return QRResponse(
-                slug=business.slug, entry_url=entry_url, name=business.name, qr_type="network"
+                slug=business.slug,
+                entry_url=entry_url,
+                name=business.name,
+                qr_type="network",
             )
 
     except Exception as e:
@@ -65,7 +71,9 @@ async def get_stores_list(
     try:
         async with prisma_client.client as db:
             if not current_user.businessId:
-                raise HTTPException(status_code=400, detail="User not part of a business")
+                raise HTTPException(
+                    status_code=400, detail="User not part of a business"
+                )
 
             stores = await db.store.find_many(
                 where={"businessId": current_user.businessId, "isActive": True}

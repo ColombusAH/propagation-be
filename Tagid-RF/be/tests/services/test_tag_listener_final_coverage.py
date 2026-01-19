@@ -6,7 +6,6 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.services.tag_listener_service import TagListenerService
 
 
@@ -19,7 +18,8 @@ def service():
 async def test_run_listener_error(service):
     """Test background thread listener error handling."""
     with patch(
-        "app.services.tag_listener_service.start_server", side_effect=Exception("Bind Error")
+        "app.services.tag_listener_service.start_server",
+        side_effect=Exception("Bind Error"),
     ):
         service._run_listener()
 
@@ -53,7 +53,9 @@ async def test_broadcast_tag_prisma_error(service):
     """Test _broadcast_tag when Prisma fails."""
     with (
         patch("app.db.prisma.prisma_client") as mock_prisma,
-        patch("app.routers.websocket.manager.broadcast", new_callable=AsyncMock) as mock_b,
+        patch(
+            "app.routers.websocket.manager.broadcast", new_callable=AsyncMock
+        ) as mock_b,
     ):
 
         mock_prisma.client.__aenter__.side_effect = Exception("Prisma Down")
@@ -67,7 +69,9 @@ async def test_broadcast_tag_sqlalchemy_error(service):
     """Test _broadcast_tag when SQLAlchemy fails."""
     with (
         patch("app.services.database.SessionLocal", side_effect=Exception("DB Down")),
-        patch("app.routers.websocket.manager.broadcast", new_callable=AsyncMock) as mock_b,
+        patch(
+            "app.routers.websocket.manager.broadcast", new_callable=AsyncMock
+        ) as mock_b,
     ):
 
         await service._broadcast_tag({"epc": "E1"})
@@ -84,8 +88,12 @@ async def test_broadcast_tag_general_exception(service):
 def test_start_stop_scan(service):
     """Test start_scan and stop_scan methods."""
     with (
-        patch("app.services.tag_listener_service.start_inventory", return_value=True) as m_start,
-        patch("app.services.tag_listener_service.stop_inventory", return_value=True) as m_stop,
+        patch(
+            "app.services.tag_listener_service.start_inventory", return_value=True
+        ) as m_start,
+        patch(
+            "app.services.tag_listener_service.stop_inventory", return_value=True
+        ) as m_stop,
     ):
 
         assert service.start_scan() is True

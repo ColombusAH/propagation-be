@@ -2,7 +2,6 @@ import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.routers.websocket import manager, websocket_endpoint
 
 
