@@ -31,7 +31,7 @@ import struct
 import sys
 import time
 from datetime import datetime
-from typing import List, Dict, Any, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 # ===========================================================================
 # PROTOCOL CONSTANTS (from M-200 manual)

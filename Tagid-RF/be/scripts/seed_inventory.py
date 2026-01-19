@@ -1,13 +1,13 @@
-import sys
 import os
 import random
+import sys
 from datetime import datetime
 
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.services.database import SessionLocal
 from app.models.rfid_tag import RFIDTag
+from app.services.database import SessionLocal
 
 
 def seed_inventory():

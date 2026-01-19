@@ -5,8 +5,8 @@ Update: Using simplified parameter structure for Q-value.
 """
 
 import socket
-import time
 import struct
+import time
 
 # Constants
 LISTEN_PORT = 4001

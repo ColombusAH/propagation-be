@@ -13,16 +13,16 @@ This script simulates a complete business flow:
 
 import asyncio
 import logging
-import sys
 import os
+import sys
 
 # Add the current directory to sys.path to allow imports from app
 sys.path.append(os.getcwd())
 
 from app.db.prisma import prisma_client
 from app.services.inventory import take_snapshot
-from app.services.theft_detection import TheftDetectionService
 from app.services.tag_encryption import get_encryption_service
+from app.services.theft_detection import TheftDetectionService
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)

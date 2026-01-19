@@ -2,19 +2,20 @@
 """
 Diagnostic script to inspect raw M-200 responses
 """
+import os
 import socket
 import sys
-import os
+
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
 from app.services.m200_protocol import (
-    build_get_device_info_command,
+    HEAD,
     M200Command,
     M200Commands,
-    HEAD,
+    build_get_device_info_command,
 )
 
 

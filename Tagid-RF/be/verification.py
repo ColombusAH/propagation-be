@@ -1,7 +1,8 @@
 import asyncio
 from unittest.mock import MagicMock, patch
+
 import app.services.rfid_reader
-from app.services.rfid_reader import RFIDReaderService, M200ResponseParser
+from app.services.rfid_reader import M200ResponseParser, RFIDReaderService
 
 print("Checking imports in rfid_reader...")
 print(

@@ -1,5 +1,5 @@
-import re
 import os
+import re
 
 SCHEMA_PATH = "prisma/schema.prisma"
 BACKUP_PATH = "prisma/schema.prisma.bak"

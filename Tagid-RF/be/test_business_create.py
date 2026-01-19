@@ -1,7 +1,9 @@
 
 import asyncio
-from prisma import Prisma
 import uuid
+
+from prisma import Prisma
+
 
 async def test_create():
     db = Prisma()

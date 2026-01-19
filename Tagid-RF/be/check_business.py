@@ -1,6 +1,8 @@
 
 import asyncio
+
 from prisma import Prisma
+
 
 async def check_business():
     db = Prisma()

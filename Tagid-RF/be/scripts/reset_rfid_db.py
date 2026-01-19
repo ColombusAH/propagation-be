@@ -1,11 +1,11 @@
-import sys
 import os
+import sys
 
 # Add parent directory to path to allow importing app modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.services.database import engine, Base
-from app.models.rfid_tag import RFIDTag, RFIDScanHistory
+from app.models.rfid_tag import RFIDScanHistory, RFIDTag
+from app.services.database import Base, engine
 
 
 def reset_db():

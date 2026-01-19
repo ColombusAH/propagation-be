@@ -1,9 +1,10 @@
 
 import asyncio
 import logging
-from prisma import Prisma
+
 from app.core.security import create_access_token, verify_access_token
 from app.crud.user import get_user_by_email
+from prisma import Prisma
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

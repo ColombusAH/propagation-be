@@ -2,14 +2,15 @@
 """
 Find the correct RFID protocol port by testing binary M-200 protocol
 """
+import os
 import socket
 import sys
-import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from app.services.m200_protocol import build_get_device_info_command, HEAD
+from app.services.m200_protocol import HEAD, build_get_device_info_command
 
 
 def test_port(ip: str, port: int, timeout: int = 2) -> dict:

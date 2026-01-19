@@ -7,8 +7,8 @@ Parses the result to show current Config, specifically WorkMode.
 """
 
 import socket
-import time
 import struct
+import time
 
 LISTEN_PORT = 4001
 HEAD = 0xCF

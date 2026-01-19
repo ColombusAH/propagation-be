@@ -2,10 +2,10 @@
 """
 Database migration utility script for Python Prisma.
 """
-import os
-import sys
-import subprocess
 import argparse
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 # Get the project root directory

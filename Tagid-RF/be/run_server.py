@@ -1,6 +1,7 @@
-import uvicorn
-import sys
 import os
+import sys
+
+import uvicorn
 
 if __name__ == "__main__":
     # Ensure we are in the 'be' directory context

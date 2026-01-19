@@ -1,8 +1,9 @@
 
 import asyncio
 import logging
+
+from app.crud.user import create_user, get_user_by_email
 from prisma import Prisma
-from app.crud.user import get_user_by_email, create_user
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

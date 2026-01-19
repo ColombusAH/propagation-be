@@ -1,6 +1,8 @@
 
 import inspect
+
 from prisma.models import Business
+
 
 def check_business_fields():
     print("In-memory Business model fields:")

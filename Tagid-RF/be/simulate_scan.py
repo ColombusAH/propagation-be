@@ -1,7 +1,7 @@
 import asyncio
 import logging
-import sys
 import os
+import sys
 
 # Set up path to import app modules
 sys.path.append(os.getcwd())
@@ -20,8 +20,8 @@ async def simulate():
         await prisma_client.connect()
         logger.info("DB Connected.")
 
-        from app.services.rfid_reader import rfid_reader_service
         from app.routers.websocket import manager
+        from app.services.rfid_reader import rfid_reader_service
 
         # Test tag data
         fake_tag = {

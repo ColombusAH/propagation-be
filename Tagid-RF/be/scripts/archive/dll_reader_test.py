@@ -8,9 +8,9 @@ The DLL handles all protocol complexities internally.
 """
 
 import ctypes
-from ctypes import c_int, c_void_p, c_char_p, c_ushort, c_uint, c_byte, POINTER, Structure, byref
 import os
 import sys
+from ctypes import POINTER, Structure, byref, c_byte, c_char_p, c_int, c_uint, c_ushort, c_void_p
 
 # DLL path
 DLL_PATH = r"c:\Users\eliran_ha\Documents\Eliran\propagation-be\Tagid-RF\be\Files\Chaphon\M100.200.300.400+SDK\M100.200.300.400 SDK\Library\Win\x64\UHFPrimeReader.dll"

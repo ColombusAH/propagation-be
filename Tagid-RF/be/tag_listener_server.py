@@ -31,7 +31,7 @@ import sys
 import threading
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
-from typing import Any, Dict, List, Optional, Set, Callable
+from typing import Any, Callable, Dict, List, Optional, Set
 
 # ============================================================================
 # CONFIGURATION

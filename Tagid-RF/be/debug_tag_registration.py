@@ -1,6 +1,7 @@
 import asyncio
-from prisma import Prisma
 import logging
+
+from prisma import Prisma
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

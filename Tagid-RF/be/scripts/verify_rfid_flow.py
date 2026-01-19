@@ -1,6 +1,7 @@
 import asyncio
-import websockets
 import json
+
+import websockets
 
 
 async def test_rfid_websocket():

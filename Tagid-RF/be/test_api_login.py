@@ -1,6 +1,8 @@
 
-import requests
 import json
+
+import requests
+
 
 def test_login():
     url = "http://localhost:8000/api/v1/auth/dev-login"

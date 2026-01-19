@@ -4,6 +4,7 @@ Setup script to create initial business and test the database connection.
 """
 
 import asyncio
+
 from app.db.prisma import prisma_client
 
 

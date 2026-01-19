@@ -7,14 +7,14 @@ Usage:
 """
 
 import asyncio
-import sys
 import os
+import sys
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from app.services.rfid_reader import rfid_reader_service
 from app.services.m200_protocol import M200Command, M200Commands
+from app.services.rfid_reader import rfid_reader_service
 
 
 async def test_connection():

@@ -2,9 +2,9 @@
 """
 Simple pre-deployment check script for Python Prisma backend.
 """
+import importlib.util
 import os
 import sys
-import importlib.util
 from pathlib import Path
 
 

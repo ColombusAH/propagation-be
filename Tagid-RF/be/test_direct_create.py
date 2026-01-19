@@ -4,8 +4,9 @@ Direct test of user creation to see the actual error.
 """
 
 import asyncio
-from app.db.prisma import prisma_client
+
 from app.crud.user import create_user
+from app.db.prisma import prisma_client
 
 
 async def test_create():

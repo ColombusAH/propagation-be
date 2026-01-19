@@ -1,7 +1,7 @@
+import re
 import socket
 import struct
 import time
-import re
 
 # Listen on the port the reader connects to
 LISTEN_IP = "0.0.0.0"

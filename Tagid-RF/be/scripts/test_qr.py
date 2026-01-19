@@ -1,5 +1,6 @@
-import httpx
 import asyncio
+
+import httpx
 
 BASE_URL = "http://localhost:8000/api/v1"
 

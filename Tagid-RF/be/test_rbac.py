@@ -4,8 +4,9 @@ Test script for RBAC (Role-Based Access Control).
 Tests that endpoints are properly protected by role requirements.
 """
 
-import requests
 import json
+
+import requests
 
 BASE_URL = "http://localhost:8000/api/v1"
 BUSINESS_ID = "dc33f1dc-7fca-4628-bd75-e8b6eb6d8ca6"

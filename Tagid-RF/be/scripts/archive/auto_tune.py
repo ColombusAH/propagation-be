@@ -1,7 +1,7 @@
 import socket
 import struct
-import time
 import sys
+import time
 
 # Configuration
 LISTEN_IP = "0.0.0.0"

@@ -2,10 +2,10 @@
 """
 Simple database connection checker for troubleshooting.
 """
-import os
-import sys
 import asyncio
+import os
 import socket
+import sys
 from urllib.parse import urlparse
 
 try:

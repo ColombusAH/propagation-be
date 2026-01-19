@@ -4,9 +4,10 @@ Test script for authentication endpoints.
 Tests registration, login, and user management.
 """
 
-import requests
 import json
 from typing import Optional
+
+import requests
 
 BASE_URL = "http://localhost:8000/api/v1"
 BUSINESS_ID = "dc33f1dc-7fca-4628-bd75-e8b6eb6d8ca6"  # From setup_test_data.py

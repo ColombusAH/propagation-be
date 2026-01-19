@@ -13,8 +13,8 @@ Usage:
 """
 
 import socket
-import threading
 import sys
+import threading
 
 # Configuration
 CLIENT_SIDE_PORT = 8888  # Port for the PC Software to connect to
