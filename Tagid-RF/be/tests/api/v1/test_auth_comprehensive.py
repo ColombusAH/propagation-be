@@ -63,7 +63,7 @@ class TestDevLogin:
 
         mock_db_instance = MagicMock()
         mock_db_instance.business = MagicMock()
-        mock_db_instance.business.find_first = AsyncMock(return_value=MagicMock(id="biz-1"))
+        mock_db_instance.business.find_first = AsyncMock(return_value=SimpleNamespace(id="biz-1"))
         mock_db_instance.user = MagicMock()
         mock_db_instance.user.find_unique = AsyncMock(return_value=None)
         mock_db_instance.user.create = AsyncMock(
@@ -93,7 +93,7 @@ class TestDevLogin:
 
         mock_db_instance = MagicMock()
         mock_db_instance.business = MagicMock()
-        mock_db_instance.business.find_first = AsyncMock(return_value=MagicMock(id="biz-1"))
+        mock_db_instance.business.find_first = AsyncMock(return_value=SimpleNamespace(id="biz-1"))
         mock_db_instance.user = MagicMock()
         mock_db_instance.user.find_unique = AsyncMock(
             return_value=create_mock_user(
@@ -116,7 +116,7 @@ class TestDevLogin:
 
         mock_db_instance = MagicMock()
         mock_db_instance.business = MagicMock()
-        mock_db_instance.business.find_first = AsyncMock(return_value=MagicMock(id="biz-1"))
+        mock_db_instance.business.find_first = AsyncMock(return_value=SimpleNamespace(id="biz-1"))
         mock_db_instance.user = MagicMock()
         mock_db_instance.user.find_unique = AsyncMock(
             return_value=create_mock_user(

@@ -81,9 +81,6 @@ async def dev_login(request: DevLoginRequest, db: Prisma = Depends(get_db)):
 
     logger.info(f"Dev login attempt for role: {role}")
 
-    # Use a fresh connection for dev-login to avoid staleness issues
-    local_db = Prisma()
-    await local_db.connect()
     try:
         # Map Frontend Roles to Prisma Schema Roles
         role_mapping = {
@@ -102,29 +99,29 @@ async def dev_login(request: DevLoginRequest, db: Prisma = Depends(get_db)):
         # Ensure a dummy business exists
         logger.info("Checking for existing dev business")
         try:
-            business = await local_db.business.find_first(where={"name": "Dev Business"})
-            if business:
-                logger.info(f"Found existing dev business: {business.id}")
-            else:
+            business = await db.business.find_first(where={"name": "Dev Business"})
+            if not business:
                 logger.info("Creating fresh dev business")
                 business_slug = f"dev-business-{uuid.uuid4().hex[:8]}"
-                business = await local_db.business.create(
+                business = await db.business.create(
                     data={"name": "Dev Business", "slug": business_slug}
                 )
                 logger.info(f"Business created successfully: {business.id}")
+            else:
+                logger.info(f"Found existing dev business: {business.id}")
         except Exception as bus_err:
             logger.error(f"Business operation failed: {bus_err}")
             raise HTTPException(status_code=500, detail=f"Business operation error: {str(bus_err)}")
 
         # Try to find existing dev user
-        user = await get_user_by_email(local_db, email)
+        user = await get_user_by_email(db, email)
 
         if not user:
             logger.info(f"Creating new dev user: {email}")
             try:
                 # Create new dev user
                 user = await create_user(
-                    db=local_db,
+                    db=db,
                     email=email,
                     password="devpassword",
                     name=f"Dev {role.title()}",
@@ -139,13 +136,9 @@ async def dev_login(request: DevLoginRequest, db: Prisma = Depends(get_db)):
                 raise HTTPException(status_code=500, detail=f"User creation error: {str(user_err)}")
     except Exception as e:
         logger.error(f"Dev login failed: {e}", exc_info=True)
-        # Re-raise so it's caught outside if needed, or handle here
         if isinstance(e, HTTPException):
             raise e
         raise HTTPException(status_code=500, detail=f"Dev login internal error: {str(e)}")
-    finally:
-        if local_db.is_connected():
-            await local_db.disconnect()
 
     # Generate Token
     jwt_payload = {

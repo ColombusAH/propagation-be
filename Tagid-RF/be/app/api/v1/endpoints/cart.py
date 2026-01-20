@@ -30,6 +30,7 @@ def get_user_cart(user_id: str) -> List[CartItem]:
 async def add_to_cart(
     request: AddToCartRequest,
     current_user: Any = Depends(deps.get_current_active_user),
+    db: Any = Depends(deps.get_db),
 ) -> CartSummary:
     """
     Add a single item to the cart via QR scan.
@@ -53,12 +54,11 @@ async def add_to_cart(
         if qr_data.startswith("tagid://product/"):
             # If it's a SKU link, we need to find an available tag for that SKU
             sku = qr_data.replace("tagid://product/", "")
-            async with prisma_client.client as db:
-                tag = await db.rfidtag.find_first(
-                    where={"productId": sku, "isPaid": False, "status": "ACTIVE"}
-                )
-                if tag:
-                    epc = tag.epc
+            tag = await db.rfidtag.find_first(
+                where={"productId": sku, "isPaid": False, "status": "ACTIVE"}
+            )
+            if tag:
+                epc = tag.epc
         else:
             epc = qr_data
 
@@ -66,26 +66,25 @@ async def add_to_cart(
         raise HTTPException(status_code=400, detail="Could not identify product from QR")
 
     # Verify tag exists and is available
-    async with prisma_client.client as db:
-        tag = await db.rfidtag.find_unique(where={"epc": epc})
+    tag = await db.rfidtag.find_unique(where={"epc": epc})
 
-        if not tag:
-            raise HTTPException(status_code=404, detail="Product not found")
+    if not tag:
+        raise HTTPException(status_code=404, detail="Product not found")
 
-        if tag.isPaid:
-            raise HTTPException(status_code=400, detail="This item has already been paid for")
+    if tag.isPaid:
+        raise HTTPException(status_code=400, detail="This item has already been paid for")
 
-        if any(item.epc == epc for item in cart):
-            raise HTTPException(status_code=400, detail="Item already in cart")
+    if any(item.epc == epc for item in cart):
+        raise HTTPException(status_code=400, detail="Item already in cart")
 
-        # Create CartItem
-        new_item = CartItem(
-            epc=tag.epc,
-            product_name=tag.productDescription or "Unknown Product",
-            product_sku=tag.productId or "UNKNOWN",
-            price_cents=0,  # TODO: Add price to RfidTag model
-        )
-        cart.append(new_item)
+    # Create CartItem
+    new_item = CartItem(
+        epc=tag.epc,
+        product_name=tag.productDescription or "Unknown Product",
+        product_sku=tag.productId or "UNKNOWN",
+        price_cents=0,  # TODO: Add price to RfidTag model
+    )
+    cart.append(new_item)
 
     return _calculate_summary(cart)
 

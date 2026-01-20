@@ -165,11 +165,11 @@ async def root():
     }
 
 
-# Include API router
-app.include_router(api_router, prefix=settings.API_V1_STR)
-
 # Include RFID routers
 app.include_router(tags.router, prefix=f"{settings.API_V1_STR}/tags", tags=["RFID Tags"])
+
+# Include API router
+app.include_router(api_router, prefix=settings.API_V1_STR)
 app.include_router(websocket.router, prefix="/ws", tags=["WebSocket"])
 
 # Include Store Management routers
