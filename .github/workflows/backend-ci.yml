@@ -56,7 +56,7 @@ jobs:
       - name: Run linting
         working-directory: ./Tagid-RF/be
         run: |
-          pip install flake8 black isort
+          pip install flake8 black==25.12.0 isort==7.0.0
           black --check app/ tests/
           isort --check-only app/ tests/
           flake8 app/ --count --statistics
@@ -94,7 +94,7 @@ jobs:
 
       - name: Install linting tools
         run: |
-          pip install black isort flake8 mypy
+          pip install black==25.12.0 isort==7.0.0 flake8 mypy
 
       - name: Check formatting with Black
         working-directory: ./Tagid-RF/be
