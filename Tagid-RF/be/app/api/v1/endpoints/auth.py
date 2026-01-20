@@ -1,6 +1,6 @@
 """API endpoints for user authentication, including Google OAuth."""
 
-import asyncio
+
 import logging
 import uuid
 from typing import Any, Dict  # For type hints

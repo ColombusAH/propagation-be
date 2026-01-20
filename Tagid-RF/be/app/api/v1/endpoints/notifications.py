@@ -1,6 +1,6 @@
 """API endpoints for user notification settings."""
 
-from typing import Any, List
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel

@@ -1,6 +1,6 @@
 """API endpoints for product verification (counterfeit prevention)."""
 
-from typing import Any, Optional
+from typing import Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel

@@ -4,9 +4,9 @@ Handles shopping cart operations, including QR scan and bulk "Bath" sync.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.api import deps
 from app.db.prisma import prisma_client
