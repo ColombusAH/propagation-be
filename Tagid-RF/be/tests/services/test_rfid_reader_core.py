@@ -9,6 +9,7 @@ import struct
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from app.services.m200_protocol import (
     HEAD,
     M200Command,
@@ -101,9 +102,7 @@ async def test_reader_connect_disconnect(reader_service):
     """Test connect and disconnect flow."""
     with patch("socket.socket") as mock_socket_cls:
         mock_sock = mock_socket_cls.return_value
-        with patch.object(
-            reader_service, "get_reader_info", return_value={"connected": True}
-        ):
+        with patch.object(reader_service, "get_reader_info", return_value={"connected": True}):
             assert await reader_service.connect() is True
             assert reader_service.is_connected is True
             await reader_service.disconnect()

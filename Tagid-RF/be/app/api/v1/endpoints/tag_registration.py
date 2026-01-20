@@ -14,10 +14,11 @@ import logging
 from typing import Optional
 
 import qrcode
-from app.db.dependencies import get_db
 from fastapi import APIRouter, Depends, HTTPException, status
-from prisma import Prisma
 from pydantic import BaseModel
+
+from app.db.dependencies import get_db
+from prisma import Prisma
 
 logger = logging.getLogger(__name__)
 
@@ -141,9 +142,7 @@ async def register_tag(request: TagRegisterRequest, db: Prisma = Depends(get_db)
             qr_data = generate_encrypted_qr_data(request.epc, existing_tag.id)
             qr_image = generate_qr_code(qr_data)
 
-            await db.rfidtag.update(
-                where={"id": existing_tag.id}, data={"encryptedQr": qr_data}
-            )
+            await db.rfidtag.update(where={"id": existing_tag.id}, data={"encryptedQr": qr_data})
         else:
             qr_image = generate_qr_code(existing_tag.encryptedQr)
 
@@ -211,9 +210,7 @@ async def list_products(store_id: str, db: Prisma = Depends(get_db)):
     products = await db.product.find_many(where={"storeId": store_id})
 
     return [
-        ProductResponse(
-            id=p.id, name=p.name, price=p.price, sku=p.sku, category=p.category
-        )
+        ProductResponse(id=p.id, name=p.name, price=p.price, sku=p.sku, category=p.category)
         for p in products
     ]
 
@@ -246,9 +243,7 @@ async def get_tag_qr(tag_id: str, db: Prisma = Depends(get_db)):
     tag = await db.rfidtag.find_unique(where={"id": tag_id})
 
     if not tag:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found")
 
     if not tag.encryptedQr:
         # Generate QR if missing
@@ -273,17 +268,13 @@ async def link_tag_to_product(
     tag = await db.rfidtag.find_unique(where={"id": tag_id})
 
     if not tag:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found")
 
     # Verify product exists
     product = await db.product.find_unique(where={"id": request.product_id})
 
     if not product:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Product not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
 
     # Update tag with product info
     updated_tag = await db.rfidtag.update(
@@ -301,11 +292,7 @@ async def link_tag_to_product(
         id=updated_tag.id,
         epc=updated_tag.epc,
         status=updated_tag.status,
-        qr_code=(
-            generate_qr_code(updated_tag.encryptedQr)
-            if updated_tag.encryptedQr
-            else None
-        ),
+        qr_code=(generate_qr_code(updated_tag.encryptedQr) if updated_tag.encryptedQr else None),
         product_id=product.id,
         product_name=product.name,
         product_price=product.price,
@@ -319,9 +306,7 @@ async def get_tag(tag_id: str, db: Prisma = Depends(get_db)):
     tag = await db.rfidtag.find_unique(where={"id": tag_id})
 
     if not tag:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found")
 
     product = None
     if tag.productId:

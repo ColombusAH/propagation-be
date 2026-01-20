@@ -2,6 +2,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from app.api.dependencies.auth import get_current_user as get_current_user_auth
 from app.core.deps import get_current_user as get_current_user_core
 from app.core.permissions import requires_any_role
@@ -43,9 +44,7 @@ class TestListTheftAlerts:
             mock_alert.resolvedBy = None
             mock_alert.notes = None
 
-            mock_prisma.client.theftalert.find_many = AsyncMock(
-                return_value=[mock_alert]
-            )
+            mock_prisma.client.theftalert.find_many = AsyncMock(return_value=[mock_alert])
 
             response = await client.get("/api/v1/alerts/")
             assert response.status_code == 200
@@ -93,9 +92,7 @@ class TestGetMyAlerts:
             mock_recipient = MagicMock()
             mock_recipient.theftAlert = mock_alert
 
-            mock_prisma.client.alertrecipient.find_many = AsyncMock(
-                return_value=[mock_recipient]
-            )
+            mock_prisma.client.alertrecipient.find_many = AsyncMock(return_value=[mock_recipient])
 
             response = await client.get("/api/v1/alerts/my-alerts")
             assert response.status_code == 200
@@ -130,9 +127,7 @@ class TestGetAlertDetails:
             mock_alert.resolvedBy = None
             mock_alert.notes = None
 
-            mock_prisma.client.theftalert.find_unique = AsyncMock(
-                return_value=mock_alert
-            )
+            mock_prisma.client.theftalert.find_unique = AsyncMock(return_value=mock_alert)
 
             response = await client.get("/api/v1/alerts/alert-1")
             assert response.status_code == 200
@@ -182,9 +177,7 @@ class TestMarkAlertRead:
             mock_recipient = MagicMock()
             mock_recipient.id = "recipient-1"
 
-            mock_prisma.client.alertrecipient.find_first = AsyncMock(
-                return_value=mock_recipient
-            )
+            mock_prisma.client.alertrecipient.find_first = AsyncMock(return_value=mock_recipient)
             mock_prisma.client.alertrecipient.update = AsyncMock()
 
             response = await client.post("/api/v1/alerts/mark-read/alert-1")

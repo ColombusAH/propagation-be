@@ -160,9 +160,7 @@ class TestTheftDetectionEnhanced:
         from app.services.theft_detection import TheftDetectionService
 
         with patch("app.services.theft_detection.prisma_client") as mock_p:
-            mock_p.client.tagmapping.find_unique = AsyncMock(
-                side_effect=Exception("DB Error")
-            )
+            mock_p.client.tagmapping.find_unique = AsyncMock(side_effect=Exception("DB Error"))
             service = TheftDetectionService()
             result = await service.check_tag_payment_status("ERROR")
             assert result is True  # Should return True on error

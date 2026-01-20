@@ -47,9 +47,7 @@ class TestPushNotificationService:
     @pytest.mark.asyncio
     async def test_send_notification_error(self, service):
         """Test handling error during notification."""
-        with patch.object(
-            service, "send_notification", side_effect=Exception("FCM Error")
-        ):
+        with patch.object(service, "send_notification", side_effect=Exception("FCM Error")):
             with pytest.raises(Exception):
                 await service.send_notification("user-123", "Title", "Body")
 
@@ -68,9 +66,7 @@ class TestPushNotificationService:
     @pytest.mark.asyncio
     async def test_send_bulk_notifications_empty_list(self, service):
         """Test bulk notifications with empty list."""
-        results = await service.send_bulk_notifications(
-            user_ids=[], title="Title", body="Body"
-        )
+        results = await service.send_bulk_notifications(user_ids=[], title="Title", body="Body")
 
         assert results == {}
 

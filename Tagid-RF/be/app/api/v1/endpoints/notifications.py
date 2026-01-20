@@ -2,11 +2,12 @@
 
 from typing import Any, List
 
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+
 from app.api.dependencies.auth import get_current_user
 from app.db.dependencies import get_db
-from fastapi import APIRouter, Depends, HTTPException
 from prisma import Prisma
-from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -47,9 +48,7 @@ async def get_notification_settings(
     print(f"DEBUG: get_notification_settings called for user {current_user.id}")
     try:
         # Check if NotificationPreference records exist for user
-        preferences = await db.notificationpreference.find_many(
-            where={"userId": current_user.id}
-        )
+        preferences = await db.notificationpreference.find_many(where={"userId": current_user.id})
 
         # Default values
         settings = {

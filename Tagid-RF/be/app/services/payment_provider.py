@@ -66,9 +66,7 @@ class PaymentProvider(ABC):
         """
 
     @abstractmethod
-    async def refund_payment(
-        self, payment_id: str, amount: Optional[int] = None
-    ) -> Dict[str, Any]:
+    async def refund_payment(self, payment_id: str, amount: Optional[int] = None) -> Dict[str, Any]:
         """
         Refund a payment (full or partial).
 

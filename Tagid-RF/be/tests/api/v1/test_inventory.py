@@ -5,10 +5,11 @@ Tests for Inventory Router - Aggregation API.
 from unittest.mock import MagicMock, patch
 
 import pytest
-from app.routers.inventory import router
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
+
+from app.routers.inventory import router
 
 app = FastAPI()
 app.include_router(router)

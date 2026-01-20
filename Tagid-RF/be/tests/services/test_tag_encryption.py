@@ -3,6 +3,7 @@ Tests for TagEncryptionService - Pure unit tests without external dependencies.
 """
 
 import pytest
+
 from app.services.tag_encryption import TagEncryptionService, get_encryption_service
 
 

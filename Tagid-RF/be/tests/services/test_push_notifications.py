@@ -5,6 +5,7 @@ Tests for Push Notification Service.
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from app.services.push_notifications import PushNotificationService
 
 

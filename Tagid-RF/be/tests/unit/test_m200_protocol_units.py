@@ -6,6 +6,7 @@ These tests use real byte data to verify the parsing logic without mocking the f
 import struct
 
 import pytest
+
 from app.services.m200_protocol import (
     M200Command,
     M200Commands,

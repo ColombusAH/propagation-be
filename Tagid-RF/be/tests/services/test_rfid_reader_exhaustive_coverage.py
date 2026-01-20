@@ -3,6 +3,7 @@ import socket
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from app.services.m200_protocol import M200Commands, M200Status
 from app.services.rfid_reader import RFIDReaderService
 
@@ -50,9 +51,7 @@ async def test_rfid_reader_config_methods(reader):
 
     with (
         patch.object(reader, "_send_command", return_value=b"raw"),
-        patch(
-            "app.services.m200_protocol.M200ResponseParser.parse", return_value=mock_res
-        ),
+        patch("app.services.m200_protocol.M200ResponseParser.parse", return_value=mock_res),
     ):
 
         # Network Config

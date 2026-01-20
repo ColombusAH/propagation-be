@@ -158,8 +158,9 @@ class TestRequiresAnyRole:
     @pytest.mark.asyncio
     async def test_requires_any_role_denied(self):
         """Test access denied for non-allowed role."""
-        from app.core.permissions import requires_any_role
         from fastapi import HTTPException
+
+        from app.core.permissions import requires_any_role
 
         check_role = requires_any_role(["SUPER_ADMIN"])
 

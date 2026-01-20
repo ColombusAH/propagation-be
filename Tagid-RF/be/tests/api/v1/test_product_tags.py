@@ -3,14 +3,13 @@ Tests for creating and retrieving RfidTag (product tag) records via API.
 """
 
 import pytest
-from app.core.config import settings
 from httpx import AsyncClient
+
+from app.core.config import settings
 
 
 @pytest.mark.asyncio
-async def test_create_rfid_tag(
-    async_client: AsyncClient, normal_user_token_headers: dict
-):
+async def test_create_rfid_tag(async_client: AsyncClient, normal_user_token_headers: dict):
     tag_payload = {
         "epc": "EPC-TEST-001",
         "productId": "SKU-001",

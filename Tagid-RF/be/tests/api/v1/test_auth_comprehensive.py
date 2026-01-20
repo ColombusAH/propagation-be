@@ -5,9 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 
-def create_mock_user(
-    id="user-1", email="test@example.com", role="CUSTOMER", business_id="biz-1"
-):
+def create_mock_user(id="user-1", email="test@example.com", role="CUSTOMER", business_id="biz-1"):
     """Helper to create a clean mock user that satisfies Prisma/Pydantic schemas."""
     return SimpleNamespace(
         id=id,
@@ -65,9 +63,7 @@ class TestDevLogin:
 
         mock_db_instance = MagicMock()
         mock_db_instance.business = MagicMock()
-        mock_db_instance.business.find_first = AsyncMock(
-            return_value=MagicMock(id="biz-1")
-        )
+        mock_db_instance.business.find_first = AsyncMock(return_value=MagicMock(id="biz-1"))
         mock_db_instance.user = MagicMock()
         mock_db_instance.user.find_unique = AsyncMock(return_value=None)
         mock_db_instance.user.create = AsyncMock(
@@ -97,9 +93,7 @@ class TestDevLogin:
 
         mock_db_instance = MagicMock()
         mock_db_instance.business = MagicMock()
-        mock_db_instance.business.find_first = AsyncMock(
-            return_value=MagicMock(id="biz-1")
-        )
+        mock_db_instance.business.find_first = AsyncMock(return_value=MagicMock(id="biz-1"))
         mock_db_instance.user = MagicMock()
         mock_db_instance.user.find_unique = AsyncMock(
             return_value=create_mock_user(
@@ -109,9 +103,7 @@ class TestDevLogin:
 
         app.dependency_overrides[get_db] = lambda: mock_db_instance
         try:
-            response = await client.post(
-                "/api/v1/auth/dev-login", json={"role": "ADMIN"}
-            )
+            response = await client.post("/api/v1/auth/dev-login", json={"role": "ADMIN"})
             assert response.status_code == 200
         finally:
             app.dependency_overrides.clear()
@@ -124,9 +116,7 @@ class TestDevLogin:
 
         mock_db_instance = MagicMock()
         mock_db_instance.business = MagicMock()
-        mock_db_instance.business.find_first = AsyncMock(
-            return_value=MagicMock(id="biz-1")
-        )
+        mock_db_instance.business.find_first = AsyncMock(return_value=MagicMock(id="biz-1"))
         mock_db_instance.user = MagicMock()
         mock_db_instance.user.find_unique = AsyncMock(
             return_value=create_mock_user(
@@ -136,9 +126,7 @@ class TestDevLogin:
 
         app.dependency_overrides[get_db] = lambda: mock_db_instance
         try:
-            response = await client.post(
-                "/api/v1/auth/dev-login", json={"role": "CUSTOMER"}
-            )
+            response = await client.post("/api/v1/auth/dev-login", json={"role": "CUSTOMER"})
             assert response.status_code == 200
         finally:
             app.dependency_overrides.clear()
@@ -196,13 +184,9 @@ class TestLoginWithGoogle:
         app.dependency_overrides[get_db] = lambda: mock_db_instance
 
         try:
-            with patch(
-                "app.api.v1.endpoints.auth.id_token.verify_oauth2_token"
-            ) as mock_verify:
+            with patch("app.api.v1.endpoints.auth.id_token.verify_oauth2_token") as mock_verify:
                 mock_verify.side_effect = ValueError("Invalid token")
-                response = await client.post(
-                    "/api/v1/auth/google", json={"token": "invalid_token"}
-                )
+                response = await client.post("/api/v1/auth/google", json={"token": "invalid_token"})
                 assert response.status_code == 401
         finally:
             app.dependency_overrides.clear()
@@ -218,9 +202,7 @@ class TestLoginWithGoogle:
 
         try:
             with (
-                patch(
-                    "app.api.v1.endpoints.auth.id_token.verify_oauth2_token"
-                ) as mock_verify,
+                patch("app.api.v1.endpoints.auth.id_token.verify_oauth2_token") as mock_verify,
                 patch("app.api.v1.endpoints.auth.get_user_by_email") as mock_get_user,
             ):
 
@@ -250,13 +232,9 @@ class TestLoginWithGoogle:
 
         try:
             with (
-                patch(
-                    "app.api.v1.endpoints.auth.id_token.verify_oauth2_token"
-                ) as mock_verify,
+                patch("app.api.v1.endpoints.auth.id_token.verify_oauth2_token") as mock_verify,
                 patch("app.api.v1.endpoints.auth.get_user_by_email") as mock_get_user,
-                patch(
-                    "app.api.v1.endpoints.auth.update_user_google_info"
-                ) as mock_update,
+                patch("app.api.v1.endpoints.auth.update_user_google_info") as mock_update,
             ):
 
                 mock_verify.return_value = {
@@ -285,9 +263,7 @@ class TestLoginWithGoogle:
         app.dependency_overrides[get_db] = lambda: MagicMock()
         try:
             with patch("app.api.v1.endpoints.auth.GOOGLE_CLIENT_ID", None):
-                response = await client.post(
-                    "/api/v1/auth/google", json={"token": "some_token"}
-                )
+                response = await client.post("/api/v1/auth/google", json={"token": "some_token"})
                 assert response.status_code == 500
         finally:
             app.dependency_overrides.clear()

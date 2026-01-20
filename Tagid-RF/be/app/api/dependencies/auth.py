@@ -1,16 +1,17 @@
 import logging
 from typing import Optional
 
-from app.core.security import verify_access_token
-from app.crud.user import get_user_by_id
-from app.db.dependencies import get_db
 from fastapi import Depends, HTTPException, status
 from fastapi.security import (  # Using standard security classes
     HTTPAuthorizationCredentials,
     HTTPBearer,
 )
-from prisma import Prisma
 from prisma.models import User  # Import User model for type hint
+
+from app.core.security import verify_access_token
+from app.crud.user import get_user_by_id
+from app.db.dependencies import get_db
+from prisma import Prisma
 
 logger = logging.getLogger(__name__)
 

@@ -2,7 +2,6 @@
 SQLAlchemy models for RFID tag tracking system.
 """
 
-from app.services.database import Base
 from sqlalchemy import (
     JSON,
     Boolean,
@@ -15,6 +14,8 @@ from sqlalchemy import (
     Text,
 )
 from sqlalchemy.sql import func
+
+from app.services.database import Base
 
 
 class RFIDTag(Base):
@@ -29,18 +30,10 @@ class RFIDTag(Base):
         comment="Electronic Product Code",
     )
     tid = Column(String(128), nullable=True, index=True, comment="Tag ID")
-    user_memory = Column(
-        Text, nullable=True, comment="User-defined data (max 512 chars)"
-    )
-    rssi = Column(
-        Float, nullable=True, comment="Received Signal Strength Indicator (dBm)"
-    )
-    antenna_port = Column(
-        Integer, nullable=True, comment="Which antenna detected the tag"
-    )
-    read_count = Column(
-        Integer, default=1, nullable=False, comment="Number of times scanned"
-    )
+    user_memory = Column(Text, nullable=True, comment="User-defined data (max 512 chars)")
+    rssi = Column(Float, nullable=True, comment="Received Signal Strength Indicator (dBm)")
+    antenna_port = Column(Integer, nullable=True, comment="Which antenna detected the tag")
+    read_count = Column(Integer, default=1, nullable=False, comment="Number of times scanned")
     frequency = Column(Float, nullable=True, comment="Operating frequency in MHz")
     pc = Column(String(16), nullable=True, comment="Protocol Control bits")
     crc = Column(String(16), nullable=True, comment="Cyclic Redundancy Check")
@@ -48,9 +41,7 @@ class RFIDTag(Base):
     # FIX: rename attribute; keep DB column name "metadata"
     meta = Column("metadata", JSON, nullable=True, comment="Additional flexible data")
 
-    location = Column(
-        String(100), nullable=True, comment="Physical location where scanned"
-    )
+    location = Column(String(100), nullable=True, comment="Physical location where scanned")
     notes = Column(Text, nullable=True, comment="User notes (max 500 chars)")
 
     # NEW: Payment and product info for theft prevention
@@ -61,17 +52,11 @@ class RFIDTag(Base):
         index=True,
         comment="Payment status - True if item has been paid for",
     )
-    product_name = Column(
-        String(255), nullable=True, comment="Product name for display"
-    )
+    product_name = Column(String(255), nullable=True, comment="Product name for display")
     product_sku = Column(String(50), nullable=True, index=True, comment="Product SKU")
     price_cents = Column(Integer, nullable=True, comment="Price in cents/agorot")
-    store_id = Column(
-        Integer, nullable=True, index=True, comment="Store ID where tag belongs"
-    )
-    paid_at = Column(
-        DateTime(timezone=True), nullable=True, comment="When payment was made"
-    )
+    store_id = Column(Integer, nullable=True, index=True, comment="Store ID where tag belongs")
+    paid_at = Column(DateTime(timezone=True), nullable=True, comment="When payment was made")
 
     is_active = Column(
         Boolean, default=True, nullable=False, index=True, comment="Soft delete flag"
@@ -89,9 +74,7 @@ class RFIDTag(Base):
         nullable=False,
         comment="Most recent scan timestamp",
     )
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -124,9 +107,7 @@ class RFIDScanHistory(Base):
     antenna_port = Column(Integer, nullable=True, comment="Antenna that detected")
     frequency = Column(Float, nullable=True, comment="Frequency used")
     location = Column(String(100), nullable=True, comment="Location at scan time")
-    reader_id = Column(
-        String(100), nullable=True, comment="Identifier of the reader device"
-    )
+    reader_id = Column(String(100), nullable=True, comment="Identifier of the reader device")
 
     # FIX: rename attribute; keep DB column name "metadata"
     meta = Column("metadata", JSON, nullable=True, comment="Additional scan context")

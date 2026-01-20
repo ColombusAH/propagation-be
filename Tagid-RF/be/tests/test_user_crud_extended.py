@@ -1,6 +1,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from app.crud.user import get_user_by_email, get_user_by_id, update_user_google_info
 
 

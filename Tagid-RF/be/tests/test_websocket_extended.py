@@ -1,8 +1,9 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from app.routers.websocket import manager
 from fastapi import WebSocket
+
+from app.routers.websocket import manager
 
 
 @pytest.mark.asyncio

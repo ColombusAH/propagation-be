@@ -5,9 +5,10 @@ Tests for app/main.py - Entry point, middleware, and lifespan events.
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from app.main import SecurityHeadersMiddleware, app
 from fastapi.testclient import TestClient
 from starlette.middleware.base import BaseHTTPMiddleware
+
+from app.main import SecurityHeadersMiddleware, app
 
 
 @pytest.fixture

@@ -98,21 +98,15 @@ class TranzilaGateway(PaymentGateway):
     ) -> PaymentResult:
         """Tranzila payments are confirmed via callback, not API."""
         # In redirect flow, confirmation happens via callback URL
-        return PaymentResult(
-            success=True, payment_id=payment_id, status=PaymentStatus.PROCESSING
-        )
+        return PaymentResult(success=True, payment_id=payment_id, status=PaymentStatus.PROCESSING)
 
     async def get_payment_status(self, payment_id: str) -> PaymentResult:
         """Query Tranzila for payment status."""
         # Tranzila doesn't have a standard status API
         # Status is usually tracked internally after receiving callback
-        return PaymentResult(
-            success=True, payment_id=payment_id, status=PaymentStatus.PENDING
-        )
+        return PaymentResult(success=True, payment_id=payment_id, status=PaymentStatus.PENDING)
 
-    async def refund_payment(
-        self, payment_id: str, amount: Optional[int] = None
-    ) -> RefundResult:
+    async def refund_payment(self, payment_id: str, amount: Optional[int] = None) -> RefundResult:
         """Refund a Tranzila payment."""
         try:
             params = {
@@ -132,9 +126,7 @@ class TranzilaGateway(PaymentGateway):
                 result = self._parse_response(response.text)
 
                 if result.get("Response") == "000":
-                    return RefundResult(
-                        success=True, refund_id=result.get("ConfirmationCode")
-                    )
+                    return RefundResult(success=True, refund_id=result.get("ConfirmationCode"))
                 else:
                     return RefundResult(
                         success=False, error=f"Tranzila error: {result.get('Response')}"

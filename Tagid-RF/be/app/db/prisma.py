@@ -3,8 +3,9 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 from fastapi import FastAPI
-from prisma import Prisma
 from prisma.errors import PrismaError, TableNotFoundError
+
+from prisma import Prisma
 
 logger = logging.getLogger(__name__)
 

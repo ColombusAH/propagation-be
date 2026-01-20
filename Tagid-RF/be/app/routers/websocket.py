@@ -59,9 +59,7 @@ class ConnectionManager:
         """
         await websocket.accept()
         self.active_connections.append(websocket)
-        logger.info(
-            f"WebSocket connected. Total connections: {len(self.active_connections)}"
-        )
+        logger.info(f"WebSocket connected. Total connections: {len(self.active_connections)}")
 
     def disconnect(self, websocket: WebSocket):
         """

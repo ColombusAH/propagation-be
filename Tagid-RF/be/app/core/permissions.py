@@ -3,9 +3,10 @@
 from functools import wraps
 from typing import Callable, List
 
-from app.api.dependencies.auth import get_current_user
 from fastapi import Depends, HTTPException, status
 from prisma.models import User
+
+from app.api.dependencies.auth import get_current_user
 
 
 def requires_role(*allowed_roles: str):
@@ -27,9 +28,7 @@ def requires_role(*allowed_roles: str):
 
     def decorator(func: Callable):
         @wraps(func)
-        async def wrapper(
-            *args, current_user: User = Depends(get_current_user), **kwargs
-        ):
+        async def wrapper(*args, current_user: User = Depends(get_current_user), **kwargs):
             if current_user.role not in allowed_roles:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,

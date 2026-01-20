@@ -1,8 +1,9 @@
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
-from app.db.dependencies import get_db
 from fastapi import HTTPException, Request
+
+from app.db.dependencies import get_db
 
 
 @pytest.mark.asyncio

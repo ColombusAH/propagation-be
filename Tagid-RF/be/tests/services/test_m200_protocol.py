@@ -5,6 +5,7 @@ Tests for M200 Protocol - CRC calculation, command building, response parsing.
 import struct
 
 import pytest
+
 from app.services.m200_protocol import (
     BROADCAST_ADDR,
     HEAD,
@@ -114,9 +115,7 @@ class TestM200ResponseParser:
 
     def test_parse_success_response(self):
         """Parse a simple success response."""
-        frame = self._build_frame(
-            M200Commands.RFM_GET_DEVICE_INFO, M200Status.SUCCESS, b""
-        )
+        frame = self._build_frame(M200Commands.RFM_GET_DEVICE_INFO, M200Status.SUCCESS, b"")
 
         response = M200ResponseParser.parse(frame, strict_crc=False)
 
@@ -224,9 +223,7 @@ class TestNetworkConfig:
     def test_parse_network_response(self):
         """Test network config response parsing."""
         # IP(4) + Subnet(4) + Gateway(4) + Port(2)
-        data = bytes(
-            [192, 168, 1, 100, 255, 255, 255, 0, 192, 168, 1, 1]
-        ) + struct.pack(">H", 4001)
+        data = bytes([192, 168, 1, 100, 255, 255, 255, 0, 192, 168, 1, 1]) + struct.pack(">H", 4001)
 
         config = parse_network_response(data)
 

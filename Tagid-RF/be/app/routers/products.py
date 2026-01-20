@@ -1,9 +1,10 @@
 from io import BytesIO
 
 import qrcode
-from app.core.config import get_settings
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
+
+from app.core.config import get_settings
 
 router = APIRouter()
 settings = get_settings()

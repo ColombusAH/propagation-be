@@ -4,11 +4,12 @@ Notification management API endpoints.
 
 from typing import List, Optional
 
-from app.models.store import Notification, NotificationPreference, User
-from app.services.database import get_db
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+
+from app.models.store import Notification, NotificationPreference, User
+from app.services.database import get_db
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
@@ -88,11 +89,7 @@ async def get_preferences(user_id: int, db: Session = Depends(get_db)):
 
     Returns default preferences if user has no custom settings.
     """
-    prefs = (
-        db.query(NotificationPreference)
-        .filter(NotificationPreference.user_id == user_id)
-        .all()
-    )
+    prefs = db.query(NotificationPreference).filter(NotificationPreference.user_id == user_id).all()
 
     # If no preferences exist, return defaults
     if not prefs:
@@ -138,9 +135,7 @@ async def update_preferences(
     """
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     result = []
     for pref_data in preferences:
@@ -230,14 +225,10 @@ async def get_notifications(
 @router.post("/{notification_id}/read", response_model=dict)
 async def mark_as_read(notification_id: int, db: Session = Depends(get_db)):
     """Mark a notification as read."""
-    notification = (
-        db.query(Notification).filter(Notification.id == notification_id).first()
-    )
+    notification = db.query(Notification).filter(Notification.id == notification_id).first()
 
     if not notification:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Notification not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Notification not found")
 
     notification.is_read = True
     db.commit()
@@ -246,9 +237,7 @@ async def mark_as_read(notification_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/send", response_model=dict, status_code=status.HTTP_201_CREATED)
-async def send_notification(
-    request: SendNotificationRequest, db: Session = Depends(get_db)
-):
+async def send_notification(request: SendNotificationRequest, db: Session = Depends(get_db)):
     """
     Send a notification to a user.
 
@@ -257,9 +246,7 @@ async def send_notification(
     """
     user = db.query(User).filter(User.id == request.user_id).first()
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     # Get user preferences for this notification type
     pref = (
@@ -273,9 +260,7 @@ async def send_notification(
 
     # Default preferences if not set
     send_push = True
-    send_sms = (
-        request.notification_type == "UNPAID_EXIT"
-    )  # Security alerts default to SMS
+    send_sms = request.notification_type == "UNPAID_EXIT"  # Security alerts default to SMS
     send_email = request.notification_type == "UNPAID_EXIT"
 
     if pref:

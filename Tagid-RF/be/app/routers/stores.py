@@ -4,11 +4,12 @@ Store management API endpoints.
 
 from typing import List, Optional
 
-from app.models.store import Store, User
-from app.services.database import get_db
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+
+from app.models.store import Store, User
+from app.services.database import get_db
 
 router = APIRouter(prefix="/stores", tags=["stores"])
 
@@ -118,9 +119,7 @@ async def create_store(store_data: StoreCreate, db: Session = Depends(get_db)):
 
     Requires ADMIN role (not enforced here, should be added via dependency).
     """
-    store = Store(
-        name=store_data.name, address=store_data.address, phone=store_data.phone
-    )
+    store = Store(name=store_data.name, address=store_data.address, phone=store_data.phone)
 
     db.add(store)
     db.commit()
@@ -143,24 +142,18 @@ async def get_store(store_id: int, db: Session = Depends(get_db)):
     store = db.query(Store).filter(Store.id == store_id).first()
 
     if not store:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Store not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Store not found")
 
     # Get stats
     seller_count = (
         db.query(User)
-        .filter(
-            User.store_id == store.id, User.role == "SELLER", User.is_active.is_(True)
-        )
+        .filter(User.store_id == store.id, User.role == "SELLER", User.is_active.is_(True))
         .count()
     )
 
     manager = (
         db.query(User)
-        .filter(
-            User.store_id == store.id, User.role == "MANAGER", User.is_active.is_(True)
-        )
+        .filter(User.store_id == store.id, User.role == "MANAGER", User.is_active.is_(True))
         .first()
     )
 
@@ -176,16 +169,12 @@ async def get_store(store_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{store_id}", response_model=StoreResponse)
-async def update_store(
-    store_id: int, store_data: StoreUpdate, db: Session = Depends(get_db)
-):
+async def update_store(store_id: int, store_data: StoreUpdate, db: Session = Depends(get_db)):
     """Update a store."""
     store = db.query(Store).filter(Store.id == store_id).first()
 
     if not store:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Store not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Store not found")
 
     # Update fields
     if store_data.name is not None:
@@ -219,9 +208,7 @@ async def delete_store(store_id: int, db: Session = Depends(get_db)):
     store = db.query(Store).filter(Store.id == store_id).first()
 
     if not store:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Store not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Store not found")
 
     store.is_active = False
     db.commit()
@@ -240,15 +227,11 @@ async def assign_manager(
     """
     store = db.query(Store).filter(Store.id == store_id).first()
     if not store:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Store not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Store not found")
 
     user = db.query(User).filter(User.id == request.user_id).first()
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     # Update user's store and role
     user.store_id = store_id

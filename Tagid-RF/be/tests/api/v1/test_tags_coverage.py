@@ -231,9 +231,7 @@ async def test_create_existing_tag_update(client: AsyncClient):
         ):
 
             # First create
-            res1 = await client.post(
-                "/api/v1/tags/", json={"epc": epc, "location": "Loc1"}
-            )
+            res1 = await client.post("/api/v1/tags/", json={"epc": epc, "location": "Loc1"})
             assert res1.status_code in [201, 200]
 
             # Update location for mock_tag for later assertion
@@ -241,9 +239,7 @@ async def test_create_existing_tag_update(client: AsyncClient):
             mock_tag.read_count = 2
 
             # Second create (update)
-            res2 = await client.post(
-                "/api/v1/tags/", json={"epc": epc, "location": "Loc2"}
-            )
+            res2 = await client.post("/api/v1/tags/", json={"epc": epc, "location": "Loc2"})
             assert res2.status_code in [201, 200]
 
             # Check update

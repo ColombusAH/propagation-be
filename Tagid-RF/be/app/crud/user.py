@@ -1,8 +1,9 @@
 import logging
 from typing import Optional
 
-from prisma import Prisma
 from prisma.models import User
+
+from prisma import Prisma
 
 logger = logging.getLogger(__name__)
 
@@ -18,21 +19,15 @@ async def get_user_by_email(db: Prisma, email: str) -> Optional[User]:
             logger.debug(f"No user found with email: {email}")
         return user
     except Exception as e:
-        logger.error(
-            f"Database error while fetching user by email {email}: {e}", exc_info=True
-        )
+        logger.error(f"Database error while fetching user by email {email}: {e}", exc_info=True)
         # Re-raise or handle appropriately depending on desired error propagation
         raise
 
 
-async def update_user_google_info(
-    db: Prisma, user_id: str, google_sub_id: str
-) -> Optional[User]:
+async def update_user_google_info(db: Prisma, user_id: str, google_sub_id: str) -> Optional[User]:
     """Updates the subId (Google ID) for a given user."""
     try:
-        logger.debug(
-            f"Attempting to update subId for user {user_id} to {google_sub_id}"
-        )
+        logger.debug(f"Attempting to update subId for user {user_id} to {google_sub_id}")
         updated_user = await db.user.update(
             where={
                 "id": user_id,
@@ -43,9 +38,7 @@ async def update_user_google_info(
             logger.info(f"Successfully updated subId for user {user_id}.")
         else:
             # This case might be less likely with find_unique first, but good practice
-            logger.warning(
-                f"Attempted to update subId for non-existent user ID: {user_id}"
-            )
+            logger.warning(f"Attempted to update subId for non-existent user ID: {user_id}")
         return updated_user
     except Exception as e:
         logger.error(
@@ -66,9 +59,7 @@ async def get_user_by_id(db: Prisma, user_id: str) -> Optional[User]:
             logger.debug(f"No user found with ID: {user_id}")
         return user
     except Exception as e:
-        logger.error(
-            f"Database error while fetching user by ID {user_id}: {e}", exc_info=True
-        )
+        logger.error(f"Database error while fetching user by ID {user_id}: {e}", exc_info=True)
         raise
 
 
@@ -121,9 +112,7 @@ async def authenticate_user(db: Prisma, email: str, password: str) -> Optional[U
             return None
 
         if not user.password:
-            logger.debug(
-                f"Authentication failed: user {email} has no password (OAuth only)"
-            )
+            logger.debug(f"Authentication failed: user {email} has no password (OAuth only)")
             return None
 
         if not verify_password(password, user.password):

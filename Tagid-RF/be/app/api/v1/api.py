@@ -1,3 +1,5 @@
+from fastapi import APIRouter
+
 from app.api.v1.endpoints import (
     alerts,
     auth,
@@ -16,7 +18,6 @@ from app.api.v1.endpoints import (
     users,
     verify,
 )
-from fastapi import APIRouter
 
 api_router = APIRouter()
 
@@ -30,9 +31,7 @@ api_router.include_router(rfid_scan.router)
 api_router.include_router(payment.router, prefix="/payment", tags=["payment"])
 api_router.include_router(alerts.router, prefix="/alerts", tags=["alerts"])
 api_router.include_router(network.router, prefix="/network", tags=["network"])
-api_router.include_router(
-    notifications.router, prefix="/notifications", tags=["notifications"]
-)
+api_router.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
 api_router.include_router(inventory.router, prefix="/inventory", tags=["inventory"])
 api_router.include_router(verify.router, prefix="/products", tags=["products"])
 api_router.include_router(cart.router, prefix="/cart", tags=["cart"])

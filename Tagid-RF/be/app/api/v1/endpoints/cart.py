@@ -6,10 +6,11 @@ Handles shopping cart operations, including QR scan and bulk "Bath" sync.
 import logging
 from typing import Any, Dict, List, Optional
 
+from fastapi import APIRouter, Depends, HTTPException, status
+
 from app.api import deps
 from app.db.prisma import prisma_client
 from app.schemas.cart import AddToCartRequest, CartItem, CartSummary
-from fastapi import APIRouter, Depends, HTTPException, status
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -62,9 +63,7 @@ async def add_to_cart(
             epc = qr_data
 
     if not epc:
-        raise HTTPException(
-            status_code=400, detail="Could not identify product from QR"
-        )
+        raise HTTPException(status_code=400, detail="Could not identify product from QR")
 
     # Verify tag exists and is available
     async with prisma_client.client as db:
@@ -74,9 +73,7 @@ async def add_to_cart(
             raise HTTPException(status_code=404, detail="Product not found")
 
         if tag.isPaid:
-            raise HTTPException(
-                status_code=400, detail="This item has already been paid for"
-            )
+            raise HTTPException(status_code=400, detail="This item has already been paid for")
 
         if any(item.epc == epc for item in cart):
             raise HTTPException(status_code=400, detail="Item already in cart")
@@ -146,6 +143,4 @@ async def clear_cart(
 
 def _calculate_summary(cart: List[CartItem]) -> CartSummary:
     total = sum(i.price_cents for i in cart)
-    return CartSummary(
-        items=cart, total_items=len(cart), total_price_cents=total, currency="ILS"
-    )
+    return CartSummary(items=cart, total_items=len(cart), total_price_cents=total, currency="ILS")

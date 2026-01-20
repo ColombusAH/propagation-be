@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from app.core.security import (
     create_access_token,
     get_password_hash,

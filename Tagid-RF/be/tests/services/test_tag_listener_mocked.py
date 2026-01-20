@@ -31,9 +31,7 @@ class TestTagListenerServiceMocked:
     async def test_start_stop(self, service):
         """Test starting and stopping the listener thread."""
         with (
-            patch(
-                "app.services.tag_listener_service.threading.Thread"
-            ) as mock_thread_cls,
+            patch("app.services.tag_listener_service.threading.Thread") as mock_thread_cls,
             patch("app.services.tag_listener_service.set_tag_callback"),
         ):
 
@@ -84,9 +82,7 @@ class TestTagListenerServiceMocked:
             ) as mock_manager,
             patch("app.services.database.SessionLocal") as mock_session_cls,
             patch("app.db.prisma.prisma_client") as mock_prisma,
-            patch(
-                "app.services.tag_encryption.get_encryption_service"
-            ) as mock_get_encrypt,
+            patch("app.services.tag_encryption.get_encryption_service") as mock_get_encrypt,
         ):
 
             # Setup DB mock

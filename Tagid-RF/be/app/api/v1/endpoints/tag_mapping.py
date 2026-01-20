@@ -10,13 +10,14 @@ Provides endpoints for:
 import logging
 from typing import List, Optional
 
+from fastapi import APIRouter, Depends, HTTPException
+from prisma.models import User
+from pydantic import BaseModel
+
 from app.api.dependencies.auth import get_current_user
 from app.core.permissions import requires_any_role
 from app.db.prisma import prisma_client
 from app.services.tag_encryption import TagEncryptionService, get_encryption_service
-from fastapi import APIRouter, Depends, HTTPException
-from prisma.models import User
-from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -85,9 +86,7 @@ async def create_mapping(
     request: CreateMappingRequest,
     encryption: TagEncryptionService = Depends(get_encryption),
     current_user: User = Depends(get_current_user),
-    _: None = Depends(
-        requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])
-    ),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
 ):
     """
     Create a new encrypted QR code for a UHF tag EPC.
@@ -99,14 +98,10 @@ async def create_mapping(
     - Returns the encrypted QR code for printing/display
     """
     # Check if EPC already mapped
-    existing = await prisma_client.client.tagmapping.find_unique(
-        where={"epc": request.epc}
-    )
+    existing = await prisma_client.client.tagmapping.find_unique(where={"epc": request.epc})
 
     if existing:
-        raise HTTPException(
-            status_code=400, detail="EPC already mapped. Use PUT to update."
-        )
+        raise HTTPException(status_code=400, detail="EPC already mapped. Use PUT to update.")
 
     # Encrypt the EPC
     encrypted_qr = encryption.encrypt_tag(request.epc)
@@ -150,9 +145,7 @@ async def verify_match(
     match = encryption.verify_match(request.epc, request.qr_code)
 
     if match:
-        return VerifyResponse(
-            match=True, epc=request.epc, message="QR code and UHF tag match!"
-        )
+        return VerifyResponse(match=True, epc=request.epc, message="QR code and UHF tag match!")
     else:
         return VerifyResponse(match=False, message="QR code and UHF tag do NOT match")
 
@@ -213,9 +206,7 @@ async def get_by_epc(epc: str):
 @router.get("/by-qr/{qr_code:path}", response_model=MappingResponse)
 async def get_by_qr(qr_code: str):
     """Get mapping by encrypted QR code."""
-    mapping = await prisma_client.client.tagmapping.find_unique(
-        where={"encryptedQr": qr_code}
-    )
+    mapping = await prisma_client.client.tagmapping.find_unique(where={"encryptedQr": qr_code})
 
     if not mapping:
         raise HTTPException(status_code=404, detail="Mapping not found")
@@ -235,9 +226,7 @@ async def get_by_qr(qr_code: str):
 async def delete_mapping(
     mapping_id: str,
     current_user: User = Depends(get_current_user),
-    _: None = Depends(
-        requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])
-    ),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
 ):
     """
     Delete a tag mapping.

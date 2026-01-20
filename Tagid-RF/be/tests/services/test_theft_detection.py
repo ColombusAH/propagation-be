@@ -6,6 +6,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from app.services.theft_detection import TheftDetectionService
 
 
@@ -45,14 +46,10 @@ async def test_check_tag_unpaid_returns_false(theft_service, mock_tag):
     """Unpaid tags should return False and trigger alert."""
     with patch("app.services.theft_detection.prisma_client") as mock_prisma:
         mock_prisma.client.tagmapping.find_unique = AsyncMock(return_value=mock_tag)
-        mock_prisma.client.theftalert.create = AsyncMock(
-            return_value=MagicMock(id="alert_1")
-        )
+        mock_prisma.client.theftalert.create = AsyncMock(return_value=MagicMock(id="alert_1"))
         mock_prisma.client.user.find_many = AsyncMock(return_value=[])
 
-        result = await theft_service.check_tag_payment_status(
-            "E200UNPAID", location="Gate 1"
-        )
+        result = await theft_service.check_tag_payment_status("E200UNPAID", location="Gate 1")
 
         assert result is False
         mock_prisma.client.theftalert.create.assert_called_once()
@@ -113,9 +110,7 @@ async def test_notify_stakeholders(theft_service, mock_tag):
     mock_user = MagicMock(id="user_1", email="admin@test.com")
 
     with patch("app.services.theft_detection.prisma_client") as mock_prisma:
-        mock_prisma.client.alertrecipient.create = AsyncMock(
-            return_value=MagicMock(id="rec_1")
-        )
+        mock_prisma.client.alertrecipient.create = AsyncMock(return_value=MagicMock(id="rec_1"))
         mock_prisma.client.alertrecipient.update = AsyncMock()
 
         # Mock push service

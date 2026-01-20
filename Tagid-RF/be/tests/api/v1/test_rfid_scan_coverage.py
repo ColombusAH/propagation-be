@@ -66,9 +66,7 @@ class TestStartScanning:
         """Test starting RFID scanning."""
         with (
             patch("app.api.v1.endpoints.rfid_scan.rfid_reader_service") as mock_rfid,
-            patch(
-                "app.api.v1.endpoints.rfid_scan.tag_listener_service"
-            ) as mock_listener,
+            patch("app.api.v1.endpoints.rfid_scan.tag_listener_service") as mock_listener,
         ):
             mock_rfid.is_connected = True
             mock_rfid.start_continuous_scan = AsyncMock(return_value=True)
@@ -95,9 +93,7 @@ class TestStopScanning:
         """Test stopping RFID scanning."""
         with (
             patch("app.api.v1.endpoints.rfid_scan.rfid_reader_service") as mock_rfid,
-            patch(
-                "app.api.v1.endpoints.rfid_scan.tag_listener_service"
-            ) as mock_listener,
+            patch("app.api.v1.endpoints.rfid_scan.tag_listener_service") as mock_listener,
         ):
             mock_rfid.stop_continuous_scan = MagicMock()
             mock_listener.stop = MagicMock()
@@ -119,9 +115,7 @@ class TestPerformInventory:
 
             mock_rfid.is_connected = True
             mock_rfid.perform_inventory = AsyncMock(
-                return_value=[
-                    {"epc": "E280681000001234", "rssi": -55.0, "antenna_port": 1}
-                ]
+                return_value=[{"epc": "E280681000001234", "rssi": -55.0, "antenna_port": 1}]
             )
             mock_prisma.client.tagmapping.find_unique = AsyncMock(return_value=None)
 
@@ -156,9 +150,7 @@ class TestModuleControl:
         with patch("app.api.v1.endpoints.rfid_scan.rfid_reader_service") as mock_rfid:
             mock_rfid.set_power = AsyncMock()
 
-            response = await client.post(
-                "/api/v1/rfid-scan/power", json={"power_dbm": 20}
-            )
+            response = await client.post("/api/v1/rfid-scan/power", json={"power_dbm": 20})
             assert response.status_code in [200, 401, 403, 422]
 
     @pytest.mark.asyncio
@@ -224,9 +216,7 @@ class TestNetworkConfiguration:
     async def test_get_all_config(self, client):
         """Test getting all device parameters."""
         with patch("app.api.v1.endpoints.rfid_scan.rfid_reader_service") as mock_rfid:
-            mock_rfid.get_all_params = AsyncMock(
-                return_value={"power": 20, "frequency": 920}
-            )
+            mock_rfid.get_all_params = AsyncMock(return_value={"power": 20, "frequency": 920})
 
             response = await client.get("/api/v1/rfid-scan/config")
             assert response.status_code in [200, 401, 403]

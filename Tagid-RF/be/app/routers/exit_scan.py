@@ -5,12 +5,13 @@ Exit gate scanning API - triggers security alerts for unpaid items.
 import logging
 from typing import List, Optional
 
-from app.models.rfid_tag import RFIDTag
-from app.models.store import Notification, NotificationPreference, Store, User
-from app.services.database import get_db
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+
+from app.models.rfid_tag import RFIDTag
+from app.models.store import Notification, NotificationPreference, Store, User
+from app.services.database import get_db
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/exit-scan", tags=["exit-scan"])
@@ -93,9 +94,7 @@ async def check_exit_scan(request: ExitScanRequest, db: Session = Depends(get_db
             paid_count += 1
         else:
             # Unpaid item!
-            price_display = (
-                f"₪{tag.price_cents / 100:.2f}" if tag.price_cents else "לא ידוע"
-            )
+            price_display = f"₪{tag.price_cents / 100:.2f}" if tag.price_cents else "לא ידוע"
             unpaid_items.append(
                 UnpaidItemAlert(
                     epc=epc,
@@ -121,18 +120,13 @@ async def check_exit_scan(request: ExitScanRequest, db: Session = Depends(get_db
         if store_id:
             # For MANAGER and SELLER, filter by store
             # ADMIN gets all notifications
-            stakeholders = stakeholders.filter(
-                (User.store_id == store_id) | (User.role == "ADMIN")
-            )
+            stakeholders = stakeholders.filter((User.store_id == store_id) | (User.role == "ADMIN"))
 
         stakeholders = stakeholders.all()
 
         # Build alert message
         items_text = "\n".join(
-            [
-                f"- {item.product_name} ({item.epc}) | {item.price_display}"
-                for item in unpaid_items
-            ]
+            [f"- {item.product_name} ({item.epc}) | {item.price_display}" for item in unpaid_items]
         )
 
         message = f"זוהו {len(unpaid_items)} פריטים לא משולמים בשער יציאה!\n\n"

@@ -1,6 +1,9 @@
 import logging
 from typing import Dict, List
 
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
 from app.core.config import get_settings
 from app.models.rfid_tag import RFIDTag
 from app.schemas.cart import (
@@ -13,8 +16,6 @@ from app.schemas.cart import (
 from app.services.database import get_db
 from app.services.payment.base import PaymentRequest, PaymentStatus
 from app.services.payment.factory import get_gateway
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -168,9 +169,7 @@ async def checkout(request: CheckoutRequest, db: Session = Depends(get_db)):
                 payment_method=request.payment_method_id,
             )
             if not confirm_res.success:
-                raise HTTPException(
-                    status_code=400, detail=f"Payment failed: {confirm_res.error}"
-                )
+                raise HTTPException(status_code=400, detail=f"Payment failed: {confirm_res.error}")
             final_status = confirm_res.status
             external_id = confirm_res.external_id or confirm_res.payment_id
 
@@ -213,6 +212,4 @@ async def checkout(request: CheckoutRequest, db: Session = Depends(get_db)):
 
 def _calculate_summary(cart: List[CartItem]) -> CartSummary:
     total = sum(item.price_cents for item in cart)
-    return CartSummary(
-        items=cart, total_items=len(cart), total_price_cents=total, currency="ILS"
-    )
+    return CartSummary(items=cart, total_items=len(cart), total_price_cents=total, currency="ILS")

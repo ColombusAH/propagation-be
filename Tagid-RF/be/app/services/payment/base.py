@@ -76,7 +76,5 @@ class PaymentGateway(ABC):
         """Get the status of a payment."""
 
     @abstractmethod
-    async def refund_payment(
-        self, payment_id: str, amount: Optional[int] = None
-    ) -> RefundResult:
+    async def refund_payment(self, payment_id: str, amount: Optional[int] = None) -> RefundResult:
         """Refund a payment (full or partial)."""

@@ -1,6 +1,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from app.crud.user import (
     authenticate_user,
     create_user,

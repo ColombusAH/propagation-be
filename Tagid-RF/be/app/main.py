@@ -2,6 +2,12 @@
 import logging
 from contextlib import asynccontextmanager
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+
 from app.api.v1.api import api_router
 from app.core.config import get_settings
 from app.core.logging import setup_logging
@@ -19,11 +25,6 @@ from app.routers import (
 from app.services.database import init_db as init_rfid_db
 from app.services.rfid_reader import rfid_reader_service
 from app.services.tag_listener_service import tag_listener_service
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -38,9 +39,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             response.headers["X-Content-Type-Options"] = "nosniff"
             response.headers["X-Frame-Options"] = "DENY"
             response.headers["X-XSS-Protection"] = "1; mode=block"
-            response.headers["Strict-Transport-Security"] = (
-                "max-age=31536000; includeSubDomains"
-            )
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
             response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
             response.headers["Cache-Control"] = "no-store"
             response.headers["Permissions-Policy"] = (
@@ -68,9 +67,7 @@ async def lifespan(app: FastAPI):
     try:
         await init_db(app)
     except Exception as e:
-        logger.error(
-            f"WARNING: Prisma DB initialization failed: {e}. Running without main DB."
-        )
+        logger.error(f"WARNING: Prisma DB initialization failed: {e}. Running without main DB.")
         # Proceed without DB - some features may fail
 
     # Initialize RFID database tables (SQLAlchemy)
@@ -78,9 +75,7 @@ async def lifespan(app: FastAPI):
         logger.info("Initializing RFID database...")
         init_rfid_db()
     except Exception as e:
-        logger.error(
-            f"WARNING: RFID DB initialization failed: {e}. Running without RFID DB."
-        )
+        logger.error(f"WARNING: RFID DB initialization failed: {e}. Running without RFID DB.")
 
     # Optional: Auto-connect to RFID reader on startup
     # Uncomment if you want automatic connection
@@ -174,25 +169,17 @@ async def root():
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 # Include RFID routers
-app.include_router(
-    tags.router, prefix=f"{settings.API_V1_STR}/tags", tags=["RFID Tags"]
-)
+app.include_router(tags.router, prefix=f"{settings.API_V1_STR}/tags", tags=["RFID Tags"])
 app.include_router(websocket.router, prefix="/ws", tags=["WebSocket"])
 
 # Include Store Management routers
 app.include_router(stores.router, prefix=f"{settings.API_V1_STR}", tags=["Stores"])
 app.include_router(users.router, prefix=f"{settings.API_V1_STR}", tags=["Users"])
-app.include_router(
-    exit_scan.router, prefix=f"{settings.API_V1_STR}", tags=["Exit Scan"]
-)
+app.include_router(exit_scan.router, prefix=f"{settings.API_V1_STR}", tags=["Exit Scan"])
 
-app.include_router(
-    inventory.router, prefix=f"{settings.API_V1_STR}/inventory", tags=["Inventory"]
-)
+app.include_router(inventory.router, prefix=f"{settings.API_V1_STR}/inventory", tags=["Inventory"])
 
-app.include_router(
-    products.router, prefix=f"{settings.API_V1_STR}/products", tags=["Products"]
-)
+app.include_router(products.router, prefix=f"{settings.API_V1_STR}/products", tags=["Products"])
 app.include_router(cart.router, prefix=f"{settings.API_V1_STR}/cart", tags=["Cart"])
 
 

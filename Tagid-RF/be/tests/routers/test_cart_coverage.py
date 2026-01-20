@@ -8,6 +8,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from app.routers.cart import FAKE_CART_DB, _calculate_summary, get_cart_session
 from app.schemas.cart import CartItem
 
@@ -147,9 +148,7 @@ class TestAddToCart:
         app.dependency_overrides[get_db] = override_get_db
         try:
             FAKE_CART_DB.clear()
-            response = await client.post(
-                "/api/v1/cart/add", json={"qr_data": "E280681000001234"}
-            )
+            response = await client.post("/api/v1/cart/add", json={"qr_data": "E280681000001234"})
             assert response.status_code in [200, 201]
         finally:
             app.dependency_overrides.clear()
@@ -170,9 +169,7 @@ class TestViewCart:
         """Test viewing cart with items."""
         FAKE_CART_DB.clear()
         FAKE_CART_DB["demo_guest"] = [
-            CartItem(
-                epc="EPC1", product_name="Product", product_sku="SKU", price_cents=100
-            )
+            CartItem(epc="EPC1", product_name="Product", product_sku="SKU", price_cents=100)
         ]
         response = await client.get("/api/v1/cart/")
         assert response.status_code == 200
@@ -185,9 +182,7 @@ class TestCheckout:
     async def test_checkout_empty_cart(self, client):
         """Test checkout with empty cart."""
         FAKE_CART_DB.clear()
-        response = await client.post(
-            "/api/v1/cart/checkout", json={"payment_method_id": "none"}
-        )
+        response = await client.post("/api/v1/cart/checkout", json={"payment_method_id": "none"})
         assert response.status_code in [400, 422, 500]
 
     @pytest.mark.asyncio
@@ -199,9 +194,7 @@ class TestCheckout:
 
         mock_gw = MagicMock()
         mock_gw.create_payment = MagicMock(
-            return_value=SimpleNamespace(
-                success=True, payment_id="pay-123", status="pending"
-            )
+            return_value=SimpleNamespace(success=True, payment_id="pay-123", status="pending")
         )
 
         app.dependency_overrides[get_gateway] = lambda: mock_gw

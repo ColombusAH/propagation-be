@@ -1,8 +1,9 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from app.db.prisma import PrismaClient
 from prisma.errors import PrismaError
+
+from app.db.prisma import PrismaClient
 
 
 @pytest.mark.asyncio

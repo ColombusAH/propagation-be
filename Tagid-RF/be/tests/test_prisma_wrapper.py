@@ -1,6 +1,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from app.db.prisma import PrismaClient, init_db, prisma_client, shutdown_db
 
 
@@ -32,8 +33,6 @@ async def test_init_db_success():
 async def test_shutdown_db_success():
     """Test shutdown_db disconnects."""
     mock_app = MagicMock()
-    with patch.object(
-        prisma_client, "disconnect", new_callable=AsyncMock
-    ) as mock_disconnect:
+    with patch.object(prisma_client, "disconnect", new_callable=AsyncMock) as mock_disconnect:
         await shutdown_db(mock_app)
         mock_disconnect.assert_called_once()

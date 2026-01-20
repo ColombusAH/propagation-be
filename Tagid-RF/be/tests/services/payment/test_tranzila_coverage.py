@@ -16,9 +16,7 @@ class TestTranzilaGateway:
         """Create TranzilaGateway instance."""
         from app.services.payment.tranzila import TranzilaGateway
 
-        return TranzilaGateway(
-            terminal_name="test_terminal", terminal_password="test_pass"
-        )
+        return TranzilaGateway(terminal_name="test_terminal", terminal_password="test_pass")
 
     def test_provider_property(self, gateway):
         """Test provider property returns TRANZILA."""

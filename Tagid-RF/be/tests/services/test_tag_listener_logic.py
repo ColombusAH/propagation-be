@@ -6,6 +6,7 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from app.services.tag_listener_service import TagListenerService
 
 
@@ -224,9 +225,7 @@ def test_start_no_event_loop(service):
 
 def test_start_scan(service):
     """Test start_scan invokes start_inventory."""
-    with patch(
-        "app.services.tag_listener_service.start_inventory", return_value=True
-    ) as mock_inv:
+    with patch("app.services.tag_listener_service.start_inventory", return_value=True) as mock_inv:
         result = service.start_scan()
         mock_inv.assert_called_once()
         assert result is True
@@ -234,9 +233,7 @@ def test_start_scan(service):
 
 def test_stop_scan(service):
     """Test stop_scan invokes stop_inventory."""
-    with patch(
-        "app.services.tag_listener_service.stop_inventory", return_value=True
-    ) as mock_stop:
+    with patch("app.services.tag_listener_service.stop_inventory", return_value=True) as mock_stop:
         result = service.stop_scan()
         mock_stop.assert_called_once()
         assert result is True
@@ -258,9 +255,7 @@ async def test_broadcast_tag_prisma_error(service):
     with (
         patch("app.db.prisma.prisma_client") as mock_prisma,
         patch("app.services.database.SessionLocal") as mock_session_cls,
-        patch(
-            "app.routers.websocket.ConnectionManager.broadcast", new_callable=AsyncMock
-        ),
+        patch("app.routers.websocket.ConnectionManager.broadcast", new_callable=AsyncMock),
     ):
 
         # Make Prisma raise an error
@@ -318,9 +313,7 @@ async def test_broadcast_tag_sqlalchemy_error(service):
     with (
         patch("app.db.prisma.prisma_client") as mock_prisma,
         patch("app.services.database.SessionLocal") as mock_session_cls,
-        patch(
-            "app.routers.websocket.ConnectionManager.broadcast", new_callable=AsyncMock
-        ),
+        patch("app.routers.websocket.ConnectionManager.broadcast", new_callable=AsyncMock),
         patch("asyncio.to_thread", side_effect=Exception("DB error")),
     ):
 
