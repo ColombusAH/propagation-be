@@ -93,9 +93,9 @@ class TestAddToCart:
     @pytest.mark.asyncio
     async def test_add_to_cart_sku(self, client):
         """Test adding item by SKU."""
-        from app.main import app
         from app.api import deps
         from app.api.v1.endpoints.cart import USER_CARTS
+        from app.main import app
 
         mock_user = MagicMock()
         mock_user.id = "user-123"
@@ -129,9 +129,9 @@ class TestAddToCart:
     @pytest.mark.asyncio
     async def test_add_to_cart_epc(self, client):
         """Test adding item by EPC."""
-        from app.main import app
         from app.api import deps
         from app.api.v1.endpoints.cart import USER_CARTS
+        from app.main import app
 
         mock_user = MagicMock()
         mock_user.id = "user-123"
@@ -168,8 +168,8 @@ class TestViewCart:
     @pytest.mark.asyncio
     async def test_view_cart_empty(self, client):
         """Test viewing empty cart."""
-        from app.main import app
         from app.api import deps
+        from app.main import app
 
         mock_user = MagicMock()
         mock_user.id = "user-123"
@@ -185,9 +185,9 @@ class TestViewCart:
     @pytest.mark.asyncio
     async def test_view_cart_with_items(self, client):
         """Test viewing cart with items."""
-        from app.main import app
         from app.api import deps
         from app.api.v1.endpoints.cart import USER_CARTS
+        from app.main import app
 
         mock_user = MagicMock()
         mock_user.id = "user-123"

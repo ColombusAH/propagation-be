@@ -2,9 +2,10 @@
 Tests for main.py app initialization and lifespan.
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock, AsyncMock
 
 
 def test_app_startup():

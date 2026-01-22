@@ -1,9 +1,11 @@
-import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 from datetime import datetime
-from app.main import app
-from app.core.deps import get_current_user
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
 from app.api.dependencies.auth import get_current_user as get_current_user_api
+from app.core.deps import get_current_user
+from app.main import app
 
 
 # Function-level fixture for auth override

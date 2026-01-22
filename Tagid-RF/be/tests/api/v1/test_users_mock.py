@@ -2,15 +2,15 @@
 Mock-based tests for user endpoints (no DB required).
 """
 
-from unittest.mock import AsyncMock, patch
 from datetime import datetime
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app
 from app.api.dependencies.auth import get_current_user
 from app.api.deps import get_current_active_user
+from app.main import app
 from tests.mock_utils import MockModel
 
 client = TestClient(app)

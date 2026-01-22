@@ -2,11 +2,13 @@
 Targeted tests for inventory.get_current_stock coverage.
 """
 
-import pytest
+from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
 from app.services.inventory import get_current_stock
 from tests.mock_utils import MockModel
-from datetime import datetime
 
 
 @pytest.mark.asyncio

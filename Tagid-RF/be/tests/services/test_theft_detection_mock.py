@@ -3,7 +3,9 @@ Mock-based tests for Theft Detection service.
 """
 
 from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
+
 from app.services.theft_detection import TheftDetectionService
 from tests.mock_utils import MockModel
 

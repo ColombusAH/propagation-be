@@ -2,16 +2,18 @@
 Mock-based tests for Inventory Service.
 """
 
+from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
+
 from app.services.inventory import (
-    take_snapshot,
-    get_latest_snapshot,
-    get_inventory_history,
     get_current_stock,
+    get_inventory_history,
+    get_latest_snapshot,
+    take_snapshot,
 )
 from tests.mock_utils import MockModel
-from datetime import datetime
 
 
 class TestInventoryServiceMock:

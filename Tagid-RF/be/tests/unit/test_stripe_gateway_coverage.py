@@ -1,7 +1,9 @@
-import pytest
 from unittest.mock import MagicMock, patch
-from app.services.payment.stripe_gateway import StripeGateway
+
+import pytest
+
 from app.services.payment.base import PaymentRequest, PaymentStatus
+from app.services.payment.stripe_gateway import StripeGateway
 
 
 @pytest.fixture

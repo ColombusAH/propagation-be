@@ -3,14 +3,16 @@ Mock-based tests for cart endpoints (no DB required).
 """
 
 from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 from fastapi.testclient import TestClient
-from app.main import app
+
 from app.api import deps
-from tests.mock_utils import MockModel
 
 # Import USER_CARTS to manipulate it directly if needed for setup
 from app.api.v1.endpoints.cart import USER_CARTS
+from app.main import app
+from tests.mock_utils import MockModel
 
 client = TestClient(app)
 

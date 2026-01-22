@@ -2,11 +2,13 @@
 Mock-based tests for Tag Listener Service.
 """
 
+from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
+
 from app.services.tag_listener_service import TagListenerService
 from tests.mock_utils import MockModel
-from datetime import datetime
 
 
 class TestTagListenerServiceMock:
@@ -252,9 +254,9 @@ class TestTagListenerServiceMock:
         # Hard to do without reloading.
         # Instead, we can import them directly if they are exposed
         from app.services.tag_listener_service import (
+            set_tag_callback,
             start_inventory,
             stop_inventory,
-            set_tag_callback,
         )
 
         assert start_inventory() is False

@@ -2,13 +2,15 @@
 Mock-based tests for Alerts endpoints.
 """
 
+from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 from fastapi.testclient import TestClient
-from app.main import app
+
 from app.core.deps import get_current_user
+from app.main import app
 from tests.mock_utils import MockModel
-from datetime import datetime
 
 client = TestClient(app)
 

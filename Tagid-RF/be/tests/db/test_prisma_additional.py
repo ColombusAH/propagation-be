@@ -2,8 +2,9 @@
 Tests for prisma.py database client.
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
 
 
 class TestPrismaClientCoverage:

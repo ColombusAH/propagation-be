@@ -3,13 +3,14 @@ Mock-based tests for notifications endpoints (no DB required).
 """
 
 from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 from fastapi.testclient import TestClient
-from app.main import app
-from app.api.dependencies.auth import get_current_user
-from tests.mock_utils import MockModel
 
+from app.api.dependencies.auth import get_current_user
 from app.db.dependencies import get_db
+from app.main import app
+from tests.mock_utils import MockModel
 
 client = TestClient(app)
 

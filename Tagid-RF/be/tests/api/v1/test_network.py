@@ -13,8 +13,9 @@ async def test_get_network_qr(
     Test retrieving Network QR for a user associated with a business.
     """
     from unittest.mock import MagicMock
-    from app.main import app
+
     from app.api.dependencies.auth import get_current_user
+    from app.main import app
 
     mock_user = MagicMock()
     mock_user.id = "user-123"

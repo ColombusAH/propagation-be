@@ -3,10 +3,12 @@ Mock-based tests for network endpoints (no DB required).
 """
 
 from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 from fastapi.testclient import TestClient
-from app.main import app
+
 from app.api.deps import get_current_active_user
+from app.main import app
 from tests.mock_utils import MockModel
 
 client = TestClient(app)

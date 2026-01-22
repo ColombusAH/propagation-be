@@ -2,8 +2,10 @@
 Coverage tests for TagStore class.
 """
 
-import pytest
 import time
+
+import pytest
+
 from app.services.tag_store import TagStore
 
 

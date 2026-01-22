@@ -2,14 +2,16 @@
 Mock-based tests for SQLAlchemy Notifications Router.
 """
 
+from datetime import datetime
 from unittest.mock import MagicMock, patch
+
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+
+from app.models.store import Notification, NotificationPreference, User
 from app.routers.notifications import router as notifications_router
 from app.services.database import get_db
-from app.models.store import Notification, NotificationPreference, User
-from datetime import datetime
 
 # Create a dedicated app for testing the legacy router
 test_app = FastAPI()
