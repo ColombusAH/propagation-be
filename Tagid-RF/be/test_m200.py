@@ -108,9 +108,7 @@ async def test_continuous_scan(duration: int = 10):
     def tag_callback(tag_data):
         nonlocal tag_count
         tag_count += 1
-        print(
-            f"  [{tag_count}] EPC: {tag_data.get('epc')}, RSSI: {tag_data.get('rssi')} dBm"
-        )
+        print(f"  [{tag_count}] EPC: {tag_data.get('epc')}, RSSI: {tag_data.get('rssi')} dBm")
 
     await rfid_reader_service.start_scanning(callback=tag_callback)
 

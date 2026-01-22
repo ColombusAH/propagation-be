@@ -8,9 +8,7 @@ print("Checking imports in rfid_reader...")
 print(
     f"parse_inventory_response in rfid_reader: {'parse_inventory_response' in dir(app.services.rfid_reader)}"
 )
-print(
-    f"M200ResponseParser in rfid_reader: {'M200ResponseParser' in dir(app.services.rfid_reader)}"
-)
+print(f"M200ResponseParser in rfid_reader: {'M200ResponseParser' in dir(app.services.rfid_reader)}")
 
 
 async def verify_process_tag():

@@ -15,12 +15,12 @@ async def test_get_network_qr(
     from unittest.mock import MagicMock
     from app.main import app
     from app.api.dependencies.auth import get_current_user
-    
+
     mock_user = MagicMock()
     mock_user.id = "user-123"
     mock_user.businessId = "biz-123"
-    mock_user.role = "CUSTOMER" # Or minimal role
-    
+    mock_user.role = "CUSTOMER"  # Or minimal role
+
     # We also need to ensure business lookup works if the endpoint uses it.
     # network endpoint likely uses businessId from user.
 
@@ -55,7 +55,8 @@ async def test_get_network_qr_unauthorized(async_client: AsyncClient):
     """
     # Ensure no override
     from app.main import app
+
     app.dependency_overrides.pop("get_current_user", None)
-    
+
     response = await async_client.get(f"{settings.API_V1_STR}/network/qr")
     assert response.status_code == 401

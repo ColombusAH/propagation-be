@@ -13,6 +13,7 @@ from tests.mock_utils import MockModel
 
 client = TestClient(app)
 
+
 class TestVerifyEndpointsMock:
     """Tests for verification endpoints using mocks."""
 
@@ -23,7 +24,7 @@ class TestVerifyEndpointsMock:
         mock_prisma_client.client = MagicMock()
         mock_prisma_client.client.__aenter__ = AsyncMock(return_value=mock_db)
         mock_prisma_client.client.__aexit__ = AsyncMock(return_value=None)
-        
+
         mock_tag = MockModel(
             status="ACTIVE",
             epc="E200001234",
@@ -31,14 +32,14 @@ class TestVerifyEndpointsMock:
             manufacturer="Test Factory",
             productionDate=datetime(2023, 1, 1),
             kosherInfo="Kosher",
-            originalityCert="Cert123"
+            originalityCert="Cert123",
         )
-        
+
         # Ensure it's awaitable
         mock_db.rfidtag.find_unique = AsyncMock(return_value=mock_tag)
-        
+
         response = client.get("/api/v1/products/verify/E200001234")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["is_authentic"] is True
@@ -51,11 +52,11 @@ class TestVerifyEndpointsMock:
         mock_prisma_client.client = MagicMock()
         mock_prisma_client.client.__aenter__ = AsyncMock(return_value=mock_db)
         mock_prisma_client.client.__aexit__ = AsyncMock(return_value=None)
-        
+
         mock_db.rfidtag.find_unique = AsyncMock(return_value=None)
-        
+
         response = client.get("/api/v1/products/verify/UNKNOWN")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["is_authentic"] is False
@@ -68,17 +69,13 @@ class TestVerifyEndpointsMock:
         mock_prisma_client.client = MagicMock()
         mock_prisma_client.client.__aenter__ = AsyncMock(return_value=mock_db)
         mock_prisma_client.client.__aexit__ = AsyncMock(return_value=None)
-        
-        mock_tag = MockModel(
-            status="STOLEN",
-            epc="E200001234",
-            productDescription="Stolen Item"
-        )
-        
+
+        mock_tag = MockModel(status="STOLEN", epc="E200001234", productDescription="Stolen Item")
+
         mock_db.rfidtag.find_unique = AsyncMock(return_value=mock_tag)
-        
+
         response = client.get("/api/v1/products/verify/E200001234")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["is_authentic"] is False
@@ -92,20 +89,20 @@ class TestVerifyEndpointsMock:
         mock_svc = MagicMock()
         mock_svc.decrypt_qr.return_value = "E200001234"
         mock_get_enc_svc.return_value = mock_svc
-        
+
         mock_db = MagicMock()
         mock_prisma_client.client = MagicMock()
         mock_prisma_client.client.__aenter__ = AsyncMock(return_value=mock_db)
         mock_prisma_client.client.__aexit__ = AsyncMock(return_value=None)
-        
+
         mock_tag = MockModel(
             status="ACTIVE",
             epc="E200001234",
             productDescription="Test Product",
             manufacturer="Factory",
-            productionDate=datetime.now()
+            productionDate=datetime.now(),
         )
-        
+
         mock_db.rfidtag.find_unique = AsyncMock(return_value=mock_tag)
 
         # NOTE: Scan endpoint is also under /products?
@@ -113,6 +110,6 @@ class TestVerifyEndpointsMock:
         # verify.py: @router.get("/scan/{qr_code}")
         # So /api/v1/products/scan/...
         response = client.get("/api/v1/products/scan/ENCRYPTED_QR")
-        
+
         assert response.status_code == 200
         assert response.json()["is_authentic"] is True

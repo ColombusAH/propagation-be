@@ -1,10 +1,12 @@
 """
 Coverage tests for Nexi Provider.
 """
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from app.services.nexi_provider import NexiProvider
 from app.services.payment_provider import PaymentStatus
+
 
 class TestNexiProviderCoverage:
 
@@ -15,7 +17,7 @@ class TestNexiProviderCoverage:
             "amount": 1000,
             "currency": "ILS",
             "status": PaymentStatus.PENDING,
-            "created_at": "2023-01-01T00:00:00"
+            "created_at": "2023-01-01T00:00:00",
         }
 
     @patch("app.services.nexi_provider.httpx.AsyncClient")
@@ -34,7 +36,7 @@ class TestNexiProviderCoverage:
         """Test API returning non-200 status."""
         mock_client_ctx = AsyncMock()
         mock_client.return_value.__aenter__.return_value = mock_client_ctx
-        
+
         response = MagicMock()
         response.status_code = 400
         response.text = "Bad Request"
@@ -66,7 +68,7 @@ class TestNexiProviderCoverage:
         """Test confirm payment API failure."""
         mock_client_ctx = AsyncMock()
         mock_client.return_value.__aenter__.return_value = mock_client_ctx
-        
+
         response = MagicMock()
         response.status_code = 500
         mock_client_ctx.post.return_value = response
@@ -97,7 +99,7 @@ class TestNexiProviderCoverage:
         """Test refund API failure."""
         mock_client_ctx = AsyncMock()
         mock_client.return_value.__aenter__.return_value = mock_client_ctx
-        
+
         response = MagicMock()
         response.status_code = 400
         mock_client_ctx.post.return_value = response
@@ -120,9 +122,7 @@ class TestNexiProviderCoverage:
 
     async def test_cancel_payment_invalid_state(self):
         """Test cancel for non-pending transaction."""
-        self.provider.pending_transactions["tx_done"] = {
-            "status": PaymentStatus.COMPLETED
-        }
+        self.provider.pending_transactions["tx_done"] = {"status": PaymentStatus.COMPLETED}
         with pytest.raises(ValueError) as exc:
             await self.provider.cancel_payment("tx_done")
         assert "Cannot cancel" in str(exc.value)
@@ -143,7 +143,7 @@ class TestNexiProviderCoverage:
         """Test cancel API failure."""
         mock_client_ctx = AsyncMock()
         mock_client.return_value.__aenter__.return_value = mock_client_ctx
-        
+
         response = MagicMock()
         response.status_code = 500
         mock_client_ctx.post.return_value = response
@@ -151,4 +151,3 @@ class TestNexiProviderCoverage:
         with pytest.raises(ValueError) as exc:
             await self.provider.cancel_payment("tx1")
         assert "cancellation failed: 500" in str(exc.value)
-

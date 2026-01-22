@@ -23,9 +23,7 @@ def calculate_crc16(data: bytes) -> int:
 
 def build_command(cmd_code: int, data: bytes = b"", addr: int = 0xFF) -> bytes:
     head = 0xCF
-    frame_body = struct.pack(
-        ">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF
-    )
+    frame_body = struct.pack(">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF)
     frame_body += struct.pack("B", len(data))
     frame_body += data
     crc = calculate_crc16(frame_body)
@@ -113,9 +111,7 @@ def main():
                 0: "Inventory Mode (counting)",
                 1: "EAS Mode (entry/exit)",
             }
-            print(
-                f"\n   📊 GATEMODE: 0x{gatemode:02X} - {gatemode_names.get(gatemode, 'Unknown')}"
-            )
+            print(f"\n   📊 GATEMODE: 0x{gatemode:02X} - {gatemode_names.get(gatemode, 'Unknown')}")
 
         if len(data) >= 2:
             print(f"   📊 GATEGPI1: 0x{data[1]:02X}")
@@ -184,9 +180,7 @@ def main():
         if len(data) >= 1:
             gatemode = data[0]
             gatemode_names = {0: "Inventory Mode", 1: "EAS Mode"}
-            print(
-                f"   📊 GATEMODE: 0x{gatemode:02X} - {gatemode_names.get(gatemode, 'Unknown')}"
-            )
+            print(f"   📊 GATEMODE: 0x{gatemode:02X} - {gatemode_names.get(gatemode, 'Unknown')}")
     else:
         print("   ⚠️ Verify Failed.")
 

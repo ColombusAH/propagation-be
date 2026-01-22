@@ -1,9 +1,11 @@
 """
 Coverage tests for Cash Provider.
 """
+
 import pytest
 from app.services.cash_provider import CashProvider
 from app.services.payment_provider import PaymentStatus
+
 
 class TestCashProviderCoverage:
 
@@ -14,13 +16,13 @@ class TestCashProviderCoverage:
             "amount": 1000,
             "currency": "ILS",
             "status": PaymentStatus.PENDING,
-            "created_at": "2023-01-01T00:00:00"
+            "created_at": "2023-01-01T00:00:00",
         }
         self.provider.pending_payments["tx_completed"] = {
             "amount": 1000,
             "currency": "ILS",
             "status": PaymentStatus.COMPLETED,
-            "created_at": "2023-01-01T00:00:00"
+            "created_at": "2023-01-01T00:00:00",
         }
 
     async def test_confirm_payment_not_found(self):

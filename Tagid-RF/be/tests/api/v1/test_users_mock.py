@@ -15,7 +15,10 @@ from tests.mock_utils import MockModel
 
 client = TestClient(app)
 
-def create_mock_user(id="user1", email="test@example.com", name="Test User", role="CUSTOMER", businessId="biz123"):
+
+def create_mock_user(
+    id="user1", email="test@example.com", name="Test User", role="CUSTOMER", businessId="biz123"
+):
     """Create a mock user with all required fields (and more) for Pydantic validation."""
     return MockModel(
         id=id,
@@ -26,16 +29,18 @@ def create_mock_user(id="user1", email="test@example.com", name="Test User", rol
         phone="1234567890",
         address="Test Address",
         createdAt=datetime.now(),
-        updatedAt=datetime.now()
+        updatedAt=datetime.now(),
     )
+
 
 def override_user(user):
     app.dependency_overrides[get_current_user] = lambda: user
     app.dependency_overrides[get_current_active_user] = lambda: user
 
+
 class TestUsersEndpointsMock:
     """Tests for users endpoints using mocks."""
-    
+
     def teardown_method(self):
         app.dependency_overrides.clear()
 
@@ -45,9 +50,9 @@ class TestUsersEndpointsMock:
         """Test getting own user profile."""
         mock_user = create_mock_user(id="user1", name="Test User")
         override_user(mock_user)
-        
+
         mock_crud_get.return_value = mock_user
-        
+
         response = client.get("/api/v1/users/user1")
         assert response.status_code == 200
         assert response.json()["name"] == "Test User"
@@ -58,11 +63,11 @@ class TestUsersEndpointsMock:
         """Test getting other profile as admin."""
         admin_user = create_mock_user(id="admin1", role="SUPER_ADMIN")
         override_user(admin_user)
-        
+
         target_user = create_mock_user(id="user2", name="Target", role="CUSTOMER")
-        
+
         mock_crud_get.return_value = target_user
-        
+
         response = client.get("/api/v1/users/user2")
         assert response.status_code == 200
         assert response.json()["name"] == "Target"
@@ -73,7 +78,7 @@ class TestUsersEndpointsMock:
         """Test getting other profile as normal user (forbidden)."""
         user = create_mock_user(id="user1", role="CUSTOMER")
         override_user(user)
-        
+
         response = client.get("/api/v1/users/user2")
         assert response.status_code == 403
 
@@ -83,10 +88,12 @@ class TestUsersEndpointsMock:
         """Test creating a new user (admin)."""
         admin = create_mock_user(id="admin1", role="SUPER_ADMIN")
         override_user(admin)
-        
-        new_user = create_mock_user(id="new1", email="new@example.com", name="New User", role="CUSTOMER")
+
+        new_user = create_mock_user(
+            id="new1", email="new@example.com", name="New User", role="CUSTOMER"
+        )
         mock_crud_create.return_value = new_user
-        
+
         payload = {
             "email": "new@example.com",
             "password": "password",
@@ -94,9 +101,9 @@ class TestUsersEndpointsMock:
             "role": "CUSTOMER",
             "phone": "0501234567",
             "address": "Tel Aviv",
-            "businessId": "biz123"
+            "businessId": "biz123",
         }
-        
+
         response = client.post("/api/v1/users/", json=payload)
         assert response.status_code == 201
         assert response.json()["email"] == "new@example.com"
@@ -107,7 +114,7 @@ class TestUsersEndpointsMock:
         """Test creating user without permissions."""
         user = create_mock_user(id="user1", role="CUSTOMER")
         override_user(user)
-        
+
         payload = {
             "email": "new@example.com",
             "password": "password",
@@ -115,8 +122,8 @@ class TestUsersEndpointsMock:
             "role": "CUSTOMER",
             "phone": "0501234567",
             "address": "Tel Aviv",
-            "businessId": "biz123"
+            "businessId": "biz123",
         }
-        
+
         response = client.post("/api/v1/users/", json=payload)
         assert response.status_code == 403

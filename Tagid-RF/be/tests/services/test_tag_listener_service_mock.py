@@ -8,8 +8,9 @@ from app.services.tag_listener_service import TagListenerService
 from tests.mock_utils import MockModel
 from datetime import datetime
 
+
 class TestTagListenerServiceMock:
-    
+
     def setup_method(self):
         self.service = TagListenerService()
 
@@ -31,7 +32,7 @@ class TestTagListenerServiceMock:
         self.service.start()
         assert self.service._running is True
         mock_thread.return_value.start.assert_called_once()
-        
+
     def test_stop_service(self):
         self.service._running = True
         self.service.stop()
@@ -46,20 +47,20 @@ class TestTagListenerServiceMock:
         mock_client_instance.__aenter__ = AsyncMock(return_value=mock_db)
         mock_client_instance.__aexit__ = AsyncMock(return_value=None)
         mock_prisma_wrapper.client = mock_client_instance
-        
+
         # Reader lookup fails/returns None
         mock_db.rfidreader.find_unique = AsyncMock(return_value=None)
         # Tag lookup finds tag
         tag = MockModel(id="t1", epc="E1", productDescription="Desc", isPaid=False)
         mock_db.rfidtag.find_unique = AsyncMock(return_value=tag)
-        
+
         # Ensure broadcast is an AsyncMock
         mock_manager.broadcast = AsyncMock()
-        
+
         data = {"epc": "E1", "tag_id": "tid1", "rssi": -50}
-        
+
         await self.service._broadcast_tag(data)
-        
+
         # Verify broadcast
         mock_manager.broadcast.assert_called_once()
         call_args = mock_manager.broadcast.call_args[0][0]
@@ -76,25 +77,25 @@ class TestTagListenerServiceMock:
         mock_client_instance.__aenter__ = AsyncMock(return_value=mock_db)
         mock_client_instance.__aexit__ = AsyncMock(return_value=None)
         mock_prisma_wrapper.client = mock_client_instance
-        
+
         mock_db.rfidreader.find_unique = AsyncMock(return_value=None)
-        
+
         # Tag with encryption
         tag = MockModel(id="t1", epc="E1", encryptedQr="ENC_DATA")
         mock_db.rfidtag.find_unique = AsyncMock(return_value=tag)
-        
+
         # Ensure broadcast is an AsyncMock
         mock_manager.broadcast = AsyncMock()
-        
+
         # Mock encryption service
         with patch("app.services.tag_encryption.get_encryption_service") as mock_get_enc:
             mock_svc = MagicMock()
             mock_svc.decrypt_qr.return_value = "DECRYPTED"
             mock_get_enc.return_value = mock_svc
-            
+
             data = {"epc": "E1"}
             await self.service._broadcast_tag(data)
-            
+
             mock_manager.broadcast.assert_called()
             call_args = mock_manager.broadcast.call_args[0][0]
             assert call_args["data"]["is_encrypted"] is True
@@ -110,28 +111,28 @@ class TestTagListenerServiceMock:
         mock_client_instance.__aenter__ = AsyncMock(return_value=mock_db)
         mock_client_instance.__aexit__ = AsyncMock(return_value=None)
         mock_prisma_wrapper.client = mock_client_instance
-        
+
         # Reader is GATE
         reader = MockModel(id="r1", name="Gate 1", type="GATE", location="Exit")
         mock_db.rfidreader.find_unique = AsyncMock(return_value=reader)
-        
+
         tag = MockModel(id="t1", epc="E1", isPaid=False, productDescription="Stolen Item")
         mock_db.rfidtag.find_unique = AsyncMock(return_value=tag)
-        
+
         # Mock Theft Service to report unpaid
         mock_theft_instance = mock_theft_cls.return_value
         mock_theft_instance.check_tag_payment_status = AsyncMock(return_value=False)
-        
+
         # Ensure broadcast is an AsyncMock
         mock_manager.broadcast = AsyncMock()
-        
+
         data = {"epc": "E1", "reader_ip": "1.1.1.1"}
-        
+
         await self.service._broadcast_tag(data)
-        
+
         # Should broadcast twice: scan and alert
         assert mock_manager.broadcast.call_count == 2
-        
+
         # Check second call for alert
         alert_call = mock_manager.broadcast.call_args_list[1][0][0]
         assert alert_call["type"] == "theft_alert"
@@ -147,23 +148,23 @@ class TestTagListenerServiceMock:
         mock_client_instance.__aenter__ = AsyncMock(return_value=mock_db)
         mock_client_instance.__aexit__ = AsyncMock(return_value=None)
         mock_prisma_wrapper.client = mock_client_instance
-        
+
         reader = MockModel(id="r1", type="GATE")
         mock_db.rfidreader.find_unique = AsyncMock(return_value=reader)
-        
+
         tag = MockModel(id="t1", epc="E1", isPaid=True)
         mock_db.rfidtag.find_unique = AsyncMock(return_value=tag)
-        
+
         mock_theft_instance = mock_theft_cls.return_value
         mock_theft_instance.check_tag_payment_status = AsyncMock(return_value=True)
-        
+
         # Ensure broadcast is an AsyncMock
         mock_manager.broadcast = AsyncMock()
-        
+
         data = {"epc": "E1", "reader_ip": "1.1.1.1"}
-        
+
         await self.service._broadcast_tag(data)
-        
+
         # Scan broadcast only
         assert mock_manager.broadcast.call_count == 1
         assert mock_manager.broadcast.call_args[0][0]["type"] == "tag_scanned"
@@ -176,9 +177,10 @@ class TestTagListenerServiceMock:
 
     def test_on_tag_scanned_sync_with_error(self):
         """Test the sync callback with an error-prone callback."""
+
         def error_cb(tag):
             raise Exception("Callback Error")
-            
+
         self.service.add_tag_callback(error_cb)
         # Should not raise exception
         self.service.on_tag_scanned_sync({"epc": "E1"})
@@ -193,18 +195,18 @@ class TestTagListenerServiceMock:
         mock_client_instance.__aenter__ = AsyncMock(return_value=mock_db)
         mock_client_instance.__aexit__ = AsyncMock(return_value=None)
         mock_prisma_wrapper.client = mock_client_instance
-        
+
         mock_tag = MockModel(id="t1", epc="E1", encryptedQr="BAD_QR")
         mock_db.rfidtag.find_unique = AsyncMock(return_value=mock_tag)
         mock_db.rfidreader.find_unique = AsyncMock(return_value=None)
-        
+
         mock_manager.broadcast = AsyncMock()
-        
+
         with patch("app.services.tag_encryption.get_encryption_service") as mock_get_enc:
             mock_enc = MagicMock()
             mock_enc.decrypt_qr.side_effect = Exception("Decrypt Error")
             mock_get_enc.return_value = mock_enc
-            
+
             # Should not raise exception, but log it
             await self.service._broadcast_tag({"epc": "E1"})
             assert True
@@ -230,7 +232,7 @@ class TestTagListenerServiceMock:
         """Test start() handles no running loop gracefully."""
         self.service._running = False
         mock_asyncio.get_running_loop.side_effect = RuntimeError("No loop")
-        
+
         with patch("app.services.tag_listener_service.threading.Thread") as mock_thread:
             self.service.start()
             assert self.service._running is True
@@ -246,13 +248,16 @@ class TestTagListenerServiceMock:
 
     def test_module_functions_fallback(self):
         """Test the fallback module-level functions."""
-        # reset module imports to trigger fallback if possible? 
-        # Hard to do without reloading. 
+        # reset module imports to trigger fallback if possible?
+        # Hard to do without reloading.
         # Instead, we can import them directly if they are exposed
-        from app.services.tag_listener_service import start_inventory, stop_inventory, set_tag_callback
-        
+        from app.services.tag_listener_service import (
+            start_inventory,
+            stop_inventory,
+            set_tag_callback,
+        )
+
         assert start_inventory() is False
         assert stop_inventory() is False
         # set_tag_callback passes silently
         set_tag_callback(print)
-

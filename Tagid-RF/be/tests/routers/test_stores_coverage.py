@@ -31,7 +31,7 @@ class TestStoresRouterCoverage:
         mock_query = mock_db.query.return_value
         mock_query.filter.return_value = mock_query
         mock_query.all.return_value = []
-        
+
         response = client.get("/api/v1/stores")
         assert response.status_code == 200
         assert response.json() == []
@@ -39,20 +39,20 @@ class TestStoresRouterCoverage:
     def test_get_store_not_found(self, mock_db):
         """Test getting a non-existent store."""
         mock_db.query.return_value.filter.return_value.first.return_value = None
-        
+
         response = client.get("/api/v1/stores/999")
         assert response.status_code == 404
 
     def test_delete_store_not_found(self, mock_db):
         """Test deleting a non-existent store."""
         mock_db.query.return_value.filter.return_value.first.return_value = None
-        
+
         response = client.delete("/api/v1/stores/999")
         assert response.status_code == 404
 
     def test_update_store_not_found(self, mock_db):
         """Test updating a non-existent store."""
         mock_db.query.return_value.filter.return_value.first.return_value = None
-        
+
         response = client.put("/api/v1/stores/999", json={"name": "New Name"})
         assert response.status_code == 404

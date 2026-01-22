@@ -10,7 +10,7 @@ from unittest.mock import patch, MagicMock, AsyncMock
 def test_app_startup():
     """Test that the app starts correctly."""
     from app.main import app
-    
+
     client = TestClient(app)
     # Just verify the app is importable and runnable
     assert app is not None
@@ -20,7 +20,7 @@ def test_app_startup():
 def test_health_check():
     """Test health check endpoint."""
     from app.main import app
-    
+
     client = TestClient(app)
     response = client.get("/health")
     assert response.status_code in [200, 404]
@@ -29,7 +29,7 @@ def test_health_check():
 def test_root_endpoint():
     """Test root endpoint."""
     from app.main import app
-    
+
     client = TestClient(app)
     response = client.get("/")
     assert response.status_code in [200, 404]
@@ -38,7 +38,7 @@ def test_root_endpoint():
 def test_openapi_schema():
     """Test OpenAPI schema generation."""
     from app.main import app
-    
+
     client = TestClient(app)
     response = client.get("/openapi.json")
     assert response.status_code in [200, 404]
@@ -49,7 +49,7 @@ def test_openapi_schema():
 def test_docs_endpoint():
     """Test docs endpoint."""
     from app.main import app
-    
+
     client = TestClient(app)
     response = client.get("/docs")
     assert response.status_code == 200

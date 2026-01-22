@@ -29,14 +29,19 @@ class TestCartRouterCoverage:
         """Test checkout with empty cart (sync TestClient)."""
         FAKE_CART_DB.clear()
         FAKE_CART_DB["demo_guest"] = []
-        
+
         response = client.post("/cart/checkout", json={"payment_method_id": "pm_test"})
         assert response.status_code in [400, 404, 307]
 
     def test_calculate_summary_large_cart(self):
         """Test summary calculation with multiple items."""
         items = [
-            CartItem(epc=f"EPC{i}", product_name=f"Product {i}", product_sku=f"SKU{i}", price_cents=1000 + i * 100)
+            CartItem(
+                epc=f"EPC{i}",
+                product_name=f"Product {i}",
+                product_sku=f"SKU{i}",
+                price_cents=1000 + i * 100,
+            )
             for i in range(10)
         ]
         summary = _calculate_summary(items)

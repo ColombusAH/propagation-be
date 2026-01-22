@@ -16,9 +16,10 @@ test_app = FastAPI()
 test_app.include_router(notifications_router)
 client = TestClient(test_app)
 
+
 class TestNotificationsRouterMock:
     """Tests for legacy notifications router using SQLAlchemy mocks."""
-    
+
     def teardown_method(self):
         test_app.dependency_overrides.clear()
 
@@ -29,9 +30,9 @@ class TestNotificationsRouterMock:
         mock_query = mock_db.query.return_value
         mock_filter = mock_query.filter.return_value
         mock_filter.all.return_value = []
-        
+
         test_app.dependency_overrides[get_db] = lambda: mock_db
-        
+
         response = client.get("/notifications/preferences?user_id=1")
         assert response.status_code == 200
         data = response.json()
@@ -50,11 +51,11 @@ class TestNotificationsRouterMock:
         pref.channel_sms = False
         pref.channel_email = False
         pref.store_filter_id = 5
-        
+
         mock_db.query.return_value.filter.return_value.all.return_value = [pref]
-        
+
         test_app.dependency_overrides[get_db] = lambda: mock_db
-        
+
         response = client.get("/notifications/preferences?user_id=1")
         assert response.status_code == 200
         data = response.json()
@@ -67,21 +68,20 @@ class TestNotificationsRouterMock:
         mock_db = MagicMock()
         # Mock user exists
         mock_db.query.return_value.filter.return_value.first.side_effect = [
-            MagicMock(spec=User), # user
-            None # no existing pref
+            MagicMock(spec=User),  # user
+            None,  # no existing pref
         ]
-        
+
         # Mock refresh to set an ID on the pref object
         def mock_refresh(obj):
             obj.id = 99
+
         mock_db.refresh.side_effect = mock_refresh
-        
+
         test_app.dependency_overrides[get_db] = lambda: mock_db
-        
-        payload = [
-            {"notification_type": "SALE", "channel_push": True}
-        ]
-        
+
+        payload = [{"notification_type": "SALE", "channel_push": True}]
+
         response = client.put("/notifications/preferences?user_id=1", json=payload)
         assert response.status_code == 200
         assert mock_db.add.called
@@ -97,11 +97,13 @@ class TestNotificationsRouterMock:
         n1.message = "Msg"
         n1.is_read = False
         n1.created_at = datetime(2023, 1, 1)
-        
-        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [n1]
-        
+
+        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            n1
+        ]
+
         test_app.dependency_overrides[get_db] = lambda: mock_db
-        
+
         response = client.get("/notifications?user_id=1&unread_only=true")
         assert response.status_code == 200
         data = response.json()
@@ -113,9 +115,9 @@ class TestNotificationsRouterMock:
         mock_db = MagicMock()
         notification = MagicMock(spec=Notification)
         mock_db.query.return_value.filter.return_value.first.return_value = notification
-        
+
         test_app.dependency_overrides[get_db] = lambda: mock_db
-        
+
         response = client.post("/notifications/1/read")
         assert response.status_code == 200
         assert notification.is_read is True
@@ -125,19 +127,19 @@ class TestNotificationsRouterMock:
         """Test internal send notification logic."""
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.side_effect = [
-            MagicMock(spec=User), # user
-            None # no pref (use defaults)
+            MagicMock(spec=User),  # user
+            None,  # no pref (use defaults)
         ]
-        
+
         test_app.dependency_overrides[get_db] = lambda: mock_db
-        
+
         payload = {
             "user_id": 1,
             "notification_type": "SALE",
             "title": "New Sale",
-            "message": "You made a sale!"
+            "message": "You made a sale!",
         }
-        
+
         response = client.post("/notifications/send", json=payload)
         assert response.status_code == 201
         assert mock_db.add.called

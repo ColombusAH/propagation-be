@@ -21,9 +21,7 @@ async def test_inventory_summary():
 
             print("\n----- Details -----")
             for product in data["products"]:
-                print(
-                    f"📦 Product: {product['product_name']} (SKU: {product['product_sku']})"
-                )
+                print(f"📦 Product: {product['product_name']} (SKU: {product['product_sku']})")
                 print(f"   Total: {product['total_items']}")
                 print(f"   Available: {product['available_items']}")
                 print(f"   Sold: {product['sold_items']}")
