@@ -2,13 +2,19 @@ import { NavLink } from 'react-router-dom';
 import styled from 'styled-components';
 import { theme } from '@/styles/theme';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from '@/hooks/useTranslation';
 
-const SidebarContainer = styled.aside`
+interface SidebarContainerProps {
+  $isRTL: boolean;
+}
+
+const SidebarContainer = styled.aside<SidebarContainerProps>`
   width: 200px;
   min-width: 200px;
   height: calc(100vh - 56px);
   background: ${theme.colors.surface};
-  border-left: 1px solid ${theme.colors.border};
+  border-left: ${props => props.$isRTL ? `1px solid ${theme.colors.border}` : 'none'};
+  border-right: ${props => !props.$isRTL ? `1px solid ${theme.colors.border}` : 'none'};
   padding: ${theme.spacing.sm} 0;
   display: flex;
   flex-direction: column;
@@ -45,7 +51,7 @@ const NavItem = styled(NavLink)`
   font-size: 13px;
   font-weight: ${theme.typography.fontWeight.medium};
   transition: all ${theme.transitions.fast};
-  border-right: 3px solid transparent;
+  border-inline-start: 3px solid transparent;
 
   &:hover {
     background: ${theme.colors.surfaceHover};
@@ -55,7 +61,7 @@ const NavItem = styled(NavLink)`
   &.active {
     background: ${theme.colors.info};
     color: white;
-    border-right-color: ${theme.colors.infoDark};
+    border-inline-start-color: ${theme.colors.infoDark};
     font-weight: ${theme.typography.fontWeight.semibold};
     
     .material-symbols-outlined {
@@ -110,6 +116,7 @@ const MaterialIcon = ({ name }: { name: string }) => (
 
 export function Sidebar() {
   const { userRole } = useAuth();
+  const { t, isRTL } = useTranslation();
 
   const isSuperAdmin = userRole === 'SUPER_ADMIN';
   const isNetworkAdmin = userRole === 'NETWORK_ADMIN';
@@ -121,74 +128,74 @@ export function Sidebar() {
   const canManageStore = isSuperAdmin || isNetworkAdmin || isStoreManager;
 
   return (
-    <SidebarContainer>
+    <SidebarContainer $isRTL={isRTL}>
       <Logo>
         <LogoIcon>
           <MaterialIcon name="sensors" />
         </LogoIcon>
-        <LogoText>Tagid RF</LogoText>
+        <LogoText>{t('app.name')}</LogoText>
       </Logo>
 
       <Section>
-        <SectionTitle>ראשי</SectionTitle>
+        <SectionTitle>{t('nav.main')}</SectionTitle>
         {isStaff && (
           <NavItem to="/dashboard">
             <MaterialIcon name="space_dashboard" />
-            סקירה כללית
+            {t('nav.dashboard')}
           </NavItem>
         )}
         <NavItem to="/catalog">
           <MaterialIcon name="storefront" />
-          קטלוג
+          {t('nav.catalog')}
         </NavItem>
       </Section>
 
       {(isSeller || !isStaff) && (
         <Section>
-          <SectionTitle>קניות</SectionTitle>
+          <SectionTitle>{t('nav.shopping')}</SectionTitle>
           <NavItem to="/customer-cart">
             <MaterialIcon name="shopping_cart" />
-            עגלה
+            {t('nav.cart')}
           </NavItem>
           <NavItem to="/scan">
             <MaterialIcon name="qr_code_scanner" />
-            סריקה
+            {t('nav.scan')}
           </NavItem>
           <NavItem to="/orders">
             <MaterialIcon name="package_2" />
-            הזמנות
+            {t('nav.orders')}
           </NavItem>
         </Section>
       )}
 
       {canManageStore && (
         <Section>
-          <SectionTitle>ניהול תגים</SectionTitle>
+          <SectionTitle>{t('nav.tagManagement')}</SectionTitle>
           <NavItem to="/tag-scanner">
             <MaterialIcon name="contactless" />
-            סריקה
+            {t('nav.tagScanner')}
           </NavItem>
           <NavItem to="/tag-linking">
             <MaterialIcon name="link" />
-            צימוד
+            {t('nav.tagLinking')}
           </NavItem>
         </Section>
       )}
 
       {canManageStore && (
         <Section>
-          <SectionTitle>תפעול</SectionTitle>
+          <SectionTitle>{t('nav.operations')}</SectionTitle>
           <NavItem to="/bath-setup">
             <MaterialIcon name="shopping_basket" />
-            אמבטים
+            {t('nav.bathSetup')}
           </NavItem>
           <NavItem to="/exit-gate">
             <MaterialIcon name="door_sensor" />
-            שער יציאה
+            {t('nav.exitGate')}
           </NavItem>
           <NavItem to="/transactions">
             <MaterialIcon name="receipt_long" />
-            עסקאות ותשלומים
+            {t('nav.transactions')}
           </NavItem>
         </Section>
       )}
@@ -196,19 +203,19 @@ export function Sidebar() {
       <Spacer />
 
       <Section>
-        <SectionTitle>הגדרות</SectionTitle>
+        <SectionTitle>{t('nav.settings')}</SectionTitle>
         <NavItem to="/reader-settings">
           <MaterialIcon name="router" />
-          קוראים
+          {t('nav.readers')}
         </NavItem>
         <NavItem to="/settings">
           <MaterialIcon name="tune" />
-          כללי
+          {t('nav.general')}
         </NavItem>
         {isAdmin && (
           <NavItem to="/users">
             <MaterialIcon name="group" />
-            משתמשים
+            {t('nav.users')}
           </NavItem>
         )}
       </Section>

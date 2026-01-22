@@ -42,30 +42,8 @@ except ImportError:
         return False
 
     # ... (TagStore implementation remains if needed, but imports are key)
-    class TagStore:
-        def __init__(self):
-            self._tags = []
-            self._unique = set()
-            self._lock = threading.Lock()
-
-        def add_tag(self, tag_data):
-            with self._lock:
-                is_new = tag_data.get("epc") not in self._unique
-                self._unique.add(tag_data.get("epc"))
-                self._tags.append(tag_data)
-                return is_new
-
-        def get_recent(self, count=50):
-            with self._lock:
-                return list(reversed(self._tags[-count:]))
-
-        def get_unique_count(self):
-            with self._lock:
-                return len(self._unique)
-
-        def get_total_count(self):
-            with self._lock:
-                return len(self._tags)
+    # ... (TagStore implementation remains if needed, but imports are key)
+    from app.services.tag_store import TagStore
 
     tag_store = TagStore()
 

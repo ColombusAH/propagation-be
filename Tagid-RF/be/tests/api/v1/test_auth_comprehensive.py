@@ -60,30 +60,39 @@ class TestDevLogin:
         """Test dev login as STORE_MANAGER."""
         from app.db.dependencies import get_db
         from app.main import app
-
-        mock_db_instance = MagicMock()
-        mock_db_instance.business = MagicMock()
-        mock_db_instance.business.find_first = AsyncMock(return_value=MagicMock(id="biz-1"))
-        mock_db_instance.user = MagicMock()
-        mock_db_instance.user.find_unique = AsyncMock(return_value=None)
-        mock_db_instance.user.create = AsyncMock(
-            return_value=create_mock_user(
-                email="dev_store_manager@example.com", role="STORE_MANAGER"
-            )
-        )
-
-        app.dependency_overrides[get_db] = lambda: mock_db_instance
-        try:
-            with patch("app.api.v1.endpoints.auth.get_user_by_email") as mock_get_user:
-                mock_get_user.return_value = None  # Force creation
-
-                response = await client.post(
-                    "/api/v1/auth/dev-login", json={"role": "STORE_MANAGER"}
+        
+        # We need to mock the Prisma() call inside the endpoint
+        with patch("app.api.v1.endpoints.auth.Prisma") as MockPrisma:
+            mock_local_db = MagicMock()
+            MockPrisma.return_value = mock_local_db
+            
+            mock_local_db.connect = AsyncMock()
+            mock_local_db.disconnect = AsyncMock()
+            mock_local_db.business.find_first = AsyncMock(return_value=MagicMock(id="biz-1"))
+            
+            # Setup user creation mock
+            mock_local_db.user.find_unique = AsyncMock(return_value=None)
+            mock_local_db.user.create = AsyncMock(
+                return_value=create_mock_user(
+                    email="dev_store_manager@example.com", role="STORE_MANAGER"
                 )
-                assert response.status_code == 200
-                assert "token" in response.json()
-        finally:
-            app.dependency_overrides.clear()
+            )
+
+            # Also override get_db just in case, though unrelated to the failure
+            app.dependency_overrides[get_db] = lambda: mock_local_db
+            try:
+                # We also need to patch get_user_by_email since the endpoint calls it
+                # passing local_db. But get_user_by_email is imported in auth.py
+                with patch("app.api.v1.endpoints.auth.get_user_by_email") as mock_get_user:
+                    mock_get_user.return_value = None  # Force creation
+
+                    response = await client.post(
+                        "/api/v1/auth/dev-login", json={"role": "STORE_MANAGER"}
+                    )
+                    assert response.status_code == 200
+                    assert "token" in response.json()
+            finally:
+                app.dependency_overrides.clear()
 
     @pytest.mark.asyncio
     async def test_dev_login_admin(self, client):
@@ -91,22 +100,31 @@ class TestDevLogin:
         from app.db.dependencies import get_db
         from app.main import app
 
-        mock_db_instance = MagicMock()
-        mock_db_instance.business = MagicMock()
-        mock_db_instance.business.find_first = AsyncMock(return_value=MagicMock(id="biz-1"))
-        mock_db_instance.user = MagicMock()
-        mock_db_instance.user.find_unique = AsyncMock(
-            return_value=create_mock_user(
-                id="user-admin", email="dev_admin@example.com", role="SUPER_ADMIN"
+        with patch("app.api.v1.endpoints.auth.Prisma") as MockPrisma:
+            mock_local_db = MagicMock()
+            MockPrisma.return_value = mock_local_db
+            
+            mock_local_db.connect = AsyncMock()
+            mock_local_db.disconnect = AsyncMock()
+            mock_local_db.business.find_first = AsyncMock(return_value=MagicMock(id="biz-1"))
+            
+            mock_local_db.user.find_unique = AsyncMock(
+                return_value=create_mock_user(
+                    id="user-admin", email="dev_admin@example.com", role="SUPER_ADMIN"
+                )
             )
-        )
 
-        app.dependency_overrides[get_db] = lambda: mock_db_instance
-        try:
-            response = await client.post("/api/v1/auth/dev-login", json={"role": "ADMIN"})
-            assert response.status_code == 200
-        finally:
-            app.dependency_overrides.clear()
+            app.dependency_overrides[get_db] = lambda: mock_local_db
+            try:
+                 with patch("app.api.v1.endpoints.auth.get_user_by_email") as mock_get_user:
+                    mock_get_user.return_value = create_mock_user(
+                        id="user-admin", email="dev_admin@example.com", role="SUPER_ADMIN"
+                    )
+                    
+                    response = await client.post("/api/v1/auth/dev-login", json={"role": "ADMIN"})
+                    assert response.status_code == 200
+            finally:
+                app.dependency_overrides.clear()
 
     @pytest.mark.asyncio
     async def test_dev_login_customer(self, client):
@@ -114,22 +132,31 @@ class TestDevLogin:
         from app.db.dependencies import get_db
         from app.main import app
 
-        mock_db_instance = MagicMock()
-        mock_db_instance.business = MagicMock()
-        mock_db_instance.business.find_first = AsyncMock(return_value=MagicMock(id="biz-1"))
-        mock_db_instance.user = MagicMock()
-        mock_db_instance.user.find_unique = AsyncMock(
-            return_value=create_mock_user(
-                id="user-customer", email="dev_customer@example.com", role="CUSTOMER"
+        with patch("app.api.v1.endpoints.auth.Prisma") as MockPrisma:
+            mock_local_db = MagicMock()
+            MockPrisma.return_value = mock_local_db
+            
+            mock_local_db.connect = AsyncMock()
+            mock_local_db.disconnect = AsyncMock()
+            mock_local_db.business.find_first = AsyncMock(return_value=MagicMock(id="biz-1"))
+            
+            mock_local_db.user.find_unique = AsyncMock(
+                return_value=create_mock_user(
+                    id="user-customer", email="dev_customer@example.com", role="CUSTOMER"
+                )
             )
-        )
 
-        app.dependency_overrides[get_db] = lambda: mock_db_instance
-        try:
-            response = await client.post("/api/v1/auth/dev-login", json={"role": "CUSTOMER"})
-            assert response.status_code == 200
-        finally:
-            app.dependency_overrides.clear()
+            app.dependency_overrides[get_db] = lambda: mock_local_db
+            try:
+                with patch("app.api.v1.endpoints.auth.get_user_by_email") as mock_get_user:
+                    mock_get_user.return_value = create_mock_user(
+                        id="user-customer", email="dev_customer@example.com", role="CUSTOMER"
+                    )
+
+                    response = await client.post("/api/v1/auth/dev-login", json={"role": "CUSTOMER"})
+                    assert response.status_code == 200
+            finally:
+                app.dependency_overrides.clear()
 
 
 class TestGetMe:

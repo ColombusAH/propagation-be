@@ -48,9 +48,9 @@ patch("app.services.tag_listener_service.tag_listener_service.start", return_val
 patch("app.services.tag_listener_service.tag_listener_service.stop", return_value=None).start()
 
 # Mock DB initializations to prevent hangs in lifespan
-patch("app.db.prisma.init_db", new_callable=AsyncMock).start()
-patch("app.db.prisma.shutdown_db", new_callable=AsyncMock).start()
-patch("app.services.database.init_db", return_value=None).start()
+# patch("app.db.prisma.init_db", new_callable=AsyncMock).start()
+# patch("app.db.prisma.shutdown_db", new_callable=AsyncMock).start()
+# patch("app.services.database.init_db", return_value=None).start()
 
 # Mock firebase_admin
 mock_firebase = MagicMock()
@@ -78,6 +78,7 @@ for model in [
     "inventorysnapshot",
     "theftalert",
     "notificationpreference",
+    "alertrecipient",
 ]:
     model_mock = MagicMock()
     model_mock.create = AsyncMock()

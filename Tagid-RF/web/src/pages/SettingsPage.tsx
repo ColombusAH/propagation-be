@@ -136,20 +136,20 @@ const ToggleInput = styled.input`
 `;
 
 const Select = styled.select`
-  padding: ${theme.spacing.sm} ${theme.spacing.lg};
-  padding-left: 2.5rem;
+  padding: 6px ${theme.spacing.md};
+  padding-left: 2rem;
   border: 1px solid ${theme.colors.primary};
   border-radius: ${theme.borderRadius.md};
-  font-size: ${theme.typography.fontSize.base};
+  font-size: 0.9rem;
   font-weight: ${theme.typography.fontWeight.bold};
   background: white;
-  min-width: 220px;
+  min-width: 160px;
   color: ${theme.colors.primary};
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='%232563EB'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='%232563EB'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: left 0.75rem center;
+  background-position: left 0.5rem center;
   transition: all ${theme.transitions.fast};
   
   option {
@@ -173,12 +173,13 @@ const Button = styled.button`
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: ${theme.spacing.sm} ${theme.spacing.lg};
+  padding: 6px ${theme.spacing.md};
   background: ${theme.colors.primary};
   color: white;
   border: none;
   border-radius: ${theme.borderRadius.md};
   font-weight: ${theme.typography.fontWeight.medium};
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all ${theme.transitions.fast};
   
@@ -188,12 +189,12 @@ const Button = styled.button`
 `;
 
 const Input = styled.input`
-  padding: ${theme.spacing.sm} ${theme.spacing.md};
+  padding: 6px ${theme.spacing.md};
   border: 1px solid ${theme.colors.border};
   border-radius: ${theme.borderRadius.md};
-  font-size: ${theme.typography.fontSize.base};
+  font-size: 0.9rem;
   background: white;
-  min-width: 250px;
+  min-width: 200px;
   transition: all ${theme.transitions.fast};
   
   &:hover {
@@ -462,16 +463,16 @@ export function SettingsPage() {
   };
 
   const networkFields = [
-    { name: 'שם הרשת', value: networkName, required: true },
-    { name: 'לוגו', value: networkLogo, required: true },
-    { name: 'ח.פ', value: businessId, required: true },
-    { name: 'טלפון', value: contactPhone, required: true },
-    { name: 'דוא"ל', value: contactEmail, required: true },
-    { name: 'כתובת', value: networkAddress, required: false },
-    { name: 'אתר', value: networkWebsite, required: false },
-    { name: 'בנק', value: bankName, required: true },
-    { name: 'סניף', value: bankBranch, required: true },
-    { name: 'חשבון', value: bankAccount, required: true },
+    { name: t('settings.networkName'), value: networkName, required: true },
+    { name: t('settings.networkLogo'), value: networkLogo, required: true },
+    { name: t('settings.businessId'), value: businessId, required: true },
+    { name: t('settings.phone'), value: contactPhone, required: true },
+    { name: t('settings.email'), value: contactEmail, required: true },
+    { name: t('settings.address'), value: networkAddress, required: false },
+    { name: t('settings.website'), value: networkWebsite, required: false },
+    { name: t('settings.bankName'), value: bankName, required: true },
+    { name: t('settings.bankBranch'), value: bankBranch, required: true },
+    { name: t('settings.bankAccount'), value: bankAccount, required: true },
   ];
 
   const filledFields = networkFields.filter(f => f.value).length;
@@ -489,16 +490,16 @@ export function SettingsPage() {
 
         {/* General Settings - All Users */}
         <Section>
-          <SectionTitle>הגדרות כלליות</SectionTitle>
+          <SectionTitle>{t('settings.general')}</SectionTitle>
 
           <SettingRow>
             <SettingInfo>
-              <SettingLabel>שפה</SettingLabel>
-              <SettingDescription>בחר את שפת הממשק (עברית ⇄ English)</SettingDescription>
+              <SettingLabel>{t('settings.language')}</SettingLabel>
+              <SettingDescription>{t('settings.languageDesc')}</SettingDescription>
             </SettingInfo>
             <Select value={locale} onChange={() => toggleLocale()}>
-              <option value="he">עברית</option>
-              <option value="en">English</option>
+              <option value="he">{t('language.he')}</option>
+              <option value="en">{t('language.en')}</option>
             </Select>
           </SettingRow>
 
@@ -508,16 +509,16 @@ export function SettingsPage() {
               <SettingDescription>{t('settings.currencyDesc')}</SettingDescription>
             </SettingInfo>
             <Select value={currency} onChange={(e) => setCurrency(e.target.value as any)} style={{ direction: 'ltr', textAlign: 'right' }}>
-              <option value="ILS">שקל ₪</option>
-              <option value="USD">דולר $</option>
-              <option value="EUR">יורו €</option>
+              <option value="ILS">{t('currency.ils')}</option>
+              <option value="USD">{t('currency.usd')}</option>
+              <option value="EUR">{t('currency.eur')}</option>
             </Select>
           </SettingRow>
 
           <SettingRow>
             <SettingInfo>
-              <SettingLabel>התראות פוש (Push)</SettingLabel>
-              <SettingDescription>קבל התראות ישירות לדפדפן או לנייד</SettingDescription>
+              <SettingLabel>{t('settings.notificationsPush')}</SettingLabel>
+              <SettingDescription>{t('settings.notificationsPushDesc')}</SettingDescription>
             </SettingInfo>
             <ToggleSwitch>
               <ToggleInput
@@ -531,8 +532,8 @@ export function SettingsPage() {
 
           <SettingRow>
             <SettingInfo>
-              <SettingLabel>התראות SMS</SettingLabel>
-              <SettingDescription>קבל עדכונים חשובים בהודעת טקסט</SettingDescription>
+              <SettingLabel>{t('settings.notificationsSms')}</SettingLabel>
+              <SettingDescription>{t('settings.notificationsSmsDesc')}</SettingDescription>
             </SettingInfo>
             <ToggleSwitch>
               <ToggleInput
@@ -546,8 +547,8 @@ export function SettingsPage() {
 
           <SettingRow>
             <SettingInfo>
-              <SettingLabel>התראות אימייל (Email)</SettingLabel>
-              <SettingDescription>קבל דוחות וסיכומי פעילות לתיבת הדואר</SettingDescription>
+              <SettingLabel>{t('settings.notificationsEmail')}</SettingLabel>
+              <SettingDescription>{t('settings.notificationsEmailDesc')}</SettingDescription>
             </SettingInfo>
             <ToggleSwitch>
               <ToggleInput
@@ -578,13 +579,13 @@ export function SettingsPage() {
         {/* Network Settings - Network Admin+ */}
         {canSeeNetworkSettings && (
           <Section>
-            <SectionTitle>פרטי הרשת</SectionTitle>
+            <SectionTitle>{t('settings.networkDetails')}</SectionTitle>
 
             <ProfileCompletionCard>
               <ProfileCompletionHeader>
                 <ProfileCompletionTitle>
                   <span className="material-symbols-outlined" style={{ fontSize: '20px', color: theme.colors.primary }}>task_alt</span>
-                  השלמת פרופיל הרשת
+                  {t('settings.networkProfileCompletion')}
                 </ProfileCompletionTitle>
                 <ProfileCompletionPercent $complete={completionPercent === 100}>
                   {completionPercent}%
@@ -595,7 +596,7 @@ export function SettingsPage() {
               </ProgressBarContainer>
               {missingRequiredFields.length > 0 && (
                 <MissingFields>
-                  <span style={{ fontSize: theme.typography.fontSize.xs, color: theme.colors.textSecondary }}>חסרים:</span>
+                  <span style={{ fontSize: theme.typography.fontSize.xs, color: theme.colors.textSecondary }}>{t('settings.missingFields')}</span>
                   {missingRequiredFields.map(f => (
                     <MissingFieldTag key={f.name}>
                       <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>circle</span>
@@ -608,37 +609,37 @@ export function SettingsPage() {
 
             <SettingRow>
               <SettingInfo>
-                <SettingLabel>שם הרשת</SettingLabel>
-                <SettingDescription>שם רשת החנויות שלך</SettingDescription>
+                <SettingLabel>{t('settings.networkName')}</SettingLabel>
+                <SettingDescription>{t('settings.networkNameDesc')}</SettingDescription>
               </SettingInfo>
               <Input
                 type="text"
                 value={networkName}
                 onChange={(e) => setNetworkName(e.target.value)}
-                placeholder="לדוגמה: רשת סופר-פארם"
+                placeholder={t('settings.networkNamePlaceholder')}
               />
             </SettingRow>
 
             <SettingRow>
               <SettingInfo>
-                <SettingLabel>לוגו הרשת</SettingLabel>
-                <SettingDescription>העלה את הלוגו של הרשת (PNG, JPG)</SettingDescription>
+                <SettingLabel>{t('settings.networkLogo')}</SettingLabel>
+                <SettingDescription>{t('settings.networkLogoDesc')}</SettingDescription>
               </SettingInfo>
               <LogoUpload>
                 <LogoPreview>
                   {networkLogo ? (
-                    <img src={networkLogo} alt="לוגו הרשת" />
+                    <img src={networkLogo} alt={t('settings.networkLogo')} />
                   ) : (
                     <span className="material-symbols-outlined" style={{ color: theme.colors.gray[400], fontSize: '24px' }}>image</span>
                   )}
                 </LogoPreview>
                 <UploadButton>
                   <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>upload</span>
-                  העלה לוגו
+                  {t('settings.uploadLogo')}
                   <input type="file" accept="image/*" onChange={handleLogoUpload} />
                 </UploadButton>
                 {networkLogo && (
-                  <DeleteLogoButton onClick={() => setNetworkLogo(null)} title="מחק לוגו">
+                  <DeleteLogoButton onClick={() => setNetworkLogo(null)} title={t('settings.deleteLogo')}>
                     <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
                   </DeleteLogoButton>
                 )}
@@ -647,14 +648,14 @@ export function SettingsPage() {
 
             <SettingRow>
               <SettingInfo>
-                <SettingLabel>ח.פ / מספר עוסק</SettingLabel>
-                <SettingDescription>מספר הזיהוי העסקי שלך (9 ספרות)</SettingDescription>
+                <SettingLabel>{t('settings.businessId')}</SettingLabel>
+                <SettingDescription>{t('settings.businessIdDesc')}</SettingDescription>
               </SettingInfo>
               <Input
                 type="text"
                 value={businessId}
                 onChange={(e) => setBusinessId(e.target.value.replace(/\D/g, '').slice(0, 9))}
-                placeholder="000000000"
+                placeholder={t('settings.businessIdPlaceholder')}
                 style={{ minWidth: '160px', textAlign: 'center', letterSpacing: '1px' }}
                 maxLength={9}
               />
@@ -662,68 +663,68 @@ export function SettingsPage() {
 
             <SubsectionHeader>
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>contact_phone</span>
-              פרטי קשר
+              {t('settings.contactDetails')}
             </SubsectionHeader>
 
             <SettingRow>
               <SettingInfo>
-                <SettingLabel>טלפון</SettingLabel>
-                <SettingDescription>מספר הטלפון הראשי של הרשת</SettingDescription>
+                <SettingLabel>{t('settings.phone')}</SettingLabel>
+                <SettingDescription>{t('settings.phoneDesc')}</SettingDescription>
               </SettingInfo>
               <Input
                 type="tel"
                 value={contactPhone}
                 onChange={(e) => setContactPhone(e.target.value.replace(/[^\d-]/g, ''))}
-                placeholder="03-1234567"
+                placeholder={t('settings.phonePlaceholder')}
                 style={{ minWidth: '180px', direction: 'ltr', textAlign: 'right' }}
               />
             </SettingRow>
 
             <SettingRow>
               <SettingInfo>
-                <SettingLabel>דוא"ל</SettingLabel>
-                <SettingDescription>כתובת האימייל הראשית</SettingDescription>
+                <SettingLabel>{t('settings.email')}</SettingLabel>
+                <SettingDescription>{t('settings.emailDesc')}</SettingDescription>
               </SettingInfo>
               <Input
                 type="email"
                 value={contactEmail}
                 onChange={(e) => setContactEmail(e.target.value)}
-                placeholder="info@company.co.il"
+                placeholder={t('settings.emailPlaceholder')}
                 style={{ minWidth: '220px', direction: 'ltr', textAlign: 'right' }}
               />
             </SettingRow>
 
             <SettingRow>
               <SettingInfo>
-                <SettingLabel>כתובת</SettingLabel>
-                <SettingDescription>כתובת המשרד הראשי</SettingDescription>
+                <SettingLabel>{t('settings.address')}</SettingLabel>
+                <SettingDescription>{t('settings.addressDesc')}</SettingDescription>
               </SettingInfo>
               <Input
                 type="text"
                 value={networkAddress}
                 onChange={(e) => setNetworkAddress(e.target.value)}
-                placeholder="רחוב הרצל 1, תל אביב"
+                placeholder={t('settings.addressPlaceholder')}
                 style={{ minWidth: '250px' }}
               />
             </SettingRow>
 
             <SettingRow>
               <SettingInfo>
-                <SettingLabel>אתר אינטרנט</SettingLabel>
-                <SettingDescription>כתובת האתר של הרשת</SettingDescription>
+                <SettingLabel>{t('settings.website')}</SettingLabel>
+                <SettingDescription>{t('settings.websiteDesc')}</SettingDescription>
               </SettingInfo>
               <Input
                 type="url"
                 value={networkWebsite}
                 onChange={(e) => setNetworkWebsite(e.target.value)}
-                placeholder="https://www.example.co.il"
+                placeholder={t('settings.websitePlaceholder')}
                 style={{ minWidth: '250px', direction: 'ltr', textAlign: 'right' }}
               />
             </SettingRow>
 
             <SubsectionHeader>
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>account_balance</span>
-              פרטי בנק
+              {t('settings.bankDetails')}
               <SecurityBadge>
                 <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>lock</span>
                 מאובטח
@@ -732,32 +733,32 @@ export function SettingsPage() {
 
             <SettingRow>
               <SettingInfo>
-                <SettingLabel>שם הבנק</SettingLabel>
-                <SettingDescription>הבנק בו מנוהל חשבון העסק</SettingDescription>
+                <SettingLabel>{t('settings.bankName')}</SettingLabel>
+                <SettingDescription>{t('settings.bankNameDesc')}</SettingDescription>
               </SettingInfo>
               <Select
                 value={bankName}
                 onChange={(e) => setBankName(e.target.value)}
                 style={{ minWidth: '200px' }}
               >
-                <option value="">בחר בנק...</option>
-                <option value="leumi">בנק לאומי</option>
-                <option value="hapoalim">בנק הפועלים</option>
-                <option value="discount">בנק דיסקונט</option>
-                <option value="mizrahi">בנק מזרחי טפחות</option>
-                <option value="fibi">הבנק הבינלאומי</option>
-                <option value="mercantile">בנק מרכנתיל</option>
-                <option value="otsar">בנק אוצר החייל</option>
-                <option value="igud">בנק איגוד</option>
-                <option value="yahav">בנק יהב</option>
-                <option value="massad">בנק מסד</option>
+                <option value="">{t('settings.bankPlaceholder')}</option>
+                <option value="leumi">{t('banks.leumi')}</option>
+                <option value="hapoalim">{t('banks.hapoalim')}</option>
+                <option value="discount">{t('banks.discount')}</option>
+                <option value="mizrahi">{t('banks.mizrahi')}</option>
+                <option value="fibi">{t('banks.fibi')}</option>
+                <option value="mercantile">{t('banks.mercantile')}</option>
+                <option value="otsar">{t('banks.otsar')}</option>
+                <option value="igud">{t('banks.igud')}</option>
+                <option value="yahav">{t('banks.yahav')}</option>
+                <option value="massad">{t('banks.massad')}</option>
               </Select>
             </SettingRow>
 
             <SettingRow>
               <SettingInfo>
-                <SettingLabel>מספר סניף</SettingLabel>
-                <SettingDescription>מספר הסניף של הבנק (3 ספרות)</SettingDescription>
+                <SettingLabel>{t('settings.bankBranch')}</SettingLabel>
+                <SettingDescription>{t('settings.bankBranchDesc')}</SettingDescription>
               </SettingInfo>
               <Input
                 type="text"
@@ -771,8 +772,8 @@ export function SettingsPage() {
 
             <SettingRow>
               <SettingInfo>
-                <SettingLabel>מספר חשבון</SettingLabel>
-                <SettingDescription>מספר חשבון הבנק של העסק</SettingDescription>
+                <SettingLabel>{t('settings.bankAccount')}</SettingLabel>
+                <SettingDescription>{t('settings.bankAccountDesc')}</SettingDescription>
               </SettingInfo>
               <Input
                 type="text"
@@ -789,12 +790,12 @@ export function SettingsPage() {
         {/* Receipt Settings - Cashier+ */}
         {canSeeReceiptSettings && (
           <Section>
-            <SectionTitle>הגדרות קבלות</SectionTitle>
+            <SectionTitle>{t('settings.receipts')}</SectionTitle>
 
             <SettingRow>
               <SettingInfo>
-                <SettingLabel>הדפסה אוטומטית</SettingLabel>
-                <SettingDescription>הדפס קבלה אוטומטית לאחר כל עסקה</SettingDescription>
+                <SettingLabel>{t('settings.autoPrint')}</SettingLabel>
+                <SettingDescription>{t('settings.autoPrintDesc')}</SettingDescription>
               </SettingInfo>
               <ToggleSwitch>
                 <ToggleInput

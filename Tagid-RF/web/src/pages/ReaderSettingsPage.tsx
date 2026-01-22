@@ -106,10 +106,10 @@ const Label = styled.label`
 
 const Input = styled.input`
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.4rem 0.8rem;
   border: 2px solid ${theme.colors.border};
-  border-radius: 10px;
-  font-size: 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
   background: ${theme.colors.background};
   color: ${theme.colors.text};
   
@@ -121,10 +121,10 @@ const Input = styled.input`
 
 const Select = styled.select`
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.4rem 0.8rem;
   border: 2px solid ${theme.colors.border};
-  border-radius: 10px;
-  font-size: 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
   background: ${theme.colors.background};
   color: ${theme.colors.text};
 `;
@@ -134,10 +134,10 @@ const Button = styled.button<{ variant?: 'primary' | 'danger' | 'success' }>`
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1rem;
   border: none;
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -230,7 +230,7 @@ const InfoValue = styled.span`
 `;
 
 const MaterialIcon = ({ name, size = 20 }: { name: string; size?: number }) => (
-  <span className="material-symbols-outlined" style={{ fontSize: size }}>{name}</span>
+    <span className="material-symbols-outlined" style={{ fontSize: size }}>{name}</span>
 );
 
 export default function ReaderSettingsPage() {
