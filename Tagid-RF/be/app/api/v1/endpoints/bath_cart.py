@@ -11,10 +11,11 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-from app.db.dependencies import get_db
 from fastapi import APIRouter, Depends, HTTPException, status
-from prisma import Prisma
 from pydantic import BaseModel
+
+from app.db.dependencies import get_db
+from prisma import Prisma
 
 logger = logging.getLogger(__name__)
 
@@ -91,9 +92,7 @@ def clear_bath_cart(bath_id: str):
 
 
 @router.post("/{bath_id}/scan", response_model=CartItem)
-async def scan_tag_to_cart(
-    bath_id: str, request: ScanTagRequest, db: Prisma = Depends(get_db)
-):
+async def scan_tag_to_cart(bath_id: str, request: ScanTagRequest, db: Prisma = Depends(get_db)):
     """
     Add a tag to the cart when scanned by bath reader.
 
@@ -113,9 +112,7 @@ async def scan_tag_to_cart(
         reader = await db.rfidreader.find_first(where={"qrCode": bath_id})
 
     if not reader or reader.type != "BATH":
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Bath reader not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bath reader not found")
 
     # Find tag by EPC
     tag = await db.rfidtag.find_unique(where={"epc": request.epc})
@@ -128,9 +125,7 @@ async def scan_tag_to_cart(
 
     # Check if already paid
     if tag.isPaid:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Tag is already paid"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tag is already paid")
 
     # Check if already in cart
     cart = get_bath_cart(reader.id)
@@ -168,9 +163,7 @@ async def remove_from_cart(bath_id: str, tag_id: str, db: Prisma = Depends(get_d
         reader = await db.rfidreader.find_first(where={"qrCode": bath_id})
 
     if not reader:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Bath reader not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bath reader not found")
 
     cart = get_bath_cart(reader.id)
 
@@ -194,9 +187,7 @@ async def get_cart(bath_id: str, db: Prisma = Depends(get_db)):
         reader = await db.rfidreader.find_first(where={"qrCode": bath_id})
 
     if not reader or reader.type != "BATH":
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Bath reader not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bath reader not found")
 
     cart_tag_ids = get_bath_cart(reader.id)
 
@@ -236,9 +227,7 @@ async def get_cart(bath_id: str, db: Prisma = Depends(get_db)):
 
 
 @router.post("/{bath_id}/checkout", response_model=CheckoutResponse)
-async def checkout(
-    bath_id: str, request: CheckoutRequest, db: Prisma = Depends(get_db)
-):
+async def checkout(bath_id: str, request: CheckoutRequest, db: Prisma = Depends(get_db)):
     """
     Process checkout for bath cart.
 
@@ -257,16 +246,12 @@ async def checkout(
         reader = await db.rfidreader.find_first(where={"qrCode": bath_id})
 
     if not reader:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Bath reader not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bath reader not found")
 
     cart_tag_ids = get_bath_cart(reader.id)
 
     if not cart_tag_ids:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Cart is empty"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cart is empty")
 
     total_price = 0.0
     items_count = 0
@@ -318,9 +303,7 @@ async def clear_cart(bath_id: str, db: Prisma = Depends(get_db)):
         reader = await db.rfidreader.find_first(where={"qrCode": bath_id})
 
     if not reader:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Bath reader not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bath reader not found")
 
     cart_tag_ids = get_bath_cart(reader.id)
 

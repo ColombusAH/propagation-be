@@ -6,9 +6,10 @@ from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from httpx import ASGITransport, AsyncClient
+
 from app.main import app
 from app.services.database import get_db
-from httpx import ASGITransport, AsyncClient
 
 pytestmark = pytest.mark.skip(reason="Complex async mocking issues with DB session")
 
@@ -51,9 +52,7 @@ def make_mock_tag(**kwargs):
 
 @pytest.fixture
 async def ac():
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
 
 
@@ -147,9 +146,7 @@ async def test_update_tag_put(ac, mock_db):
     tag = make_mock_tag(location="Old Loc")
     mock_db.query().filter().first.return_value = tag
 
-    response = await ac.put(
-        "/api/v1/tags/1", json={"location": "New Loc", "is_paid": True}
-    )
+    response = await ac.put("/api/v1/tags/1", json={"location": "New Loc", "is_paid": True})
 
     assert response.status_code == 200
     assert tag.location == "New Loc"
@@ -187,9 +184,7 @@ async def test_get_tag_stats(ac, mock_db):
     """Test summary statistics endpoint."""
     mock_db.query().count.return_value = 10
     mock_db.query().filter().count.return_value = 5
-    mock_db.query().order_by().first.return_value = make_mock_tag(
-        epc="BEST", read_count=100
-    )
+    mock_db.query().order_by().first.return_value = make_mock_tag(epc="BEST", read_count=100)
     mock_db.query().filter().scalar.return_value = -55.0
     mock_db.query().filter().group_by().all.return_value = [("Warehouse", 10)]
 

@@ -13,9 +13,7 @@ async def migrate_roles():
     """Update Role enum in database."""
 
     # Get database URL from environment
-    db_url = os.getenv(
-        "DATABASE_URL", "postgresql://postgres:postgres@127.0.0.1:5432/shifty"
-    )
+    db_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@127.0.0.1:5432/shifty")
 
     print(f"Connecting to database...")
 

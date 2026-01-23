@@ -147,9 +147,7 @@ def analyze_response(data: bytes):
                 print(f"      DATA:   {payload.hex().upper()}")
                 # Try to decode as ASCII
                 try:
-                    ascii_str = payload.rstrip(b"\x00").decode(
-                        "ascii", errors="replace"
-                    )
+                    ascii_str = payload.rstrip(b"\x00").decode("ascii", errors="replace")
                     if any(c.isalnum() for c in ascii_str):
                         print(f"      ASCII:  {ascii_str}")
                 except:
@@ -159,9 +157,7 @@ def analyze_response(data: bytes):
         # Check if ASCII
         try:
             ascii_view = data.decode("ascii", errors="replace")
-            printable = "".join(
-                c if c.isprintable() or c in "\n\r\t" else "." for c in ascii_view
-            )
+            printable = "".join(c if c.isprintable() or c in "\n\r\t" else "." for c in ascii_view)
             if printable.strip():
                 print(f"   ASCII: {printable[:200]}")
         except:

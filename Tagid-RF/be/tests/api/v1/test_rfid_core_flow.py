@@ -16,13 +16,12 @@ TODO: Adjust fixture names if they differ in the project.
 """
 
 import pytest
-from app.core.config import settings
-from app.db.prisma import prisma_client
 from httpx import AsyncClient
 
-pytestmark = pytest.mark.skip(
-    reason="Integration tests require full DB and Prisma setup"
-)
+from app.core.config import settings
+from app.db.prisma import prisma_client
+
+pytestmark = pytest.mark.skip(reason="Integration tests require full DB and Prisma setup")
 
 
 @pytest.mark.skip(
@@ -50,9 +49,7 @@ async def test_full_rfid_flow(
 
     # Debug: Print response for troubleshooting
     if add_response.status_code != 200:
-        print(
-            f"DEBUG: cart/add response: {add_response.status_code} - {add_response.text}"
-        )
+        print(f"DEBUG: cart/add response: {add_response.status_code} - {add_response.text}")
 
     assert (
         add_response.status_code == 200

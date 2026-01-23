@@ -58,9 +58,7 @@ class TestCreatePaymentIntent:
             )
             mock_gateway.return_value = mock_cash
 
-            mock_prisma.client.payment.create = AsyncMock(
-                return_value=MagicMock(id="payment-1")
-            )
+            mock_prisma.client.payment.create = AsyncMock(return_value=MagicMock(id="payment-1"))
 
             response = await client.post(
                 "/api/v1/payment/create-intent",
@@ -114,9 +112,7 @@ class TestConfirmPayment:
 
             mock_gw = MagicMock()
             mock_gw.confirm_payment = AsyncMock(
-                return_value=MagicMock(
-                    success=True, status=MagicMock(value="COMPLETED")
-                )
+                return_value=MagicMock(success=True, status=MagicMock(value="COMPLETED"))
             )
             mock_gateway.return_value = mock_gw
 
@@ -158,9 +154,7 @@ class TestCreateCashPayment:
             )
             mock_gateway.return_value = mock_cash
 
-            mock_prisma.client.payment.create = AsyncMock(
-                return_value=MagicMock(id="payment-1")
-            )
+            mock_prisma.client.payment.create = AsyncMock(return_value=MagicMock(id="payment-1"))
 
             response = await client.post(
                 "/api/v1/payment/cash",

@@ -1,10 +1,11 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from app.api.dependencies.auth import get_current_user
-from app.main import app
 from httpx import AsyncClient
 from prisma.models import User
+
+from app.api.dependencies.auth import get_current_user
+from app.main import app
 
 
 @pytest.mark.asyncio

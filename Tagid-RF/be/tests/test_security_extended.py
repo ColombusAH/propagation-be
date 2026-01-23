@@ -1,8 +1,13 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from app.core.security import (create_access_token, get_password_hash,
-                               verify_access_token, verify_password)
+
+from app.core.security import (
+    create_access_token,
+    get_password_hash,
+    verify_access_token,
+    verify_password,
+)
 
 
 def test_verify_access_token_valid():

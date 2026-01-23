@@ -5,9 +5,10 @@ Mock-based tests for network endpoints (no DB required).
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from fastapi.testclient import TestClient
+
 from app.api.deps import get_current_active_user
 from app.main import app
-from fastapi.testclient import TestClient
 from tests.mock_utils import MockModel
 
 client = TestClient(app)
@@ -61,9 +62,7 @@ class TestNetworkEndpointsMock:
         mock_prisma.client.__aenter__ = AsyncMock(return_value=mock_db)
         mock_prisma.client.__aexit__ = AsyncMock(return_value=None)
 
-        mock_store = MockModel(
-            id="store1", name="Store 1", slug="store-1", address="Address 1"
-        )
+        mock_store = MockModel(id="store1", name="Store 1", slug="store-1", address="Address 1")
 
         mock_db.store.find_many = AsyncMock(return_value=[mock_store])
 

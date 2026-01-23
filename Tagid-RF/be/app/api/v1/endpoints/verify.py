@@ -2,9 +2,10 @@
 
 from typing import Optional
 
-from app.db.prisma import prisma_client
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+
+from app.db.prisma import prisma_client
 
 router = APIRouter()
 

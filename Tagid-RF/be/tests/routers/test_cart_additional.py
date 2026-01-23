@@ -6,10 +6,11 @@ Covers checkout edge cases and empty cart handling.
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from fastapi.testclient import TestClient
+
 from app.main import app
 from app.routers.cart import FAKE_CART_DB, _calculate_summary, get_cart_session
 from app.schemas.cart import CartItem
-from fastapi.testclient import TestClient
 
 client = TestClient(app)
 

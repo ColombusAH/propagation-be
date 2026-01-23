@@ -8,6 +8,7 @@ import socket
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from app.services.m200_protocol import HEAD, M200Commands, M200Status
 from app.services.rfid_reader import RFIDReaderService
 
@@ -49,9 +50,7 @@ async def test_read_single_tag_success(reader):
             "app.services.rfid_reader.M200ResponseParser.parse",
             return_value=mock_parsed,
         ),
-        patch(
-            "app.services.rfid_reader.parse_inventory_response", return_value=mock_tags
-        ),
+        patch("app.services.rfid_reader.parse_inventory_response", return_value=mock_tags),
         patch.object(reader, "_send_command", return_value=mock_response),
     ):
         tags = await reader.read_single_tag()
@@ -67,9 +66,7 @@ async def test_read_single_tag_inventory_complete(reader):
     mock_parsed = MagicMock()
     mock_parsed.status = M200Status.INVENTORY_COMPLETE
 
-    with patch(
-        "app.services.rfid_reader.M200ResponseParser.parse", return_value=mock_parsed
-    ):
+    with patch("app.services.rfid_reader.M200ResponseParser.parse", return_value=mock_parsed):
         with patch.object(reader, "_send_command", return_value=b"raw_bytes"):
             tags = await reader.read_single_tag()
             assert tags == []
@@ -82,9 +79,7 @@ async def test_read_single_tag_failure(reader):
     mock_parsed.status = M200Status.COMMAND_FAILED
     mock_parsed.success = False
 
-    with patch(
-        "app.services.rfid_reader.M200ResponseParser.parse", return_value=mock_parsed
-    ):
+    with patch("app.services.rfid_reader.M200ResponseParser.parse", return_value=mock_parsed):
         with patch.object(reader, "_send_command", return_value=b"raw_bytes"):
             tags = await reader.read_single_tag()
             assert tags == []

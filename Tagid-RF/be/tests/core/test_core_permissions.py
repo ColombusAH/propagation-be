@@ -1,10 +1,16 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from app.core.permissions import (can_create_role, is_admin, is_manager,
-                                  requires_any_role, requires_role)
 from fastapi import HTTPException, status
 from prisma.models import User
+
+from app.core.permissions import (
+    can_create_role,
+    is_admin,
+    is_manager,
+    requires_any_role,
+    requires_role,
+)
 
 
 def create_mock_user(role: str):

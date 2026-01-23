@@ -6,9 +6,10 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from fastapi.testclient import TestClient
+
 from app.core.deps import get_current_user
 from app.main import app
-from fastapi.testclient import TestClient
 from tests.mock_utils import MockModel
 
 client = TestClient(app)
@@ -65,9 +66,7 @@ class TestAlertsEndpointsMock:
             notes=None,
         )
         recipient = MockModel(id="r1", theftAlert=alert)
-        mock_prisma.client.alertrecipient.find_many = AsyncMock(
-            return_value=[recipient]
-        )
+        mock_prisma.client.alertrecipient.find_many = AsyncMock(return_value=[recipient])
 
         response = client.get("/api/v1/alerts/my-alerts")
         assert response.status_code == 200

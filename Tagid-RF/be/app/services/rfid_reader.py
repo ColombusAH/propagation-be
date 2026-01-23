@@ -19,19 +19,39 @@ from app.models.rfid_tag import RFIDScanHistory, RFIDTag
 from app.routers.websocket import manager
 from app.services.database import SessionLocal
 from app.services.m200_protocol import (  # noqa: F401 - Full protocol API exposed for comprehensive reader control
-    HEAD, M200Command, M200Commands, M200ResponseParser, M200Status,
-    build_get_all_params_command, build_get_device_info_command,
-    build_get_gate_param_command, build_get_gate_status_command,
-    build_get_gpio_levels_command, build_get_gpio_param_command,
-    build_get_network_command, build_get_query_param_command,
-    build_inventory_command, build_module_init_command, build_read_tag_command,
-    build_relay1_command, build_relay2_command, build_select_tag_command,
-    build_set_all_params_command, build_set_gate_param_command,
-    build_set_gpio_param_command, build_set_network_command,
-    build_set_power_command, build_set_query_param_command,
-    build_set_rssi_filter_command, build_stop_inventory_command,
-    parse_device_info, parse_gate_status, parse_gpio_levels,
-    parse_inventory_response, parse_network_response)
+    HEAD,
+    M200Command,
+    M200Commands,
+    M200ResponseParser,
+    M200Status,
+    build_get_all_params_command,
+    build_get_device_info_command,
+    build_get_gate_param_command,
+    build_get_gate_status_command,
+    build_get_gpio_levels_command,
+    build_get_gpio_param_command,
+    build_get_network_command,
+    build_get_query_param_command,
+    build_inventory_command,
+    build_module_init_command,
+    build_read_tag_command,
+    build_relay1_command,
+    build_relay2_command,
+    build_select_tag_command,
+    build_set_all_params_command,
+    build_set_gate_param_command,
+    build_set_gpio_param_command,
+    build_set_network_command,
+    build_set_power_command,
+    build_set_query_param_command,
+    build_set_rssi_filter_command,
+    build_stop_inventory_command,
+    parse_device_info,
+    parse_gate_status,
+    parse_gpio_levels,
+    parse_inventory_response,
+    parse_network_response,
+)
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -119,9 +139,7 @@ class RFIDReaderService:
             device_info = await self.get_reader_info()
             if device_info.get("connected"):
                 self._device_info = device_info
-                logger.info(
-                    f"✓ M-200 device info: {device_info.get('serial_number', 'Unknown')}"
-                )
+                logger.info(f"✓ M-200 device info: {device_info.get('serial_number', 'Unknown')}")
             else:
                 logger.warning("Connected but could not retrieve device info")
 
@@ -214,9 +232,7 @@ class RFIDReaderService:
                     except socket.timeout:
                         pass  # No more data available
                     # Return what we got - let parser handle the error
-                    logger.debug(
-                        f"← RX: {response.hex().upper()} (len={len(response)})"
-                    )
+                    logger.debug(f"← RX: {response.hex().upper()} (len={len(response)})")
                     return response
 
                 # Restore original timeout
@@ -308,9 +324,7 @@ class RFIDReaderService:
                 response_text = response_bytes.decode("ascii", errors="replace")
 
                 # Detect JSON/HTTP protocol
-                if response_text.startswith(
-                    "Content-Length:"
-                ) or response_text.startswith("HTTP/"):
+                if response_text.startswith("Content-Length:") or response_text.startswith("HTTP/"):
                     logger.error(
                         "⚠️  Protocol mismatch: Reader is responding with JSON/HTTP, not binary M-200 protocol"
                     )
@@ -332,9 +346,9 @@ class RFIDReaderService:
                                     logger.error(
                                         f"JSON response type: {json_data.get('type', 'unknown')}"
                                     )
-                                    if json_data.get(
-                                        "type"
-                                    ) == "event" and "debugpy" in str(json_data):
+                                    if json_data.get("type") == "event" and "debugpy" in str(
+                                        json_data
+                                    ):
                                         logger.error(
                                             "This appears to be a Python debugger port (debugpy), not the RFID reader!"
                                         )
@@ -424,9 +438,7 @@ class RFIDReaderService:
                 return []
 
             if not response.success:
-                logger.warning(
-                    f"Inventory failed: {M200Status.get_description(response.status)}"
-                )
+                logger.warning(f"Inventory failed: {M200Status.get_description(response.status)}")
                 return []
 
             # Parse tag data
@@ -494,9 +506,7 @@ class RFIDReaderService:
                 logger.error(f"Error in scan loop: {e}", exc_info=True)
                 await asyncio.sleep(1)  # Wait before retrying
 
-    async def _process_tag(
-        self, tag_data: Dict[str, Any], callback: Optional[Callable] = None
-    ):
+    async def _process_tag(self, tag_data: Dict[str, Any], callback: Optional[Callable] = None):
         """
         Process a scanned tag: save to DB and broadcast via WebSocket.
 
@@ -553,9 +563,7 @@ class RFIDReaderService:
 
                 # Use Prisma to check for mapping
                 try:
-                    mapping = await prisma_client.client.tagmapping.find_unique(
-                        where={"epc": epc}
-                    )
+                    mapping = await prisma_client.client.tagmapping.find_unique(where={"epc": epc})
 
                     if mapping:
                         encryption_status = {
@@ -850,9 +858,7 @@ class RFIDReaderService:
     # Query & Select Commands
     # =========================================================================
 
-    async def set_query_params(
-        self, q_value: int = 4, session: int = 0, target: int = 0
-    ) -> bool:
+    async def set_query_params(self, q_value: int = 4, session: int = 0, target: int = 0) -> bool:
         """Set Query command parameters for inventory optimization."""
         if not self.is_connected:
             return False

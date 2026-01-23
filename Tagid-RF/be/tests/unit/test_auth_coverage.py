@@ -30,9 +30,7 @@ async def test_auth_google_login_success(client, db_session):
 
         db_session.client.user.find_unique.return_value = mock_user
 
-        response = await client.post(
-            "/api/v1/auth/google", json={"token": "valid-token"}
-        )
+        response = await client.post("/api/v1/auth/google", json={"token": "valid-token"})
 
         assert response.status_code == 200
         data = response.json()
@@ -54,9 +52,7 @@ async def test_auth_google_login_update_sub(client, db_session):
 
         db_session.client.user.find_unique.return_value = mock_user
 
-        response = await client.post(
-            "/api/v1/auth/google", json={"token": "valid-token"}
-        )
+        response = await client.post("/api/v1/auth/google", json={"token": "valid-token"})
 
         assert response.status_code == 200
         # Verify update was called
@@ -73,9 +69,7 @@ async def test_auth_google_login_user_not_found(client, db_session):
 
         db_session.client.user.find_unique.return_value = None
 
-        response = await client.post(
-            "/api/v1/auth/google", json={"token": "valid-token"}
-        )
+        response = await client.post("/api/v1/auth/google", json={"token": "valid-token"})
 
         assert response.status_code == 401
         assert "User not found" in response.json()["detail"]
@@ -87,9 +81,7 @@ async def test_auth_google_login_invalid_token(client, db_session):
     with patch("app.api.v1.endpoints.auth.id_token.verify_oauth2_token") as mock_verify:
         mock_verify.side_effect = ValueError("Invalid token")
 
-        response = await client.post(
-            "/api/v1/auth/google", json={"token": "invalid-token"}
-        )
+        response = await client.post("/api/v1/auth/google", json={"token": "invalid-token"})
 
         assert response.status_code == 401
         assert "Invalid Google token" in response.json()["detail"]
@@ -104,14 +96,10 @@ async def test_auth_google_missing_email(client, db_session):
             # No email
         }
 
-        response = await client.post(
-            "/api/v1/auth/google", json={"token": "valid-token"}
-        )
+        response = await client.post("/api/v1/auth/google", json={"token": "valid-token"})
 
         assert response.status_code == 400
-        assert (
-            "Could not extract required user information" in response.json()["detail"]
-        )
+        assert "Could not extract required user information" in response.json()["detail"]
 
 
 @pytest.mark.asyncio
@@ -147,12 +135,8 @@ async def test_auth_dev_login(client, db_session):
 
     db_session.client.user.find_unique.return_value = mock_user
 
-    with patch(
-        "prisma.Prisma", return_value=db_session
-    ):  # Patch local Prisma used in dev_login
-        response = await client.post(
-            "/api/v1/auth/dev-login", json={"role": "STORE_MANAGER"}
-        )
+    with patch("prisma.Prisma", return_value=db_session):  # Patch local Prisma used in dev_login
+        response = await client.post("/api/v1/auth/dev-login", json={"role": "STORE_MANAGER"})
 
         assert response.status_code == 200
         data = response.json()

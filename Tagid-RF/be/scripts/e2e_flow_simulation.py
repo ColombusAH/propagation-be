@@ -118,9 +118,7 @@ async def run_simulation():
             created_tags[0].epc, location=reader.name
         )
         if not is_paid:
-            logger.warning(
-                f"❌ Security Alert Triggered for {created_tags[0].productDescription}!"
-            )
+            logger.warning(f"❌ Security Alert Triggered for {created_tags[0].productDescription}!")
 
         # 8. Simulate Customer Checkout
         logger.info("💳 Simulating Customer Checkout...")

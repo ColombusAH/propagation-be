@@ -6,13 +6,15 @@ from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from app.models.rfid_tag import RFIDScanHistory, RFIDTag
-# Import the router to test
-from app.routers.tags import router
-from app.services.database import get_db
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
+
+from app.models.rfid_tag import RFIDScanHistory, RFIDTag
+
+# Import the router to test
+from app.routers.tags import router
+from app.services.database import get_db
 
 # Create a test app
 app = FastAPI()

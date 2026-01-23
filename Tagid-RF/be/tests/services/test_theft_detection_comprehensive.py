@@ -6,6 +6,7 @@ Covers tag payment checking, alert creation, and notification logic.
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from app.services.theft_detection import TheftDetectionService
 
 pytestmark = pytest.mark.skip(reason="Complex prisma_client mocking issues")
@@ -44,9 +45,7 @@ async def test_check_tag_unpaid_creates_alert(service, mock_prisma):
         productDescription="Test Product",
     )
     mock_prisma.client.tagmapping.find_unique = AsyncMock(return_value=mock_tag)
-    mock_prisma.client.theftalert.create = AsyncMock(
-        return_value=MagicMock(id="alert-1")
-    )
+    mock_prisma.client.theftalert.create = AsyncMock(return_value=MagicMock(id="alert-1"))
     mock_prisma.client.user.find_many = AsyncMock(return_value=[])
 
     result = await service.check_tag_payment_status("E200001234", location="Exit Gate")
@@ -66,9 +65,7 @@ async def test_check_tag_not_found(service, mock_prisma):
 @pytest.mark.asyncio
 async def test_resolve_alert_success(service, mock_prisma):
     """Test resolving a theft alert."""
-    mock_prisma.client.theftalert.update = AsyncMock(
-        return_value=MagicMock(id="alert-1")
-    )
+    mock_prisma.client.theftalert.update = AsyncMock(return_value=MagicMock(id="alert-1"))
 
     await service.resolve_alert("alert-1", resolved_by="user-123", notes="False alarm")
     mock_prisma.client.theftalert.update.assert_called_once()

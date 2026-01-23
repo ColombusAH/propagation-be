@@ -1,10 +1,11 @@
 from typing import AsyncGenerator
 
-from app.core.config import get_settings
-from app.db.prisma import prisma_client
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
+
+from app.core.config import get_settings
+from app.db.prisma import prisma_client
 from prisma import Prisma
 
 settings = get_settings()

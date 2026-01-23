@@ -9,10 +9,11 @@ from datetime import datetime, timezone
 from unittest.mock import ANY, MagicMock, patch
 
 import pytest
+from fastapi.testclient import TestClient
+
 from app.main import app
 from app.models.rfid_tag import RFIDScanHistory, RFIDTag
 from app.services.database import get_db
-from fastapi.testclient import TestClient
 
 pytestmark = pytest.mark.skip(reason="TestClient conflicts with async app")
 

@@ -6,6 +6,7 @@ Covers: create_mapping, verify_match, decrypt_qr, get_by_epc, get_by_qr, delete_
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from app.api.dependencies.auth import get_current_user as get_current_user_auth
 from app.core.deps import get_current_user as get_current_user_core
 from app.main import app
@@ -55,9 +56,7 @@ class TestCreateMapping:
     """Tests for POST /tag-mapping/create endpoint."""
 
     @pytest.mark.asyncio
-    async def test_create_mapping_success(
-        self, mock_prisma, mock_encryption_service, client
-    ):
+    async def test_create_mapping_success(self, mock_prisma, mock_encryption_service, client):
         """Test successful mapping creation."""
         mock_prisma.client.tagmapping.find_unique = AsyncMock(return_value=None)
         mock_prisma.client.tagmapping.create = AsyncMock(
@@ -84,13 +83,9 @@ class TestCreateMapping:
         self, mock_prisma, mock_encryption_service, client
     ):
         """Test mapping creation when EPC already exists."""
-        mock_prisma.client.tagmapping.find_unique = AsyncMock(
-            return_value=MagicMock(id="existing")
-        )
+        mock_prisma.client.tagmapping.find_unique = AsyncMock(return_value=MagicMock(id="existing"))
 
-        response = await client.post(
-            "/api/v1/tag-mapping/create", json={"epc": "E280681000001234"}
-        )
+        response = await client.post("/api/v1/tag-mapping/create", json={"epc": "E280681000001234"})
 
         assert response.status_code in [400, 401, 403]
 
@@ -171,9 +166,7 @@ class TestDecryptQR:
         """Test QR decryption with invalid QR code."""
         mock_encryption_service.decrypt_qr.return_value = None
 
-        response = await client.post(
-            "/api/v1/tag-mapping/decrypt", json={"qr_code": "invalid_qr"}
-        )
+        response = await client.post("/api/v1/tag-mapping/decrypt", json={"qr_code": "invalid_qr"})
 
         assert response.status_code == 200
         data = response.json()
@@ -259,9 +252,7 @@ class TestDeleteMapping:
     @pytest.mark.asyncio
     async def test_delete_mapping_not_found(self, mock_prisma, client):
         """Test deletion of non-existent mapping."""
-        mock_prisma.client.tagmapping.delete = AsyncMock(
-            side_effect=Exception("Not found")
-        )
+        mock_prisma.client.tagmapping.delete = AsyncMock(side_effect=Exception("Not found"))
 
         response = await client.delete("/api/v1/tag-mapping/unknown-id")
 

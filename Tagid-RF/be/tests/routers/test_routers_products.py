@@ -4,9 +4,10 @@ Covers QR generation for products.
 """
 
 import pytest
-from app.routers.products import router
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
+
+from app.routers.products import router
 
 
 @pytest.fixture
@@ -18,9 +19,7 @@ def test_app():
 
 @pytest.fixture
 async def client(test_app):
-    async with AsyncClient(
-        transport=ASGITransport(app=test_app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
         yield ac
 
 

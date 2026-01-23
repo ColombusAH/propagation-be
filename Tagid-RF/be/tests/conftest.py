@@ -45,15 +45,9 @@ patch(
     "app.services.rfid_reader.rfid_reader_service.start_scanning",
     new_callable=AsyncMock,
 ).start()
-patch(
-    "app.services.rfid_reader.rfid_reader_service.disconnect", new_callable=AsyncMock
-).start()
-patch(
-    "app.services.tag_listener_service.tag_listener_service.start", return_value=None
-).start()
-patch(
-    "app.services.tag_listener_service.tag_listener_service.stop", return_value=None
-).start()
+patch("app.services.rfid_reader.rfid_reader_service.disconnect", new_callable=AsyncMock).start()
+patch("app.services.tag_listener_service.tag_listener_service.start", return_value=None).start()
+patch("app.services.tag_listener_service.tag_listener_service.stop", return_value=None).start()
 
 # Mock DB initializations to prevent hangs in lifespan
 # patch("app.db.prisma.init_db", new_callable=AsyncMock).start()
@@ -133,9 +127,7 @@ for model_name in [
         model_mock.find_first.return_value = default_user
         model_mock.create.return_value = default_user
     elif model_name == "business":
-        default_biz = SimpleNamespace(
-            id="biz-1", name="Dev Business", slug="dev-business"
-        )
+        default_biz = SimpleNamespace(id="biz-1", name="Dev Business", slug="dev-business")
         model_mock.find_first.return_value = default_biz
         model_mock.create.return_value = default_biz
     elif model_name == "rfidtag":
@@ -208,9 +200,7 @@ async def async_client() -> AsyncGenerator:
 
     app.dependency_overrides[deps.get_db] = mock_get_db
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
     # Clear overrides after test

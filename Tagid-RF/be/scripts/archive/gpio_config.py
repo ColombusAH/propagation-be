@@ -23,9 +23,7 @@ def calculate_crc16(data: bytes) -> int:
 
 def build_command(cmd_code: int, data: bytes = b"", addr: int = 0xFF) -> bytes:
     head = 0xCF
-    frame_body = struct.pack(
-        ">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF
-    )
+    frame_body = struct.pack(">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF)
     frame_body += struct.pack("B", len(data))
     frame_body += data
     crc = calculate_crc16(frame_body)
@@ -118,9 +116,7 @@ def main():
                 0: "General Mode (GPIO triggers reading)",
                 1: "Door Access Mode (gate settings)",
             }
-            print(
-                f"\n   📊 GPIOMODE: 0x{gpiomode:02X} - {mode_names.get(gpiomode, 'Unknown')}"
-            )
+            print(f"\n   📊 GPIOMODE: 0x{gpiomode:02X} - {mode_names.get(gpiomode, 'Unknown')}")
             print(f"   📊 GPIEN:    0x{gpien:02X}")
             print(f"   📊 INTLEVEL: 0x{intlevel:02X}")
             print(f"   📊 GPOEN:    0x{gpoen:02X}")
@@ -153,9 +149,7 @@ def main():
     set_payload += b"\x00"  # INTLEVEL
     set_payload += b"\x01"  # GPOEN
     set_payload += b"\x00"  # PUTLEVEL
-    set_payload += (
-        b"\xff\x00\x00\x00\x00\x00\x00\x00"  # PUTTIME (8 bytes, 0xFF = continuous)
-    )
+    set_payload += b"\xff\x00\x00\x00\x00\x00\x00\x00"  # PUTTIME (8 bytes, 0xFF = continuous)
 
     print(f"   Payload: {set_payload.hex().upper()}")
     conn.send(build_command(0x0080, set_payload))
@@ -178,9 +172,7 @@ def main():
         if len(data) >= 1:
             gpiomode = data[0]
             mode_names = {0: "General Mode", 1: "Door Access Mode"}
-            print(
-                f"   📊 GPIOMODE: 0x{gpiomode:02X} - {mode_names.get(gpiomode, 'Unknown')}"
-            )
+            print(f"   📊 GPIOMODE: 0x{gpiomode:02X} - {mode_names.get(gpiomode, 'Unknown')}")
 
     print("\n5. Power cycle the reader and test again!")
 

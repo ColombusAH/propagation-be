@@ -34,9 +34,7 @@ def test_app(mock_user):
 
 @pytest.fixture
 async def client(test_app):
-    async with AsyncClient(
-        transport=ASGITransport(app=test_app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
         yield ac
 
 
@@ -57,9 +55,7 @@ def create_mock_alert(id, epc):
 @pytest.mark.asyncio
 async def test_list_theft_alerts_success(client):
     with patch("app.api.v1.endpoints.alerts.prisma_client") as mock_p:
-        mock_p.client.theftalert.find_many = AsyncMock(
-            return_value=[create_mock_alert("a1", "e1")]
-        )
+        mock_p.client.theftalert.find_many = AsyncMock(return_value=[create_mock_alert("a1", "e1")])
         response = await client.get("/?resolved=false")
         assert response.status_code == 200
 
@@ -67,9 +63,7 @@ async def test_list_theft_alerts_success(client):
 @pytest.mark.asyncio
 async def test_get_alert_details_success(client):
     with patch("app.api.v1.endpoints.alerts.prisma_client") as mock_p:
-        mock_p.client.theftalert.find_unique = AsyncMock(
-            return_value=create_mock_alert("a2", "e2")
-        )
+        mock_p.client.theftalert.find_unique = AsyncMock(return_value=create_mock_alert("a2", "e2"))
         response = await client.get("/a2")
         assert response.status_code == 200
 

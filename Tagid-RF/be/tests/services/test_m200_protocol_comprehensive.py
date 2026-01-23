@@ -5,46 +5,55 @@ Comprehensive tests for M200 Protocol to improve code coverage.
 import struct
 
 import pytest
-from app.services.m200_protocol import (HEAD, POLYNOMIAL, PRESET_VALUE,
-                                        M200Command, M200Commands,
-                                        M200Response, M200ResponseParser,
-                                        M200Status,
-                                        build_get_all_params_command,
-                                        build_get_device_info_command,
-                                        build_get_eas_mask_command,
-                                        build_get_gate_param_command,
-                                        build_get_gate_status_command,
-                                        build_get_gpio_levels_command,
-                                        build_get_gpio_param_command,
-                                        build_get_network_command,
-                                        build_get_query_param_command,
-                                        build_get_remote_server_command,
-                                        build_get_rf_protocol_command,
-                                        build_get_rssi_filter_command,
-                                        build_get_select_param_command,
-                                        build_inventory_command,
-                                        build_module_init_command,
-                                        build_read_tag_command,
-                                        build_relay1_command,
-                                        build_relay2_command,
-                                        build_select_tag_command,
-                                        build_set_all_params_command,
-                                        build_set_eas_mask_command,
-                                        build_set_gate_param_command,
-                                        build_set_gpio_param_command,
-                                        build_set_network_command,
-                                        build_set_power_command,
-                                        build_set_query_param_command,
-                                        build_set_remote_server_command,
-                                        build_set_rf_protocol_command,
-                                        build_set_rssi_filter_command,
-                                        build_set_select_param_command,
-                                        build_set_wifi_command,
-                                        build_stop_inventory_command,
-                                        calculate_crc16, parse_device_info,
-                                        parse_gate_status, parse_gpio_levels,
-                                        parse_inventory_response,
-                                        parse_network_response)
+
+from app.services.m200_protocol import (
+    HEAD,
+    POLYNOMIAL,
+    PRESET_VALUE,
+    M200Command,
+    M200Commands,
+    M200Response,
+    M200ResponseParser,
+    M200Status,
+    build_get_all_params_command,
+    build_get_device_info_command,
+    build_get_eas_mask_command,
+    build_get_gate_param_command,
+    build_get_gate_status_command,
+    build_get_gpio_levels_command,
+    build_get_gpio_param_command,
+    build_get_network_command,
+    build_get_query_param_command,
+    build_get_remote_server_command,
+    build_get_rf_protocol_command,
+    build_get_rssi_filter_command,
+    build_get_select_param_command,
+    build_inventory_command,
+    build_module_init_command,
+    build_read_tag_command,
+    build_relay1_command,
+    build_relay2_command,
+    build_select_tag_command,
+    build_set_all_params_command,
+    build_set_eas_mask_command,
+    build_set_gate_param_command,
+    build_set_gpio_param_command,
+    build_set_network_command,
+    build_set_power_command,
+    build_set_query_param_command,
+    build_set_remote_server_command,
+    build_set_rf_protocol_command,
+    build_set_rssi_filter_command,
+    build_set_select_param_command,
+    build_set_wifi_command,
+    build_stop_inventory_command,
+    calculate_crc16,
+    parse_device_info,
+    parse_gate_status,
+    parse_gpio_levels,
+    parse_inventory_response,
+    parse_network_response,
+)
 
 
 class TestCRC16:
@@ -367,9 +376,7 @@ class TestBuildCommands:
 
     def test_build_set_network_command(self):
         """Test building set network command."""
-        cmd = build_set_network_command(
-            "192.168.1.100", "255.255.255.0", "192.168.1.1", 4001
-        )
+        cmd = build_set_network_command("192.168.1.100", "255.255.255.0", "192.168.1.1", 4001)
         assert cmd.cmd == M200Commands.RFM_SET_GET_NETPARA
         assert cmd.data[0] == 0x01  # Set mode
 
@@ -460,9 +467,7 @@ class TestBuildCommands:
 
     def test_build_set_gate_param_command(self):
         """Test building set gate param command."""
-        cmd = build_set_gate_param_command(
-            mode=0x01, sensitivity=0x50, direction_detect=True
-        )
+        cmd = build_set_gate_param_command(mode=0x01, sensitivity=0x50, direction_detect=True)
         assert cmd.cmd == M200Commands.RFM_SET_GET_GATE_PARAM
         assert len(cmd.data) >= 4
 
@@ -484,9 +489,7 @@ class TestBuildCommands:
 
     def test_build_set_remote_server_command(self):
         """Test building set remote server command."""
-        cmd = build_set_remote_server_command(
-            ip="192.168.1.100", port=4001, enable=True
-        )
+        cmd = build_set_remote_server_command(ip="192.168.1.100", port=4001, enable=True)
         assert cmd.cmd == M200Commands.RFM_SET_GET_REMOTE_NETPARA
 
     def test_build_get_remote_server_command(self):
@@ -496,7 +499,5 @@ class TestBuildCommands:
 
     def test_build_set_wifi_command(self):
         """Test building set WiFi command."""
-        cmd = build_set_wifi_command(
-            ssid="MyNetwork", password="secret123", security=0x03
-        )
+        cmd = build_set_wifi_command(ssid="MyNetwork", password="secret123", security=0x03)
         assert cmd.cmd == M200Commands.RFM_SET_GET_WiFi_PARAM

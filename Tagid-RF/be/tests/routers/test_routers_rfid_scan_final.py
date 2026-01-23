@@ -1,11 +1,12 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
+
 from app.api.dependencies.auth import get_current_user as auth_get_user
 from app.api.v1.endpoints.rfid_scan import router
 from app.core.deps import get_current_user as core_get_user
-from fastapi import FastAPI
-from httpx import ASGITransport, AsyncClient
 
 
 @pytest.fixture
@@ -27,9 +28,7 @@ def test_app(mock_user):
 
 @pytest.fixture
 async def client(test_app):
-    async with AsyncClient(
-        transport=ASGITransport(app=test_app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
         yield ac
 
 

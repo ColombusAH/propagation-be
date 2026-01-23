@@ -5,13 +5,14 @@ Tests for Exit Scan Router - theft detection and tag status management.
 from unittest.mock import MagicMock, patch
 
 import pytest
+from fastapi import FastAPI
+from httpx import AsyncClient
+from sqlalchemy.orm import Session
+
 from app.main import app
 from app.models.rfid_tag import RFIDTag
 from app.models.store import Notification, Store, User
 from app.services.database import get_db
-from fastapi import FastAPI
-from httpx import AsyncClient
-from sqlalchemy.orm import Session
 
 # Mark as markers for easier selection
 pytestmark = pytest.mark.asyncio
@@ -39,9 +40,7 @@ class TestExitScanRouter:
         yield
         app.dependency_overrides.pop(get_db, None)
 
-    async def test_check_exit_scan_all_paid(
-        self, client: AsyncClient, mock_db, override_get_db
-    ):
+    async def test_check_exit_scan_all_paid(self, client: AsyncClient, mock_db, override_get_db):
         """Test exit scan where all items are paid."""
         db, mock_query = mock_db
         # Setup mock tags
@@ -117,9 +116,7 @@ class TestExitScanRouter:
         assert db.add.called
         assert db.commit.called
 
-    async def test_check_exit_scan_unknown_tag(
-        self, client: AsyncClient, mock_db, override_get_db
-    ):
+    async def test_check_exit_scan_unknown_tag(self, client: AsyncClient, mock_db, override_get_db):
         """Test exit scan with unknown EPC."""
         db, mock_query = mock_db
         mock_query.first.return_value = None
@@ -134,9 +131,7 @@ class TestExitScanRouter:
         assert data["unpaid_count"] == 1
         assert data["unpaid_items"][0]["product_name"] == "מוצר לא מזוהה"
 
-    async def test_mark_tags_as_paid(
-        self, client: AsyncClient, mock_db, override_get_db
-    ):
+    async def test_mark_tags_as_paid(self, client: AsyncClient, mock_db, override_get_db):
         """Test marking tags as paid."""
         db, mock_query = mock_db
         tag = MagicMock(spec=RFIDTag)
@@ -152,9 +147,7 @@ class TestExitScanRouter:
         assert tag.paid_at is not None
         assert db.commit.called
 
-    async def test_mark_tags_as_unpaid(
-        self, client: AsyncClient, mock_db, override_get_db
-    ):
+    async def test_mark_tags_as_unpaid(self, client: AsyncClient, mock_db, override_get_db):
         """Test marking tags as unpaid."""
         db, mock_query = mock_db
         tag = MagicMock(spec=RFIDTag)

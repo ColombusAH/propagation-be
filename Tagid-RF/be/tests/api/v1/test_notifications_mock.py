@@ -5,10 +5,11 @@ Mock-based tests for notifications endpoints (no DB required).
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from fastapi.testclient import TestClient
+
 from app.api.dependencies.auth import get_current_user
 from app.db.dependencies import get_db
 from app.main import app
-from fastapi.testclient import TestClient
 from tests.mock_utils import MockModel
 
 client = TestClient(app)
@@ -84,16 +85,12 @@ class TestNotificationsEndpointsMock:
                 return existing_pref
             return None
 
-        mock_db.notificationpreference.find_first = AsyncMock(
-            side_effect=mock_find_first
-        )
+        mock_db.notificationpreference.find_first = AsyncMock(side_effect=mock_find_first)
         mock_db.notificationpreference.update = AsyncMock()
         mock_db.notificationpreference.create = AsyncMock()
 
         # 3. Final fetch
-        mock_db.user.find_unique = AsyncMock(
-            return_value=MockModel(id="user1", darkMode=True)
-        )
+        mock_db.user.find_unique = AsyncMock(return_value=MockModel(id="user1", darkMode=True))
         mock_db.notificationpreference.find_many = AsyncMock(
             return_value=[
                 MockModel(channelType="PUSH", enabled=False),

@@ -6,6 +6,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from app.services.inventory import get_current_stock
 from tests.mock_utils import MockModel
 

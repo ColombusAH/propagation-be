@@ -132,15 +132,11 @@ class RFIDTagBase(BaseModel):
     )
 
     # Product & Payment Info
-    product_name: Optional[str] = Field(
-        None, max_length=255, description="Associated product name"
-    )
+    product_name: Optional[str] = Field(None, max_length=255, description="Associated product name")
     product_sku: Optional[str] = Field(
         None, max_length=50, description="Product Stock Keeping Unit"
     )
-    price_cents: Optional[int] = Field(
-        None, description="Price in cents (e.g., 1000 = 10.00)"
-    )
+    price_cents: Optional[int] = Field(None, description="Price in cents (e.g., 1000 = 10.00)")
     store_id: Optional[int] = Field(None, description="Store ID this tag belongs to")
     is_paid: bool = Field(False, description="Payment status")
 
@@ -205,16 +201,12 @@ class RFIDTagUpdate(BaseModel):
     location: Optional[str] = Field(
         None, max_length=100, description="Update the physical location"
     )
-    notes: Optional[str] = Field(
-        None, max_length=500, description="Update administrative notes"
-    )
+    notes: Optional[str] = Field(None, max_length=500, description="Update administrative notes")
     user_memory: Optional[str] = Field(None, description="Update user-defined data")
     meta: Optional[Dict[str, Any]] = Field(
         None, serialization_alias="metadata", description="Update custom metadata"
     )
-    is_active: Optional[bool] = Field(
-        None, description="Set to false to soft-delete the tag"
-    )
+    is_active: Optional[bool] = Field(None, description="Set to false to soft-delete the tag")
 
     # Product updates
     product_name: Optional[str] = Field(None, max_length=255)
@@ -256,12 +248,8 @@ class RFIDTagResponse(RFIDTagBase):
     """
 
     id: int = Field(description="Database primary key")
-    read_count: int = Field(
-        description="Total number of times this tag has been scanned"
-    )
-    is_active: bool = Field(
-        description="Whether the tag is active (false = soft deleted)"
-    )
+    read_count: int = Field(description="Total number of times this tag has been scanned")
+    is_active: bool = Field(description="Whether the tag is active (false = soft deleted)")
     first_seen: datetime = Field(description="Timestamp of first scan")
     last_seen: datetime = Field(description="Timestamp of most recent scan")
     created_at: datetime = Field(description="Database record creation timestamp")

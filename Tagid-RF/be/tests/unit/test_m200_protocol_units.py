@@ -6,17 +6,23 @@ These tests use real byte data to verify the parsing logic without mocking the f
 import struct
 
 import pytest
-from app.services.m200_protocol import (M200Command, M200Commands,
-                                        M200ResponseParser, M200Status,
-                                        build_get_device_info_command,
-                                        build_get_network_command,
-                                        build_inventory_command,
-                                        build_set_network_command,
-                                        build_set_power_command,
-                                        build_stop_inventory_command,
-                                        calculate_crc16, parse_gpio_levels,
-                                        parse_inventory_response,
-                                        parse_network_response)
+
+from app.services.m200_protocol import (
+    M200Command,
+    M200Commands,
+    M200ResponseParser,
+    M200Status,
+    build_get_device_info_command,
+    build_get_network_command,
+    build_inventory_command,
+    build_set_network_command,
+    build_set_power_command,
+    build_stop_inventory_command,
+    calculate_crc16,
+    parse_gpio_levels,
+    parse_inventory_response,
+    parse_network_response,
+)
 
 
 class TestM200ProtocolUnits:

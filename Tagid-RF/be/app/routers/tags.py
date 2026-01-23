@@ -6,14 +6,19 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
-from app.models.rfid_tag import RFIDScanHistory, RFIDTag
-from app.schemas.rfid_tag import (RFIDScanHistoryResponse, RFIDTagCreate,
-                                  RFIDTagResponse, RFIDTagStatsResponse,
-                                  RFIDTagUpdate)
-from app.services.database import get_db
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
+
+from app.models.rfid_tag import RFIDScanHistory, RFIDTag
+from app.schemas.rfid_tag import (
+    RFIDScanHistoryResponse,
+    RFIDTagCreate,
+    RFIDTagResponse,
+    RFIDTagStatsResponse,
+    RFIDTagUpdate,
+)
+from app.services.database import get_db
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -345,9 +350,7 @@ async def get_tag_by_epc(epc: str, db: Session = Depends(get_db)):
 
 
 @router.put("/{tag_id}", response_model=RFIDTagResponse)
-async def update_tag(
-    tag_id: int, tag_update: RFIDTagUpdate, db: Session = Depends(get_db)
-):
+async def update_tag(tag_id: int, tag_update: RFIDTagUpdate, db: Session = Depends(get_db)):
     """
     Update RFID tag metadata (location, notes, etc.).
 
@@ -564,13 +567,9 @@ async def get_tag_stats(db: Session = Depends(get_db)):
     active_tags = db.query(RFIDTag).filter(RFIDTag.is_active.is_(True)).count()
 
     # Scans today
-    today_start = datetime.now(timezone.utc).replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     scans_today = (
-        db.query(RFIDScanHistory)
-        .filter(RFIDScanHistory.scanned_at >= today_start)
-        .count()
+        db.query(RFIDScanHistory).filter(RFIDScanHistory.scanned_at >= today_start).count()
     )
 
     # Scans last hour
@@ -590,9 +589,7 @@ async def get_tag_stats(db: Session = Depends(get_db)):
         }
 
     # Average RSSI
-    avg_rssi_result = (
-        db.query(func.avg(RFIDTag.rssi)).filter(RFIDTag.rssi.isnot(None)).scalar()
-    )
+    avg_rssi_result = db.query(func.avg(RFIDTag.rssi)).filter(RFIDTag.rssi.isnot(None)).scalar()
     average_rssi = float(avg_rssi_result) if avg_rssi_result else None
 
     # Tags by location

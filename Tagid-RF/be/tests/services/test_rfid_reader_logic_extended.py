@@ -8,6 +8,7 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from app.services.m200_protocol import M200Commands, M200Status
 from app.services.rfid_reader import RFIDReaderService
 
@@ -81,9 +82,7 @@ async def test_process_tag_new_tag_flow(reader):
     with (
         patch("app.services.rfid_reader.SessionLocal") as mock_session_cls,
         patch("app.db.prisma.prisma_client") as mock_prisma,
-        patch(
-            "app.routers.websocket.manager.broadcast", new_callable=AsyncMock
-        ) as mock_broadcast,
+        patch("app.routers.websocket.manager.broadcast", new_callable=AsyncMock) as mock_broadcast,
         patch("app.services.rfid_reader.RFIDTag") as MockRFIDTag,
     ):
 
@@ -155,9 +154,7 @@ async def test_process_tag_with_mapping(reader):
     with (
         patch("app.services.rfid_reader.SessionLocal") as mock_session_cls,
         patch("app.db.prisma.prisma_client") as mock_prisma,
-        patch(
-            "app.routers.websocket.manager.broadcast", new_callable=AsyncMock
-        ) as mock_broadcast,
+        patch("app.routers.websocket.manager.broadcast", new_callable=AsyncMock) as mock_broadcast,
     ):
 
         # DB Mock (Simplified)

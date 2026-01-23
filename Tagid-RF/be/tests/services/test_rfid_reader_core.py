@@ -9,10 +9,17 @@ import struct
 from unittest.mock import MagicMock, patch
 
 import pytest
-from app.services.m200_protocol import (HEAD, M200Command, M200Commands,
-                                        M200ResponseParser, calculate_crc16,
-                                        parse_device_info, parse_gate_status,
-                                        parse_inventory_response)
+
+from app.services.m200_protocol import (
+    HEAD,
+    M200Command,
+    M200Commands,
+    M200ResponseParser,
+    calculate_crc16,
+    parse_device_info,
+    parse_gate_status,
+    parse_inventory_response,
+)
 from app.services.rfid_reader import RFIDReaderService
 
 
@@ -95,9 +102,7 @@ async def test_reader_connect_disconnect(reader_service):
     """Test connect and disconnect flow."""
     with patch("socket.socket") as mock_socket_cls:
         mock_sock = mock_socket_cls.return_value
-        with patch.object(
-            reader_service, "get_reader_info", return_value={"connected": True}
-        ):
+        with patch.object(reader_service, "get_reader_info", return_value={"connected": True}):
             assert await reader_service.connect() is True
             assert reader_service.is_connected is True
             await reader_service.disconnect()

@@ -25,8 +25,7 @@ async def reproduce():
         business = await db.business.create(
             data={
                 "name": "Dev Business",
-                "slug": "debug-slug-"
-                + str(asyncio.get_event_loop().time()).split(".")[0],
+                "slug": "debug-slug-" + str(asyncio.get_event_loop().time()).split(".")[0],
             }
         )
         logger.info(f"Created Business: {business.id}")

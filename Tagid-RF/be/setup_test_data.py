@@ -19,9 +19,7 @@ async def setup():
 
         if not business:
             print("Creating test business...")
-            business = await prisma_client.client.business.create(
-                data={"name": "Test Business"}
-            )
+            business = await prisma_client.client.business.create(data={"name": "Test Business"})
             print(f"✅ Created business: {business.id}")
         else:
             print(f"✅ Business exists: {business.id}")

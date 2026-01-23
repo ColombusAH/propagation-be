@@ -1,6 +1,7 @@
 import asyncio
 
 import httpx
+
 from app.main import app
 
 
@@ -10,9 +11,7 @@ async def test_dev_login():
     ) as client:
         try:
             print("Calling /api/v1/auth/dev-login...")
-            response = await client.post(
-                "/api/v1/auth/dev-login", json={"role": "STORE_MANAGER"}
-            )
+            response = await client.post("/api/v1/auth/dev-login", json={"role": "STORE_MANAGER"})
             print(f"Status Code: {response.status_code}")
             print(f"Response: {response.text}")
         except Exception as e:

@@ -6,8 +6,9 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from app.main import app
 from fastapi.testclient import TestClient
+
+from app.main import app
 from tests.mock_utils import MockModel
 
 client = TestClient(app)
@@ -69,9 +70,7 @@ class TestVerifyEndpointsMock:
         mock_prisma_client.client.__aenter__ = AsyncMock(return_value=mock_db)
         mock_prisma_client.client.__aexit__ = AsyncMock(return_value=None)
 
-        mock_tag = MockModel(
-            status="STOLEN", epc="E200001234", productDescription="Stolen Item"
-        )
+        mock_tag = MockModel(status="STOLEN", epc="E200001234", productDescription="Stolen Item")
 
         mock_db.rfidtag.find_unique = AsyncMock(return_value=mock_tag)
 

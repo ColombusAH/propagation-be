@@ -41,9 +41,7 @@ class TestPaymentBase:
         """Test creating PaymentResult."""
         from app.services.payment.base import PaymentResult, PaymentStatus
 
-        result = PaymentResult(
-            success=True, payment_id="pay-123", external_id="ext-456"
-        )
+        result = PaymentResult(success=True, payment_id="pay-123", external_id="ext-456")
 
         assert result.success is True
         assert result.payment_id == "pay-123"

@@ -24,9 +24,7 @@ def calculate_crc16(data: bytes) -> int:
 
 def build_command(cmd_code: int, data: bytes = b"", addr: int = 0x01) -> bytes:
     head = 0xCF
-    frame_body = struct.pack(
-        ">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF
-    )
+    frame_body = struct.pack(">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF)
     frame_body += struct.pack("B", len(data))
     frame_body += data
     crc = calculate_crc16(frame_body)
@@ -124,9 +122,7 @@ def run_test():
                             frame = data[i : i + 5 + length + 2]
                             cmd = (frame[2] << 8) | frame[3]  # Big Endian CMD
 
-                            print(
-                                f"[!] Frame Detected. CMD: 0x{cmd:04X} | Len: {length}"
-                            )
+                            print(f"[!] Frame Detected. CMD: 0x{cmd:04X} | Len: {length}")
 
                             # Accept 0x0001 (Inventory), 0x0018 (Cached), or 0x0082 (Auto-Report)
                             if cmd in [0x0001, 0x0018, 0x0082]:
@@ -151,9 +147,7 @@ def run_test():
                                         print(f"[!] TAG DATA: {raw_payload}")
 
                                         # Count it
-                                        tag_counts[raw_payload] = (
-                                            tag_counts.get(raw_payload, 0) + 1
-                                        )
+                                        tag_counts[raw_payload] = tag_counts.get(raw_payload, 0) + 1
 
                             i += 5 + length + 2
                             continue

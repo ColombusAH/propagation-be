@@ -4,30 +4,37 @@ import logging
 import uuid
 from typing import Any, Dict  # For type hints
 
-# Import auth dependency
-from app.api.dependencies.auth import get_current_user
-# Get Google Client ID and JWT settings from config
-from app.core.config import get_settings
-# Import security functions (JWT)
-from app.core.security import create_access_token
-# Import user CRUD operations
-from app.crud.user import (authenticate_user, create_user, get_user_by_email,
-                           update_user_google_info)
-# Import database dependency
-from app.db.dependencies import get_db
-# Import user schemas
-from app.schemas.user import TokenResponse, UserLogin, UserRegister
 from fastapi import APIRouter, Depends, HTTPException, status
-from google.auth.transport import \
-    requests as google_requests  # Alias to avoid name clash
+from google.auth.transport import requests as google_requests  # Alias to avoid name clash
+
 # Import necessary Google libraries and verification logic
 from google.oauth2 import id_token
-# Import Prisma client and dependency
-from prisma import Prisma
 from prisma.errors import TableNotFoundError
+
 # Import User model for type hints
 from prisma.models import User
 from pydantic import BaseModel
+
+# Import auth dependency
+from app.api.dependencies.auth import get_current_user
+
+# Get Google Client ID and JWT settings from config
+from app.core.config import get_settings
+
+# Import security functions (JWT)
+from app.core.security import create_access_token
+
+# Import user CRUD operations
+from app.crud.user import authenticate_user, create_user, get_user_by_email, update_user_google_info
+
+# Import database dependency
+from app.db.dependencies import get_db
+
+# Import user schemas
+from app.schemas.user import TokenResponse, UserLogin, UserRegister
+
+# Import Prisma client and dependency
+from prisma import Prisma
 
 settings = get_settings()
 GOOGLE_CLIENT_ID = settings.GOOGLE_CLIENT_ID
@@ -99,9 +106,7 @@ async def dev_login(request: DevLoginRequest, db: Prisma = Depends(get_db)):
                 logger.info(f"Found existing dev business: {business.id}")
         except Exception as bus_err:
             logger.error(f"Business operation failed: {bus_err}")
-            raise HTTPException(
-                status_code=500, detail=f"Business operation error: {str(bus_err)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Business operation error: {str(bus_err)}")
 
         # Try to find existing dev user
         user = await get_user_by_email(db, email)
@@ -123,16 +128,12 @@ async def dev_login(request: DevLoginRequest, db: Prisma = Depends(get_db)):
                 logger.info(f"User created: {user.id}")
             except Exception as user_err:
                 logger.error(f"User creation failed: {user_err}")
-                raise HTTPException(
-                    status_code=500, detail=f"User creation error: {str(user_err)}"
-                )
+                raise HTTPException(status_code=500, detail=f"User creation error: {str(user_err)}")
     except Exception as e:
         logger.error(f"Dev login failed: {e}", exc_info=True)
         if isinstance(e, HTTPException):
             raise e
-        raise HTTPException(
-            status_code=500, detail=f"Dev login internal error: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Dev login internal error: {str(e)}")
 
     # Generate Token
     jwt_payload = {
@@ -186,9 +187,7 @@ async def login_with_google(
     """
     logger.info("Received Google login request")
     google_id_token = request.token
-    logger.debug(
-        f"Received Google ID token: {google_id_token[:10]}..."
-    )  # Log only prefix
+    logger.debug(f"Received Google ID token: {google_id_token[:10]}...")  # Log only prefix
 
     if not GOOGLE_CLIENT_ID:
         logger.error("GOOGLE_CLIENT_ID is not configured in settings.")
@@ -206,9 +205,7 @@ async def login_with_google(
             GOOGLE_CLIENT_ID,
             clock_skew_in_seconds=settings.GOOGLE_TOKEN_TIMEOUT,  # Add clock skew tolerance
         )
-        logger.info(
-            f"Google token verified successfully for email: {idinfo.get('email')}"
-        )
+        logger.info(f"Google token verified successfully for email: {idinfo.get('email')}")
 
         # Extract required user info
         user_email = idinfo.get("email")
@@ -241,9 +238,7 @@ async def login_with_google(
                 f"Updating subId for user {db_user.id} from {db_user.subId} to {google_sub_id}"
             )
             try:
-                await update_user_google_info(
-                    db, user_id=db_user.id, google_sub_id=google_sub_id
-                )
+                await update_user_google_info(db, user_id=db_user.id, google_sub_id=google_sub_id)
             except Exception as db_update_error:
                 logger.error(
                     f"Failed to update subId for user {db_user.id}: {db_update_error}",
@@ -293,9 +288,7 @@ async def login_with_google(
         raise http_exc
     except Exception as e:
         # Catches other unexpected errors (DB connection, JWT creation issues, etc.)
-        logger.error(
-            f"An unexpected error occurred during Google login: {e}", exc_info=True
-        )
+        logger.error(f"An unexpected error occurred during Google login: {e}", exc_info=True)
         # Check if it's a DB connection issue hinted by dependencies.py
         if "Database connection not available" in str(
             e
@@ -317,9 +310,7 @@ async def login_with_google(
 
 
 @router.post("/login", response_model=TokenResponse, status_code=status.HTTP_200_OK)
-async def login_with_email(
-    credentials: UserLogin, db: Prisma = Depends(get_db)
-) -> TokenResponse:
+async def login_with_email(credentials: UserLogin, db: Prisma = Depends(get_db)) -> TokenResponse:
     """
     Handles user login via email and password.
 
@@ -376,12 +367,8 @@ async def login_with_email(
         )
 
 
-@router.post(
-    "/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED
-)
-async def register_user(
-    user_data: UserRegister, db: Prisma = Depends(get_db)
-) -> TokenResponse:
+@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+async def register_user(user_data: UserRegister, db: Prisma = Depends(get_db)) -> TokenResponse:
     """
     Registers a new user with email and password.
 
@@ -412,9 +399,7 @@ async def register_user(
         # Check if user already exists
         existing_user = await get_user_by_email(db, user_data.email)
         if existing_user:
-            logger.warning(
-                f"Registration failed: email {user_data.email} already exists"
-            )
+            logger.warning(f"Registration failed: email {user_data.email} already exists")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered",

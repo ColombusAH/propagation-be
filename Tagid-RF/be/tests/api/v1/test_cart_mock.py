@@ -5,11 +5,13 @@ Mock-based tests for cart endpoints (no DB required).
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from fastapi.testclient import TestClient
+
 from app.api import deps
+
 # Import USER_CARTS to manipulate it directly if needed for setup
 from app.api.v1.endpoints.cart import USER_CARTS
 from app.main import app
-from fastapi.testclient import TestClient
 from tests.mock_utils import MockModel
 
 client = TestClient(app)
@@ -60,9 +62,7 @@ class TestCartEndpointsMock:
         mock_prisma_wrapper.client = mock_client_instance
 
         # Tag exists, not paid
-        tag = MockModel(
-            epc="E123", isPaid=False, productDescription="Test Item", productId="SKU1"
-        )
+        tag = MockModel(epc="E123", isPaid=False, productDescription="Test Item", productId="SKU1")
         mock_db.rfidtag.find_unique = AsyncMock(return_value=tag)
 
         response = client.post("/api/v1/cart/add", json={"qr_data": "E123"})
@@ -163,9 +163,7 @@ class TestCartEndpointsMock:
         # Pre-populate cart
         from app.schemas.cart import CartItem
 
-        USER_CARTS["u1"] = [
-            CartItem(epc="E1", product_name="P1", product_sku="S1", price_cents=0)
-        ]
+        USER_CARTS["u1"] = [CartItem(epc="E1", product_name="P1", product_sku="S1", price_cents=0)]
 
         response = client.delete("/api/v1/cart/clear")
         assert response.status_code == 200

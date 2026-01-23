@@ -51,9 +51,7 @@ async def test_broadcast_tag_success_with_encryption(service):
         mock_p.client.__aenter__.return_value = mock_db
         with patch("app.services.database.SessionLocal") as mock_session_cls:
             mock_session = mock_session_cls.return_value
-            mock_session.query.return_value.filter.return_value.first.return_value = (
-                mock_tag_db
-            )
+            mock_session.query.return_value.filter.return_value.first.return_value = mock_tag_db
 
             with patch(
                 "app.services.tag_encryption.get_encryption_service",
@@ -86,9 +84,7 @@ async def test_broadcast_tag_theft_alert(service):
         mock_p.client.__aenter__.return_value = MagicMock()
         with patch("app.services.database.SessionLocal") as mock_session_cls:
             mock_session = mock_session_cls.return_value
-            mock_session.query.return_value.filter.return_value.first.return_value = (
-                mock_tag_db
-            )
+            mock_session.query.return_value.filter.return_value.first.return_value = mock_tag_db
 
             with patch(
                 "app.services.tag_listener_service.manager.broadcast",

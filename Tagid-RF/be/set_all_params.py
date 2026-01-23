@@ -23,9 +23,7 @@ def calculate_crc16(data: bytes) -> int:
 
 def build_command(cmd_code: int, data: bytes = b"", addr: int = 0xFF) -> bytes:
     head = 0xCF
-    frame_body = struct.pack(
-        ">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF
-    )
+    frame_body = struct.pack(">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF)
     frame_body += struct.pack("B", len(data))
     frame_body += data
     crc = calculate_crc16(frame_body)
@@ -111,9 +109,7 @@ def main():
             session = data[18] if len(data) > 18 else "?"
 
             work_modes = {0: "Answer Mode", 1: "Active Mode", 2: "Trigger Mode"}
-            print(
-                f"   📊 Current WorkMode: {work_mode} ({work_modes.get(work_mode, 'Unknown')})"
-            )
+            print(f"   📊 Current WorkMode: {work_mode} ({work_modes.get(work_mode, 'Unknown')})")
             print(f"   📊 Current QValue: {q_value}")
             print(f"   📊 Current Session: {session}")
     else:
@@ -172,9 +168,7 @@ def main():
             session = data[18]
 
             work_modes = {0: "Answer Mode", 1: "Active Mode", 2: "Trigger Mode"}
-            print(
-                f"   📊 WorkMode: {work_mode} ({work_modes.get(work_mode, 'Unknown')})"
-            )
+            print(f"   📊 WorkMode: {work_mode} ({work_modes.get(work_mode, 'Unknown')})")
             print(f"   📊 QValue: {q_value}")
             print(f"   📊 Session: {session}")
 

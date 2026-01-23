@@ -38,9 +38,7 @@ def test_public_registration_with_admin_role():
     }
 
     response = requests.post(url, json=payload)
-    print_response(
-        response, "TEST: Public Registration with SUPER_ADMIN Role (Should Fail)"
-    )
+    print_response(response, "TEST: Public Registration with SUPER_ADMIN Role (Should Fail)")
     return response.status_code == 400
 
 

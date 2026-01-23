@@ -6,8 +6,13 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from app.services.inventory import (get_current_stock, get_inventory_history,
-                                    get_latest_snapshot, take_snapshot)
+
+from app.services.inventory import (
+    get_current_stock,
+    get_inventory_history,
+    get_latest_snapshot,
+    take_snapshot,
+)
 from tests.mock_utils import MockModel
 
 
@@ -112,9 +117,7 @@ class TestInventoryServiceMock:
         mock_client_instance.__aexit__ = AsyncMock(return_value=None)
         mock_prisma_wrapper.client = mock_client_instance
 
-        mock_db.inventorysnapshot.find_first = AsyncMock(
-            side_effect=Exception("DB Error")
-        )
+        mock_db.inventorysnapshot.find_first = AsyncMock(side_effect=Exception("DB Error"))
 
         result = await get_latest_snapshot("r1")
         assert result is None
@@ -128,9 +131,7 @@ class TestInventoryServiceMock:
         mock_client_instance.__aexit__ = AsyncMock(return_value=None)
         mock_prisma_wrapper.client = mock_client_instance
 
-        mock_db.inventorysnapshot.find_many = AsyncMock(
-            side_effect=Exception("DB Error")
-        )
+        mock_db.inventorysnapshot.find_many = AsyncMock(side_effect=Exception("DB Error"))
 
         result = await get_inventory_history("r1")
         assert result == []

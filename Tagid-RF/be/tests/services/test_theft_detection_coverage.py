@@ -41,9 +41,7 @@ class TestTheftDetectionService:
                 isPaid=False, id="tag-1", epc="EPC123", productDescription="Product"
             )
             mock_prisma.client.tagmapping.find_unique = AsyncMock(return_value=mock_tag)
-            mock_prisma.client.theftalert.create = AsyncMock(
-                return_value=MagicMock(id="alert-1")
-            )
+            mock_prisma.client.theftalert.create = AsyncMock(return_value=MagicMock(id="alert-1"))
             mock_prisma.client.user.find_many = AsyncMock(return_value=[])
 
             result = await service.check_tag_payment_status("E280681000001234")
@@ -64,9 +62,7 @@ class TestTheftDetectionService:
     async def test_check_tag_payment_status_error(self, service):
         """Test handling errors during check."""
         with patch("app.services.theft_detection.prisma_client") as mock_prisma:
-            mock_prisma.client.tagmapping.find_unique = AsyncMock(
-                side_effect=Exception("DB error")
-            )
+            mock_prisma.client.tagmapping.find_unique = AsyncMock(side_effect=Exception("DB error"))
 
             result = await service.check_tag_payment_status("E280681000001234")
 
@@ -78,9 +74,7 @@ class TestTheftDetectionService:
         mock_tag = MagicMock(id="tag-1", epc="EPC123", productDescription="Product")
 
         with patch("app.services.theft_detection.prisma_client") as mock_prisma:
-            mock_prisma.client.theftalert.create = AsyncMock(
-                return_value=MagicMock(id="alert-1")
-            )
+            mock_prisma.client.theftalert.create = AsyncMock(return_value=MagicMock(id="alert-1"))
             mock_prisma.client.user.find_many = AsyncMock(return_value=[])
 
             await service._create_theft_alert(mock_tag, "Exit Gate")
@@ -103,9 +97,7 @@ class TestTheftDetectionService:
     async def test_get_stakeholders_error(self, service):
         """Test handling error when getting stakeholders."""
         with patch("app.services.theft_detection.prisma_client") as mock_prisma:
-            mock_prisma.client.user.find_many = AsyncMock(
-                side_effect=Exception("DB error")
-            )
+            mock_prisma.client.user.find_many = AsyncMock(side_effect=Exception("DB error"))
 
             stakeholders = await service._get_stakeholders()
 
@@ -160,9 +152,7 @@ class TestTheftDetectionService:
     async def test_resolve_alert_error(self, service):
         """Test handling error when resolving alert."""
         with patch("app.services.theft_detection.prisma_client") as mock_prisma:
-            mock_prisma.client.theftalert.update = AsyncMock(
-                side_effect=Exception("DB error")
-            )
+            mock_prisma.client.theftalert.update = AsyncMock(side_effect=Exception("DB error"))
 
             with pytest.raises(Exception):
                 await service.resolve_alert("alert-1", "user-1")

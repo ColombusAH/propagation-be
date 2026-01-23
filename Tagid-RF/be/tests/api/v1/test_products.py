@@ -3,9 +3,10 @@ Tests for Products Router - QR Code generation.
 """
 
 import pytest
-from app.routers.products import router
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+
+from app.routers.products import router
 
 app = FastAPI()
 app.include_router(router)

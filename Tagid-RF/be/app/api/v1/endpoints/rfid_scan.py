@@ -9,14 +9,15 @@ Provides endpoints for:
 import logging
 from typing import List, Optional
 
+from fastapi import APIRouter, Depends, HTTPException
+from prisma.models import User
+from pydantic import BaseModel
+
 from app.api.dependencies.auth import get_current_user
 from app.core.permissions import requires_any_role
 from app.db.prisma import prisma_client
 from app.services.rfid_reader import rfid_reader_service
 from app.services.tag_listener_service import tag_listener_service
-from fastapi import APIRouter, Depends, HTTPException
-from prisma.models import User
-from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -67,9 +68,7 @@ async def get_scan_status():
 @router.post("/connect")
 async def connect_reader(
     current_user: User = Depends(get_current_user),
-    _: None = Depends(
-        requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])
-    ),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
 ):
     """Connect to the RFID reader."""
     if rfid_reader_service.is_connected:
@@ -88,9 +87,7 @@ async def connect_reader(
 @router.post("/disconnect")
 async def disconnect_reader(
     current_user: User = Depends(get_current_user),
-    _: None = Depends(
-        requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])
-    ),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
 ):
     """Disconnect from the RFID reader."""
     await rfid_reader_service.disconnect()
@@ -100,9 +97,7 @@ async def disconnect_reader(
 @router.post("/start")
 async def start_scanning(
     current_user: User = Depends(get_current_user),
-    _: None = Depends(
-        requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])
-    ),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
 ):
     """Start continuous RFID scanning."""
     # Check if passive listener is already running (preferred mode)
@@ -135,9 +130,7 @@ async def start_scanning(
 @router.post("/stop")
 async def stop_scanning(
     current_user: User = Depends(get_current_user),
-    _: None = Depends(
-        requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])
-    ),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
 ):
     """Stop continuous RFID scanning."""
     # Try stopping passive listener command too
@@ -151,9 +144,7 @@ async def stop_scanning(
 @router.post("/inventory", response_model=InventoryResponse)
 async def perform_inventory(
     current_user: User = Depends(get_current_user),
-    _: None = Depends(
-        requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])
-    ),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
 ):
     """
     Perform a single inventory scan and return all tags in range.
@@ -179,9 +170,7 @@ async def perform_inventory(
             target_qr = None
 
             try:
-                mapping = await prisma_client.client.tagmapping.find_unique(
-                    where={"epc": epc}
-                )
+                mapping = await prisma_client.client.tagmapping.find_unique(where={"epc": epc})
                 if mapping:
                     is_mapped = True
                     target_qr = mapping.encryptedQr
@@ -204,11 +193,7 @@ async def perform_inventory(
             success=True,
             tag_count=len(tag_responses),
             tags=tag_responses,
-            message=(
-                f"Found {len(tag_responses)} tag(s)"
-                if tag_responses
-                else "No tags found"
-            ),
+            message=(f"Found {len(tag_responses)} tag(s)" if tag_responses else "No tags found"),
         )
 
     except Exception as e:
@@ -263,9 +248,7 @@ async def set_power(
 async def read_tag_memory(
     request: MemoryReadRequest,
     current_user: User = Depends(get_current_user),
-    _: None = Depends(
-        requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])
-    ),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
 ):
     """Read tag memory bank (TID, User, etc)."""
     data = await rfid_reader_service.read_tag_memory(
@@ -328,9 +311,7 @@ async def set_rssi_filter(
     _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER"])),
 ):
     """Set RSSI filter threshold for antenna."""
-    success = await rfid_reader_service.set_rssi_filter(
-        request.antenna, request.threshold
-    )
+    success = await rfid_reader_service.set_rssi_filter(request.antenna, request.threshold)
     if success:
         return {
             "status": "success",
@@ -378,9 +359,7 @@ async def set_gpio(
     _: None = Depends(requires_any_role(["SUPER_ADMIN"])),
 ):
     """Configure GPIO pin."""
-    success = await rfid_reader_service.set_gpio(
-        request.pin, request.direction, request.level
-    )
+    success = await rfid_reader_service.set_gpio(request.pin, request.direction, request.level)
     if success:
         return {"status": "success", "pin": request.pin}
     raise HTTPException(status_code=500, detail="Failed to configure GPIO")
@@ -400,9 +379,7 @@ async def control_relay(
     relay_num: int,
     request: RelayRequest,
     current_user: User = Depends(get_current_user),
-    _: None = Depends(
-        requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])
-    ),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
 ):
     """Control relay 1 or 2."""
     if relay_num not in [1, 2]:
@@ -428,9 +405,7 @@ class GateConfigRequest(BaseModel):
 @router.get("/gate/status")
 async def get_gate_status(
     current_user: User = Depends(get_current_user),
-    _: None = Depends(
-        requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])
-    ),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
 ):
     """Get gate detection status."""
     status = await rfid_reader_service.get_gate_status()
@@ -486,9 +461,7 @@ async def set_query_params(
 async def select_tag(
     request: SelectTagRequest,
     current_user: User = Depends(get_current_user),
-    _: None = Depends(
-        requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])
-    ),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
 ):
     """Select specific tag for subsequent operations."""
     success = await rfid_reader_service.select_tag(request.epc_mask)
