@@ -8,7 +8,6 @@ import struct
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.services.m200_protocol import HEAD, M200Commands, calculate_crc16
 from app.services.rfid_reader import RFIDReaderService
 
@@ -130,7 +129,9 @@ async def test_set_network_config_not_connected():
     reader = RFIDReaderService()
     reader.is_connected = False
 
-    result = await reader.set_network_config("192.168.1.50", "255.255.255.0", "192.168.1.1", 4001)
+    result = await reader.set_network_config(
+        "192.168.1.50", "255.255.255.0", "192.168.1.1", 4001
+    )
 
     assert result is False
 

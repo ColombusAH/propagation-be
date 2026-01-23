@@ -1,7 +1,6 @@
 import logging
 
 from fastapi import HTTPException, Request, status
-
 from prisma import Prisma
 
 logger = logging.getLogger(__name__)
@@ -27,11 +26,15 @@ async def get_db(request: Request) -> Prisma:
         # Get the actual Prisma client
         db = prisma_client_wrapper.client
         if not db.is_connected():
-            logger.warning("Database client was not connected. Attempting to reconnect.")
+            logger.warning(
+                "Database client was not connected. Attempting to reconnect."
+            )
             try:
                 await db.connect()
             except Exception as connect_error:
-                logger.error(f"Failed to reconnect database: {connect_error}", exc_info=True)
+                logger.error(
+                    f"Failed to reconnect database: {connect_error}", exc_info=True
+                )
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                     detail="Could not connect to the database.",

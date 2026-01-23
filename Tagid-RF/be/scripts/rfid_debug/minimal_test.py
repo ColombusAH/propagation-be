@@ -121,7 +121,9 @@ def parse_response(data: bytes):
         length = data[4]
         status = data[5]
 
-        print(f"   Parsed: ADDR=0x{addr:02X}, CMD=0x{cmd:04X}, LEN={length}, STATUS=0x{status:02X}")
+        print(
+            f"   Parsed: ADDR=0x{addr:02X}, CMD=0x{cmd:04X}, LEN={length}, STATUS=0x{status:02X}"
+        )
 
         if status == 0x00 and length > 1:
             payload = data[6 : 6 + length - 1]

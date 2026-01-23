@@ -6,7 +6,6 @@ import socket
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.services.rfid_reader import RFIDReaderService
 
 

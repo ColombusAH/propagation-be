@@ -54,7 +54,9 @@ def extract_tags(data: bytes) -> list:
 
                     if offset + 5 + epc_len <= len(payload):
                         epc = payload[offset + 5 : offset + 5 + epc_len]
-                        tags.append({"epc": epc.hex().upper(), "rssi": -rssi, "antenna": ant})
+                        tags.append(
+                            {"epc": epc.hex().upper(), "rssi": -rssi, "antenna": ant}
+                        )
                     offset += 5 + epc_len
 
                 i = frame_end

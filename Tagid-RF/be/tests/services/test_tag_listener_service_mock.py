@@ -6,7 +6,6 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.services.tag_listener_service import TagListenerService
 from tests.mock_utils import MockModel
 
@@ -90,7 +89,9 @@ class TestTagListenerServiceMock:
         mock_manager.broadcast = AsyncMock()
 
         # Mock encryption service
-        with patch("app.services.tag_encryption.get_encryption_service") as mock_get_enc:
+        with patch(
+            "app.services.tag_encryption.get_encryption_service"
+        ) as mock_get_enc:
             mock_svc = MagicMock()
             mock_svc.decrypt_qr.return_value = "DECRYPTED"
             mock_get_enc.return_value = mock_svc
@@ -106,7 +107,9 @@ class TestTagListenerServiceMock:
     @patch("app.services.theft_detection.TheftDetectionService")
     @patch("app.services.tag_listener_service.manager")
     @patch("app.db.prisma.prisma_client")
-    async def test_broadcast_theft_alert(self, mock_prisma_wrapper, mock_manager, mock_theft_cls):
+    async def test_broadcast_theft_alert(
+        self, mock_prisma_wrapper, mock_manager, mock_theft_cls
+    ):
         """Test theft alert triggering at gate."""
         mock_db = MagicMock()
         mock_client_instance = MagicMock()
@@ -118,7 +121,9 @@ class TestTagListenerServiceMock:
         reader = MockModel(id="r1", name="Gate 1", type="GATE", location="Exit")
         mock_db.rfidreader.find_unique = AsyncMock(return_value=reader)
 
-        tag = MockModel(id="t1", epc="E1", isPaid=False, productDescription="Stolen Item")
+        tag = MockModel(
+            id="t1", epc="E1", isPaid=False, productDescription="Stolen Item"
+        )
         mock_db.rfidtag.find_unique = AsyncMock(return_value=tag)
 
         # Mock Theft Service to report unpaid
@@ -143,7 +148,9 @@ class TestTagListenerServiceMock:
     @patch("app.services.theft_detection.TheftDetectionService")
     @patch("app.services.tag_listener_service.manager")
     @patch("app.db.prisma.prisma_client")
-    async def test_broadcast_gate_paid(self, mock_prisma_wrapper, mock_manager, mock_theft_cls):
+    async def test_broadcast_gate_paid(
+        self, mock_prisma_wrapper, mock_manager, mock_theft_cls
+    ):
         """Test paid item at gate (no alert)."""
         mock_db = MagicMock()
         mock_client_instance = MagicMock()
@@ -190,7 +197,9 @@ class TestTagListenerServiceMock:
 
     @patch("app.services.tag_listener_service.manager")
     @patch("app.db.prisma.prisma_client")
-    async def test_broadcast_tag_decryption_error(self, mock_prisma_wrapper, mock_manager):
+    async def test_broadcast_tag_decryption_error(
+        self, mock_prisma_wrapper, mock_manager
+    ):
         """Test QR decryption error path."""
         mock_db = MagicMock()
         mock_client_instance = MagicMock()
@@ -204,7 +213,9 @@ class TestTagListenerServiceMock:
 
         mock_manager.broadcast = AsyncMock()
 
-        with patch("app.services.tag_encryption.get_encryption_service") as mock_get_enc:
+        with patch(
+            "app.services.tag_encryption.get_encryption_service"
+        ) as mock_get_enc:
             mock_enc = MagicMock()
             mock_enc.decrypt_qr.side_effect = Exception("Decrypt Error")
             mock_get_enc.return_value = mock_enc
@@ -253,11 +264,9 @@ class TestTagListenerServiceMock:
         # reset module imports to trigger fallback if possible?
         # Hard to do without reloading.
         # Instead, we can import them directly if they are exposed
-        from app.services.tag_listener_service import (
-            set_tag_callback,
-            start_inventory,
-            stop_inventory,
-        )
+        from app.services.tag_listener_service import (set_tag_callback,
+                                                       start_inventory,
+                                                       stop_inventory)
 
         assert start_inventory() is False
         assert stop_inventory() is False

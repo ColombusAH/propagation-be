@@ -8,7 +8,6 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.routers.cart import FAKE_CART_DB, _calculate_summary, get_cart_session
 from app.schemas.cart import CartItem
 
@@ -111,18 +110,28 @@ class TestAddToCart:
         try:
             USER_CARTS.clear()
             with patch("app.api.v1.endpoints.cart.prisma_client") as mock_prisma:
-                mock_prisma.client.__aenter__ = AsyncMock(return_value=mock_prisma.client)
+                mock_prisma.client.__aenter__ = AsyncMock(
+                    return_value=mock_prisma.client
+                )
                 mock_prisma.client.__aexit__ = AsyncMock(return_value=None)
                 mock_prisma.client.rfidtag.find_first = AsyncMock(return_value=mock_tag)
-                mock_prisma.client.rfidtag.find_unique = AsyncMock(return_value=mock_tag)
+                mock_prisma.client.rfidtag.find_unique = AsyncMock(
+                    return_value=mock_tag
+                )
 
-                with patch("app.api.v1.endpoints.cart.get_encryption_service") as mock_encrypt:
+                with patch(
+                    "app.api.v1.endpoints.cart.get_encryption_service"
+                ) as mock_encrypt:
                     mock_encrypt.return_value.decrypt_qr.return_value = None
 
                     response = await client.post(
                         "/api/v1/cart/add", json={"qr_data": "tagid://product/SKU-001"}
                     )
-                    assert response.status_code in [200, 201, 400]  # 400 if decryption fails
+                    assert response.status_code in [
+                        200,
+                        201,
+                        400,
+                    ]  # 400 if decryption fails
         finally:
             app.dependency_overrides.clear()
 
@@ -147,12 +156,20 @@ class TestAddToCart:
         try:
             USER_CARTS.clear()
             with patch("app.api.v1.endpoints.cart.prisma_client") as mock_prisma:
-                mock_prisma.client.__aenter__ = AsyncMock(return_value=mock_prisma.client)
+                mock_prisma.client.__aenter__ = AsyncMock(
+                    return_value=mock_prisma.client
+                )
                 mock_prisma.client.__aexit__ = AsyncMock(return_value=None)
-                mock_prisma.client.rfidtag.find_unique = AsyncMock(return_value=mock_tag)
+                mock_prisma.client.rfidtag.find_unique = AsyncMock(
+                    return_value=mock_tag
+                )
 
-                with patch("app.api.v1.endpoints.cart.get_encryption_service") as mock_encrypt:
-                    mock_encrypt.return_value.decrypt_qr.return_value = "E280681000001234"
+                with patch(
+                    "app.api.v1.endpoints.cart.get_encryption_service"
+                ) as mock_encrypt:
+                    mock_encrypt.return_value.decrypt_qr.return_value = (
+                        "E280681000001234"
+                    )
 
                     response = await client.post(
                         "/api/v1/cart/add", json={"qr_data": "E280681000001234"}
@@ -196,7 +213,12 @@ class TestViewCart:
         try:
             USER_CARTS.clear()
             USER_CARTS["user-123"] = [
-                CartItem(epc="EPC1", product_name="Product", product_sku="SKU", price_cents=100)
+                CartItem(
+                    epc="EPC1",
+                    product_name="Product",
+                    product_sku="SKU",
+                    price_cents=100,
+                )
             ]
             response = await client.get("/api/v1/cart/")
             assert response.status_code == 200
@@ -211,7 +233,9 @@ class TestCheckout:
     async def test_checkout_empty_cart(self, client):
         """Test checkout with empty cart."""
         FAKE_CART_DB.clear()
-        response = await client.post("/api/v1/cart/checkout", json={"payment_method_id": "none"})
+        response = await client.post(
+            "/api/v1/cart/checkout", json={"payment_method_id": "none"}
+        )
         assert response.status_code in [400, 422, 500]
 
     @pytest.mark.asyncio
@@ -223,7 +247,9 @@ class TestCheckout:
 
         mock_gw = MagicMock()
         mock_gw.create_payment = MagicMock(
-            return_value=SimpleNamespace(success=True, payment_id="pay-123", status="pending")
+            return_value=SimpleNamespace(
+                success=True, payment_id="pay-123", status="pending"
+            )
         )
 
         app.dependency_overrides[get_gateway] = lambda: mock_gw

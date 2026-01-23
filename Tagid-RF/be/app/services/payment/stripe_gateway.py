@@ -3,14 +3,8 @@
 import logging
 from typing import Optional
 
-from .base import (
-    PaymentGateway,
-    PaymentProvider,
-    PaymentRequest,
-    PaymentResult,
-    PaymentStatus,
-    RefundResult,
-)
+from .base import (PaymentGateway, PaymentProvider, PaymentRequest,
+                   PaymentResult, PaymentStatus, RefundResult)
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +62,9 @@ class StripeGateway(PaymentGateway):
     ) -> PaymentResult:
         """Confirm a Stripe Payment Intent."""
         try:
-            intent = stripe.PaymentIntent.confirm(payment_id, payment_method=payment_method)
+            intent = stripe.PaymentIntent.confirm(
+                payment_id, payment_method=payment_method
+            )
 
             return PaymentResult(
                 success=intent.status in ["succeeded", "processing"],
@@ -95,7 +91,9 @@ class StripeGateway(PaymentGateway):
             logger.error(f"Stripe status error: {e}")
             return PaymentResult(success=False, payment_id=payment_id, error=str(e))
 
-    async def refund_payment(self, payment_id: str, amount: Optional[int] = None) -> RefundResult:
+    async def refund_payment(
+        self, payment_id: str, amount: Optional[int] = None
+    ) -> RefundResult:
         """Refund a Stripe payment."""
         try:
             refund_params = {"payment_intent": payment_id}

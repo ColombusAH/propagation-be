@@ -2,7 +2,6 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.api.dependencies.auth import get_current_user as get_current_user_api
 from app.core.deps import get_current_user
 from app.main import app
@@ -58,7 +57,9 @@ async def test_list_theft_alerts_error(client, db_session, override_auth):
     """Test error handling in list alerts."""
     db_session.client.theftalert.find_many.side_effect = Exception("DB Error")
 
-    response = await client.get("/api/v1/alerts/", headers={"Authorization": "Bearer token"})
+    response = await client.get(
+        "/api/v1/alerts/", headers={"Authorization": "Bearer token"}
+    )
 
     assert response.status_code == 500
 
@@ -104,7 +105,9 @@ async def test_get_alert_details(client, db_session, override_auth):
 
     db_session.client.theftalert.find_unique.return_value = mock_alert
 
-    response = await client.get("/api/v1/alerts/alert-1", headers={"Authorization": "Bearer token"})
+    response = await client.get(
+        "/api/v1/alerts/alert-1", headers={"Authorization": "Bearer token"}
+    )
 
     assert response.status_code == 200
     assert response.json()["id"] == "alert-1"
@@ -115,7 +118,9 @@ async def test_get_alert_details_not_found(client, db_session, override_auth):
     """Test alert not found."""
     db_session.client.theftalert.find_unique.return_value = None
 
-    response = await client.get("/api/v1/alerts/unknown", headers={"Authorization": "Bearer token"})
+    response = await client.get(
+        "/api/v1/alerts/unknown", headers={"Authorization": "Bearer token"}
+    )
 
     assert response.status_code == 404
 
@@ -124,7 +129,8 @@ async def test_get_alert_details_not_found(client, db_session, override_auth):
 async def test_resolve_alert(client, db_session, override_auth):
     """Test resolving an alert."""
     with patch(
-        "app.api.v1.endpoints.alerts.theft_service.resolve_alert", new_callable=AsyncMock
+        "app.api.v1.endpoints.alerts.theft_service.resolve_alert",
+        new_callable=AsyncMock,
     ) as mock_resolve:
         response = await client.post(
             "/api/v1/alerts/alert-1/resolve",

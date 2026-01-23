@@ -4,12 +4,11 @@ User management API endpoints.
 
 from typing import List, Optional
 
+from app.models.store import Store, User
+from app.services.database import get_db
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
-
-from app.models.store import Store, User
-from app.services.database import get_db
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -171,7 +170,9 @@ async def get_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
 
     store_name = None
     if user.store_id:
@@ -191,19 +192,27 @@ async def get_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{user_id}", response_model=UserResponse)
-async def update_user(user_id: int, user_data: UserUpdate, db: Session = Depends(get_db)):
+async def update_user(
+    user_id: int, user_data: UserUpdate, db: Session = Depends(get_db)
+):
     """Update a user."""
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
 
     # Update fields
     if user_data.name is not None:
         user.name = user_data.name
     if user_data.email is not None:
         # Check email uniqueness
-        existing = db.query(User).filter(User.email == user_data.email, User.id != user_id).first()
+        existing = (
+            db.query(User)
+            .filter(User.email == user_data.email, User.id != user_id)
+            .first()
+        )
         if existing:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Email already in use"
@@ -246,7 +255,9 @@ async def delete_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
 
     user.is_active = False
     db.commit()
@@ -261,11 +272,15 @@ async def assign_user_to_store(
     """Assign a user to a store."""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
 
     store = db.query(Store).filter(Store.id == request.store_id).first()
     if not store:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Store not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Store not found"
+        )
 
     user.store_id = request.store_id
     db.commit()

@@ -23,13 +23,8 @@ logger = logging.getLogger(__name__)
 # Import from standalone listener (if run as module)
 # Import from standalone listener (if run as module)
 try:
-    from tag_listener_server import (
-        set_tag_callback,
-        start_inventory,
-        start_server,
-        stop_inventory,
-        tag_store,
-    )
+    from tag_listener_server import (set_tag_callback, start_inventory,
+                                     start_server, stop_inventory, tag_store)
 except ImportError:
     # Fallback - define minimal storage here
     def set_tag_callback(cb):
@@ -140,7 +135,9 @@ class TagListenerService:
             async with prisma_client.client as db:
                 # 1. Fetch Reader Info
                 if reader_ip != "Unknown":
-                    reader_db = await db.rfidreader.find_unique(where={"ipAddress": reader_ip})
+                    reader_db = await db.rfidreader.find_unique(
+                        where={"ipAddress": reader_ip}
+                    )
 
                 # 2. Fetch Tag Info
                 if epc:
@@ -159,12 +156,16 @@ class TagListenerService:
                                 encryption_status["is_encrypted"] = True
                                 try:
                                     encrypt_svc = get_encryption_service()
-                                    encryption_status["decrypted_qr"] = encrypt_svc.decrypt_qr(
-                                        rfid_tag.encryptedQr
+                                    encryption_status["decrypted_qr"] = (
+                                        encrypt_svc.decrypt_qr(rfid_tag.encryptedQr)
                                     )
                                 except Exception as e:
-                                    logger.error(f"Error decrypting QR code for EPC {epc}: {e}")
-                                    encryption_status["decrypted_qr"] = "Decryption Failed"
+                                    logger.error(
+                                        f"Error decrypting QR code for EPC {epc}: {e}"
+                                    )
+                                    encryption_status["decrypted_qr"] = (
+                                        "Decryption Failed"
+                                    )
 
                     except Exception as e:
                         logger.error(f"Prisma check error: {e}")
@@ -178,7 +179,9 @@ class TagListenerService:
                 "timestamp": tag_data.get("timestamp"),
                 "reader_ip": reader_ip,
                 # Product Info from Prisma
-                "product_name": (existing_tag_db.productDescription if existing_tag_db else None),
+                "product_name": (
+                    existing_tag_db.productDescription if existing_tag_db else None
+                ),
                 "product_sku": existing_tag_db.productId if existing_tag_db else None,
                 "price": 0,  # TODO: Link to Product model for actual price
                 "is_paid": existing_tag_db.isPaid if existing_tag_db else False,

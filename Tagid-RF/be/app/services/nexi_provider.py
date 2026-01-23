@@ -8,7 +8,6 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 import httpx
-
 from app.core.config import settings
 from app.services.payment_provider import PaymentProvider, PaymentStatus
 
@@ -80,7 +79,9 @@ class NexiProvider(PaymentProvider):
                     "nexi_response": result,
                 }
 
-                logger.info(f"Created Nexi transaction: {transaction_id} for {amount_ils} ILS")
+                logger.info(
+                    f"Created Nexi transaction: {transaction_id} for {amount_ils} ILS"
+                )
 
                 return {
                     "payment_id": transaction_id,
@@ -89,7 +90,9 @@ class NexiProvider(PaymentProvider):
                     "status": PaymentStatus.PENDING,
                 }
             else:
-                raise ValueError(f"Nexi API error: {response.status_code} - {response.text}")
+                raise ValueError(
+                    f"Nexi API error: {response.status_code} - {response.text}"
+                )
 
         except Exception as e:
             logger.error(f"Nexi error creating transaction: {str(e)}")
@@ -129,7 +132,9 @@ class NexiProvider(PaymentProvider):
                 status = result.get("status", "completed")
 
                 transaction["status"] = (
-                    PaymentStatus.COMPLETED if status == "completed" else PaymentStatus.PROCESSING
+                    PaymentStatus.COMPLETED
+                    if status == "completed"
+                    else PaymentStatus.PROCESSING
                 )
                 transaction["confirmed_at"] = datetime.now().isoformat()
 
@@ -147,7 +152,9 @@ class NexiProvider(PaymentProvider):
             logger.error(f"Nexi error confirming payment: {str(e)}")
             raise ValueError(f"Failed to confirm payment: {str(e)}")
 
-    async def refund_payment(self, payment_id: str, amount: Optional[int] = None) -> Dict[str, Any]:
+    async def refund_payment(
+        self, payment_id: str, amount: Optional[int] = None
+    ) -> Dict[str, Any]:
         """
         Refund a Nexi payment.
 
@@ -227,7 +234,9 @@ class NexiProvider(PaymentProvider):
         transaction = self.pending_transactions[payment_id]
 
         if transaction["status"] != PaymentStatus.PENDING:
-            raise ValueError(f"Cannot cancel transaction with status {transaction['status']}")
+            raise ValueError(
+                f"Cannot cancel transaction with status {transaction['status']}"
+            )
 
         try:
             async with httpx.AsyncClient() as client:

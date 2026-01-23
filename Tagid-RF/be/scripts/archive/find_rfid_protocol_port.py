@@ -46,7 +46,9 @@ def test_port(ip: str, port: int, timeout: int = 2) -> dict:
         # Check if it's binary M-200 protocol (starts with 0xCF)
         if response[0] == HEAD:
             result["protocol"] = "M-200_BINARY"
-            result["response_preview"] = f"✓ Binary protocol detected (HEAD=0x{HEAD:02X})"
+            result["response_preview"] = (
+                f"✓ Binary protocol detected (HEAD=0x{HEAD:02X})"
+            )
             return result
 
         # Check if it's JSON/HTTP
@@ -54,11 +56,15 @@ def test_port(ip: str, port: int, timeout: int = 2) -> dict:
             text = response.decode("ascii", errors="replace")
             if text.startswith("Content-Length:") or text.startswith("HTTP/"):
                 result["protocol"] = "JSON/HTTP"
-                result["response_preview"] = text[:100] + "..." if len(text) > 100 else text
+                result["response_preview"] = (
+                    text[:100] + "..." if len(text) > 100 else text
+                )
                 return result
             if text.strip().startswith("{"):
                 result["protocol"] = "JSON"
-                result["response_preview"] = text[:100] + "..." if len(text) > 100 else text
+                result["response_preview"] = (
+                    text[:100] + "..." if len(text) > 100 else text
+                )
                 return result
         except:
             pass
@@ -93,7 +99,9 @@ def main():
         default="4001,5000,6000,8080,9090,2022,27011,10001,5678",
         help="Comma-separated list of ports to test",
     )
-    parser.add_argument("--timeout", type=int, default=2, help="Timeout per port in seconds")
+    parser.add_argument(
+        "--timeout", type=int, default=2, help="Timeout per port in seconds"
+    )
 
     args = parser.parse_args()
 

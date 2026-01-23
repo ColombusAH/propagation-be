@@ -43,7 +43,9 @@ def test_payment_result_model():
     """Test PaymentResult model creation."""
     from app.services.payment.base import PaymentResult, PaymentStatus
 
-    result = PaymentResult(success=True, payment_id="pay-123", status=PaymentStatus.COMPLETED)
+    result = PaymentResult(
+        success=True, payment_id="pay-123", status=PaymentStatus.COMPLETED
+    )
     assert result.success is True
     assert result.payment_id == "pay-123"
     assert result.status == PaymentStatus.COMPLETED
@@ -297,14 +299,18 @@ async def test_stripe_gateway_refund():
 
             # Test partial refund
             await gateway.refund_payment("pi_REFUND", amount=500)
-            mock_stripe.Refund.create.assert_called_with(payment_intent="pi_REFUND", amount=500)
+            mock_stripe.Refund.create.assert_called_with(
+                payment_intent="pi_REFUND", amount=500
+            )
 
 
 def test_stripe_gateway_verify_webhook():
     """Test StripeGateway.verify_webhook."""
     with patch("app.services.payment.stripe_gateway.STRIPE_AVAILABLE", True):
         with patch("app.services.payment.stripe_gateway.stripe") as mock_stripe:
-            mock_stripe.Webhook.construct_event.return_value = {"type": "payment_intent.succeeded"}
+            mock_stripe.Webhook.construct_event.return_value = {
+                "type": "payment_intent.succeeded"
+            }
             from app.services.payment.stripe_gateway import StripeGateway
 
             # Fail without secret
@@ -406,9 +412,13 @@ def test_tranzila_verify_callback():
     gateway = TranzilaGateway("term")
 
     # Valid
-    assert gateway.verify_callback({"Response": "000", "ConfirmationCode": "123"}) is True
+    assert (
+        gateway.verify_callback({"Response": "000", "ConfirmationCode": "123"}) is True
+    )
     # Invalid response
-    assert gateway.verify_callback({"Response": "001", "ConfirmationCode": "123"}) is False
+    assert (
+        gateway.verify_callback({"Response": "001", "ConfirmationCode": "123"}) is False
+    )
     # Missing confirmation
     assert gateway.verify_callback({"Response": "000"}) is False
 

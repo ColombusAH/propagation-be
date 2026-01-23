@@ -23,7 +23,9 @@ class TheftDetectionService:
         self.push_service = PushNotificationService()
         logger.info("Theft detection service initialized")
 
-    async def check_tag_payment_status(self, epc: str, location: Optional[str] = None) -> bool:
+    async def check_tag_payment_status(
+        self, epc: str, location: Optional[str] = None
+    ) -> bool:
         """
         Check if a scanned tag is paid. If not, create theft alert.
 
@@ -178,7 +180,9 @@ class TheftDetectionService:
         product_desc = tag.productDescription or "לא ידוע"
         return f"זוהה תג לא משולם!\nתג: {tag.epc}\nמוצר: {product_desc}"
 
-    async def resolve_alert(self, alert_id: str, resolved_by: str, notes: Optional[str] = None):
+    async def resolve_alert(
+        self, alert_id: str, resolved_by: str, notes: Optional[str] = None
+    ):
         """
         Mark a theft alert as resolved.
 

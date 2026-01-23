@@ -133,7 +133,9 @@ def test_command(sock, cmd_code, cmd_name, description, data, timeout=3.0):
             resp_status = response[5]
 
             result["status"] = resp_status
-            result["status_desc"] = STATUS_DESC.get(resp_status, f"Unknown (0x{resp_status:02X})")
+            result["status_desc"] = STATUS_DESC.get(
+                resp_status, f"Unknown (0x{resp_status:02X})"
+            )
 
             # Check if successful
             if resp_status == 0x00:

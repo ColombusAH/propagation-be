@@ -81,7 +81,9 @@ def setup_logging():
     # Console handler
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.DEBUG)  # Changed to DEBUG to see raw frames
-    console_formatter = logging.Formatter("[%(asctime)s] %(message)s", datefmt="%H:%M:%S")
+    console_formatter = logging.Formatter(
+        "[%(asctime)s] %(message)s", datefmt="%H:%M:%S"
+    )
     console_handler.setFormatter(console_formatter)
 
     logger.addHandler(file_handler)
@@ -364,7 +366,9 @@ def build_command(cmd_code: int, data: bytes = b"") -> bytes:
     head = 0xCF
     addr = 0xFF
 
-    frame_body = struct.pack(">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF)
+    frame_body = struct.pack(
+        ">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF
+    )
     frame_body += struct.pack("B", len(data))
     frame_body += data
 
@@ -452,7 +456,9 @@ def handle_client(client_socket: socket.socket, client_address: tuple):
             buffer += chunk
 
             # Log raw chunk for debugging (first 50 chars)
-            logger.debug(f"Received {len(chunk)} bytes. Raw: {chunk.hex().upper()[:50]}...")
+            logger.debug(
+                f"Received {len(chunk)} bytes. Raw: {chunk.hex().upper()[:50]}..."
+            )
 
             # Process buffer with stream logic
             buffer, parsed_frames = process_buffer(buffer)
@@ -469,7 +475,9 @@ def handle_client(client_socket: socket.socket, client_address: tuple):
                 # Auto-Detect Passive Mode
                 if cmd == 0x0082 and _reader_mode != "PASSIVE":
                     _reader_mode = "PASSIVE"
-                    logger.info("!!! AUTO-DETECTED PASSIVE MODE (Receiving 0x0082 frames) !!!")
+                    logger.info(
+                        "!!! AUTO-DETECTED PASSIVE MODE (Receiving 0x0082 frames) !!!"
+                    )
                     logger.info("Disabling automatic 'Start Inventory' commands.")
 
                 if frame_type == "TAG":

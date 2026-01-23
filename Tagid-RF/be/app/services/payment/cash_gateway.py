@@ -4,14 +4,8 @@ import logging
 import uuid
 from typing import Optional
 
-from .base import (
-    PaymentGateway,
-    PaymentProvider,
-    PaymentRequest,
-    PaymentResult,
-    PaymentStatus,
-    RefundResult,
-)
+from .base import (PaymentGateway, PaymentProvider, PaymentRequest,
+                   PaymentResult, PaymentStatus, RefundResult)
 
 logger = logging.getLogger(__name__)
 
@@ -42,13 +36,19 @@ class CashGateway(PaymentGateway):
         """Confirm a cash payment (called when cash is received)."""
         logger.info(f"Confirmed cash payment: {payment_id}")
 
-        return PaymentResult(success=True, payment_id=payment_id, status=PaymentStatus.COMPLETED)
+        return PaymentResult(
+            success=True, payment_id=payment_id, status=PaymentStatus.COMPLETED
+        )
 
     async def get_payment_status(self, payment_id: str) -> PaymentResult:
         """Get cash payment status (would query DB in real implementation)."""
-        return PaymentResult(success=True, payment_id=payment_id, status=PaymentStatus.PENDING)
+        return PaymentResult(
+            success=True, payment_id=payment_id, status=PaymentStatus.PENDING
+        )
 
-    async def refund_payment(self, payment_id: str, amount: Optional[int] = None) -> RefundResult:
+    async def refund_payment(
+        self, payment_id: str, amount: Optional[int] = None
+    ) -> RefundResult:
         """Refund a cash payment (manual process)."""
         logger.info(f"Cash refund requested for: {payment_id}")
 

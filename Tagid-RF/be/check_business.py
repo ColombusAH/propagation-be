@@ -11,7 +11,9 @@ async def check_business():
         businesses = await db.business.find_many()
         print(f"Found {len(businesses)} businesses")
         for b in businesses:
-            print(f"ID: {b.id}, Name: {b.name}, Slug: {getattr(b, 'slug', 'MISSING_ATTR')}")
+            print(
+                f"ID: {b.id}, Name: {b.name}, Slug: {getattr(b, 'slug', 'MISSING_ATTR')}"
+            )
 
     except Exception as e:
         print(f"Error checking business: {e}")

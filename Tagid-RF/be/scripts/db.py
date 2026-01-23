@@ -61,7 +61,9 @@ def create_migration(name):
     """Create a new migration"""
     env = setup_prisma_environment()
     migration_name = name or "schema-update"
-    run_command(["python", "-m", "prisma", "migrate", "dev", "--name", migration_name], env)
+    run_command(
+        ["python", "-m", "prisma", "migrate", "dev", "--name", migration_name], env
+    )
     print(f"Migration '{migration_name}' created successfully!")
 
 

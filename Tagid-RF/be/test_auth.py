@@ -137,7 +137,9 @@ def main():
         test_create_user(manager_token, "employee@test.com", "EMPLOYEE")
 
         # Test 8: Try to create network manager (should fail)
-        print("\n\n### TEST 8: Try Creating Network Manager as Store Manager (Should Fail) ###")
+        print(
+            "\n\n### TEST 8: Try Creating Network Manager as Store Manager (Should Fail) ###"
+        )
         test_create_user(manager_token, "network@test.com", "NETWORK_MANAGER")
 
     # Test 9: Test wrong password

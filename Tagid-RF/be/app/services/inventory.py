@@ -85,7 +85,9 @@ async def get_latest_snapshot(reader_id: str) -> Optional[dict]:
                     "readerId": snapshot.readerId,
                     "timestamp": snapshot.timestamp.isoformat(),
                     "itemCount": snapshot.itemCount,
-                    "items": [{"epc": item.epc, "rssi": item.rssi} for item in snapshot.items],
+                    "items": [
+                        {"epc": item.epc, "rssi": item.rssi} for item in snapshot.items
+                    ],
                 }
             return None
 

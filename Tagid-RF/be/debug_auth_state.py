@@ -24,7 +24,9 @@ async def debug_auth():
         users = await db.user.find_many()
         print(f"\n--- Users ({len(users)}) ---")
         for u in users:
-            print(f"ID: {u.id}, Email: {u.email}, Role: {u.role}, BusinessId: {u.businessId}")
+            print(
+                f"ID: {u.id}, Email: {u.email}, Role: {u.role}, BusinessId: {u.businessId}"
+            )
 
         # 3. Simulate a Dev Login Token Generation
         if users:

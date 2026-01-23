@@ -160,7 +160,9 @@ class TestTheftDetectionEnhanced:
         from app.services.theft_detection import TheftDetectionService
 
         with patch("app.services.theft_detection.prisma_client") as mock_p:
-            mock_p.client.tagmapping.find_unique = AsyncMock(side_effect=Exception("DB Error"))
+            mock_p.client.tagmapping.find_unique = AsyncMock(
+                side_effect=Exception("DB Error")
+            )
             service = TheftDetectionService()
             result = await service.check_tag_payment_status("ERROR")
             assert result is True  # Should return True on error
@@ -348,12 +350,8 @@ class TestCoreSecurity:
 
     def test_import_security(self):
         """Test that security module can be imported."""
-        from app.core.security import (
-            create_access_token,
-            get_password_hash,
-            verify_access_token,
-            verify_password,
-        )
+        from app.core.security import (create_access_token, get_password_hash,
+                                       verify_access_token, verify_password)
 
         assert create_access_token is not None
         assert verify_password is not None

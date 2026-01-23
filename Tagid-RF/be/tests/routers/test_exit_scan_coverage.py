@@ -37,7 +37,8 @@ async def test_exit_scan_paid_tag(client: AsyncClient, mock_theft_service):
 async def test_exit_scan_no_epcs(client: AsyncClient):
     """Test exit scan with empty EPC list."""
     response = await client.post(
-        "/api/v1/exit/scan", json={"epcs": [], "reader_id": "gate-1", "location": "Exit Gate"}
+        "/api/v1/exit/scan",
+        json={"epcs": [], "reader_id": "gate-1", "location": "Exit Gate"},
     )
 
     assert response.status_code in [200, 400, 404, 422]

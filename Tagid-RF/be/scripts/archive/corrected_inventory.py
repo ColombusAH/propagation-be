@@ -23,7 +23,9 @@ def calculate_crc16(data: bytes) -> int:
 
 def build_command(cmd_code: int, data: bytes = b"", addr: int = 0xFF) -> bytes:
     head = 0xCF
-    frame_body = struct.pack(">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF)
+    frame_body = struct.pack(
+        ">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF
+    )
     frame_body += struct.pack("B", len(data))
     frame_body += data
     crc = calculate_crc16(frame_body)
@@ -148,7 +150,9 @@ def main():
                         if len(payload) > 10:
                             # CUSTOMERINFO might contain EPC
                             for i in range(len(payload) - 12):
-                                if payload[i : i + 2] == b"\xe2\x80":  # Common EPC prefix
+                                if (
+                                    payload[i : i + 2] == b"\xe2\x80"
+                                ):  # Common EPC prefix
                                     epc = payload[i : i + 12].hex().upper()
                                     if epc not in tags:
                                         tags[epc] = 0

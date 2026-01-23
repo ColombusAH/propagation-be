@@ -5,7 +5,6 @@ Coverage tests for Nexi Provider.
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.services.nexi_provider import NexiProvider
 from app.services.payment_provider import PaymentStatus
 
@@ -124,7 +123,9 @@ class TestNexiProviderCoverage:
 
     async def test_cancel_payment_invalid_state(self):
         """Test cancel for non-pending transaction."""
-        self.provider.pending_transactions["tx_done"] = {"status": PaymentStatus.COMPLETED}
+        self.provider.pending_transactions["tx_done"] = {
+            "status": PaymentStatus.COMPLETED
+        }
         with pytest.raises(ValueError) as exc:
             await self.provider.cancel_payment("tx_done")
         assert "Cannot cancel" in str(exc.value)

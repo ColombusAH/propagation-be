@@ -6,10 +6,9 @@ import os
 from unittest.mock import patch
 
 import pytest
-from pydantic import ValidationError
-
 from app.core import config  # Import the module to reload it if needed
 from app.core.config import Settings, get_settings
+from pydantic import ValidationError
 
 
 def test_settings_defaults():

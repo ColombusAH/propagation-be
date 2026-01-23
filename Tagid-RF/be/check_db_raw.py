@@ -16,27 +16,23 @@ def check_db():
 
         # Check Business table
         print("\n--- Business Table Columns ---")
-        cur.execute(
-            """
+        cur.execute("""
             SELECT column_name, data_type, is_nullable, column_default
             FROM information_schema.columns
             WHERE table_name = 'Business'
             ORDER BY ordinal_position;
-        """
-        )
+        """)
         for row in cur.fetchall():
             print(row)
 
         # Check User table
         print("\n--- User Table Columns ---")
-        cur.execute(
-            """
+        cur.execute("""
             SELECT column_name, data_type, is_nullable, column_default
             FROM information_schema.columns
             WHERE table_name = 'User'
             ORDER BY ordinal_position;
-        """
-        )
+        """)
         for row in cur.fetchall():
             print(row)
 

@@ -7,13 +7,12 @@ Uses a dedicated FastAPI instance to avoid conflicts with Prisma routers.
 from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi import FastAPI
-from httpx import ASGITransport, AsyncClient
-from sqlalchemy.orm import Session
-
 from app.models.store import Store, User
 from app.routers.users import router
 from app.services.database import get_db
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.orm import Session
 
 
 @pytest.fixture
@@ -35,7 +34,9 @@ def mock_db():
 @pytest.fixture
 async def client(test_app, mock_db):
     test_app.dependency_overrides[get_db] = lambda: mock_db[0]
-    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+    async with AsyncClient(
+        transport=ASGITransport(app=test_app), base_url="http://test"
+    ) as ac:
         yield ac
     test_app.dependency_overrides.clear()
 

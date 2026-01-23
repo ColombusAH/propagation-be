@@ -6,18 +6,21 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
-
 from app.api.dependencies.auth import get_current_user
 from app.api.deps import get_current_active_user
 from app.main import app
+from fastapi.testclient import TestClient
 from tests.mock_utils import MockModel
 
 client = TestClient(app)
 
 
 def create_mock_user(
-    id="user1", email="test@example.com", name="Test User", role="CUSTOMER", businessId="biz123"
+    id="user1",
+    email="test@example.com",
+    name="Test User",
+    role="CUSTOMER",
+    businessId="biz123",
 ):
     """Create a mock user with all required fields (and more) for Pydantic validation."""
     return MockModel(

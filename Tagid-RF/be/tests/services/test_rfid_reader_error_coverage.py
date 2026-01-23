@@ -2,7 +2,6 @@ import socket
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.services.m200_protocol import HEAD, M200Command
 from app.services.rfid_reader import RFIDReaderService
 
@@ -19,7 +18,9 @@ async def test_connect_missing_info(reader):
         mock_sock = mock_socket_cls.return_value
         mock_sock.recv.side_effect = BlockingIOError()
 
-        with patch.object(reader, "get_reader_info", new_callable=AsyncMock) as mock_info:
+        with patch.object(
+            reader, "get_reader_info", new_callable=AsyncMock
+        ) as mock_info:
             mock_info.return_value = {"connected": False}
             result = await reader.connect()
             assert result is True

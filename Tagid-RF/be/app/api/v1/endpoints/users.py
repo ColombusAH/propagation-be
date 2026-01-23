@@ -2,14 +2,13 @@
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from prisma.models import User
-
 from app.api.dependencies.auth import get_current_user
 from app.crud.user import create_user, get_user_by_id
 from app.db.dependencies import get_db
 from app.schemas.user import UserRegister, UserResponse
+from fastapi import APIRouter, Depends, HTTPException, status
 from prisma import Prisma
+from prisma.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +52,9 @@ async def get_user(
 
     user = await get_user_by_id(db, user_id)
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
 
     return UserResponse.model_validate(user)
 

@@ -6,15 +6,10 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
-from jose import JWTError, jwt
-
 from app.core import security
-from app.core.security import (
-    create_access_token,
-    get_password_hash,
-    verify_access_token,
-    verify_password,
-)
+from app.core.security import (create_access_token, get_password_hash,
+                               verify_access_token, verify_password)
+from jose import JWTError, jwt
 
 
 def test_password_hashing():

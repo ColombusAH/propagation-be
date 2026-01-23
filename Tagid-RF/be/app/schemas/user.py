@@ -25,8 +25,12 @@ class UserRegister(BaseModel):
         ```
     """
 
-    email: EmailStr = Field(description="User's email address (must be valid email format)")
-    password: str = Field(..., min_length=8, description="Password (minimum 8 characters)")
+    email: EmailStr = Field(
+        description="User's email address (must be valid email format)"
+    )
+    password: str = Field(
+        ..., min_length=8, description="Password (minimum 8 characters)"
+    )
     name: str = Field(description="User's full name")
     phone: str = Field(description="Phone number (include country code)")
     address: str = Field(description="Physical address")
@@ -121,4 +125,6 @@ class TokenResponse(BaseModel):
     message: str = Field(description="Success message")
     user_id: str = Field(description="Authenticated user's ID")
     role: str = Field(description="User's role for authorization")
-    token: str = Field(description="JWT authentication token (include in Authorization header)")
+    token: str = Field(
+        description="JWT authentication token (include in Authorization header)"
+    )

@@ -5,10 +5,9 @@ Mock-based tests for tag registration endpoints (no DB required).
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
-
 from app.db.dependencies import get_db
 from app.main import app
+from fastapi.testclient import TestClient
 from tests.mock_utils import MockModel
 
 client = TestClient(app)
@@ -90,7 +89,9 @@ class TestTagRegistrationEndpointsMock:
     def test_list_products(self):
         """Test listing products for a store."""
         mock_db = MagicMock()
-        products = [MockModel(id="p1", name="P1", price=10.0, sku="SKU1", category="C1")]
+        products = [
+            MockModel(id="p1", name="P1", price=10.0, sku="SKU1", category="C1")
+        ]
         mock_db.product.find_many = AsyncMock(return_value=products)
 
         app.dependency_overrides[get_db] = lambda: mock_db
@@ -102,7 +103,11 @@ class TestTagRegistrationEndpointsMock:
     def test_list_unregistered_tags(self):
         """Test listing unregistered tags."""
         mock_db = MagicMock()
-        tags = [MockModel(id="t1", epc="E1", status="UNREGISTERED", productId=None, isPaid=False)]
+        tags = [
+            MockModel(
+                id="t1", epc="E1", status="UNREGISTERED", productId=None, isPaid=False
+            )
+        ]
         mock_db.rfidtag.find_many = AsyncMock(return_value=tags)
 
         app.dependency_overrides[get_db] = lambda: mock_db
@@ -120,7 +125,9 @@ class TestTagRegistrationEndpointsMock:
         tag = MockModel(id="t1", epc="E1", status="UNREGISTERED", encryptedQr="QR")
         product = MockModel(id="p1", name="Prod 1", price=10.0)
 
-        mock_db.rfidtag.find_unique = AsyncMock(side_effect=[tag, None])  # call 1: find tag
+        mock_db.rfidtag.find_unique = AsyncMock(
+            side_effect=[tag, None]
+        )  # call 1: find tag
         mock_db.product.find_unique = AsyncMock(return_value=product)
 
         updated_tag = MockModel(
@@ -136,7 +143,9 @@ class TestTagRegistrationEndpointsMock:
 
         app.dependency_overrides[get_db] = lambda: mock_db
 
-        response = client.post("/api/v1/tags/t1/link-product", json={"product_id": "p1"})
+        response = client.post(
+            "/api/v1/tags/t1/link-product", json={"product_id": "p1"}
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "REGISTERED"
@@ -176,7 +185,12 @@ class TestTagRegistrationEndpointsMock:
 
         mock_db = MagicMock()
         tag = MockModel(
-            id="t1", epc="E1", status="REGISTERED", encryptedQr="QR", productId="p1", isPaid=True
+            id="t1",
+            epc="E1",
+            status="REGISTERED",
+            encryptedQr="QR",
+            productId="p1",
+            isPaid=True,
         )
         product = MockModel(id="p1", name="Prod 1", price=50.0)
 
@@ -206,7 +220,9 @@ class TestTagRegistrationEndpointsMock:
         mock_db.rfidtag.find_unique = AsyncMock(return_value=None)
         app.dependency_overrides[get_db] = lambda: mock_db
 
-        response = client.post("/api/v1/tags/ghost/link-product", json={"product_id": "p1"})
+        response = client.post(
+            "/api/v1/tags/ghost/link-product", json={"product_id": "p1"}
+        )
         assert response.status_code == 404
 
     def test_link_product_not_found(self):
@@ -217,7 +233,9 @@ class TestTagRegistrationEndpointsMock:
         mock_db.product.find_unique = AsyncMock(return_value=None)
         app.dependency_overrides[get_db] = lambda: mock_db
 
-        response = client.post("/api/v1/tags/t1/link-product", json={"product_id": "ghost"})
+        response = client.post(
+            "/api/v1/tags/t1/link-product", json={"product_id": "ghost"}
+        )
         assert response.status_code == 404
 
     def test_generate_qr_code_helper(self):

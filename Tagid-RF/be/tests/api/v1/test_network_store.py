@@ -3,14 +3,15 @@ Tests for Business (Network) creation and Store registration.
 """
 
 import pytest
-from httpx import AsyncClient
-
 from app.core.config import settings
+from httpx import AsyncClient
 
 
 @pytest.mark.skip(reason="Endpoint POST /api/v1/network does not exist")
 @pytest.mark.asyncio
-async def test_create_network_and_store(async_client: AsyncClient, normal_user_token_headers: dict):
+async def test_create_network_and_store(
+    async_client: AsyncClient, normal_user_token_headers: dict
+):
     # Create Business (Network)
     net_resp = await async_client.post(
         f"{settings.API_V1_STR}/network",

@@ -6,7 +6,6 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
 from app.services.push_notification_service import PushNotificationService
 from tests.mock_utils import MockModel
 
@@ -47,7 +46,9 @@ class TestPushNotificationServiceMock:
         reader = MockModel(id="r1", type="GATE", location="Exit")
         self.mock_db.rfidreader.find_unique = AsyncMock(return_value=reader)
 
-        tag = MockModel(id="t1", epc="E123", isPaid=False, productDescription="Stolen Item")
+        tag = MockModel(
+            id="t1", epc="E123", isPaid=False, productDescription="Stolen Item"
+        )
         self.mock_db.rfidtag.find_unique = AsyncMock(return_value=tag)
         self.mock_db.rfidtag.update = AsyncMock()
 

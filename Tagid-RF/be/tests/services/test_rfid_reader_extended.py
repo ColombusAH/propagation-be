@@ -7,7 +7,6 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.services.m200_protocol import M200Commands, M200Status
 from app.services.rfid_reader import RFIDReaderService
 

@@ -39,7 +39,9 @@ def capture_raw(ip: str, port: int, duration: int = 30):
                     message_count += 1
                     timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
 
-                    print(f"\n[{timestamp}] Message #{message_count} ({len(data)} bytes)")
+                    print(
+                        f"\n[{timestamp}] Message #{message_count} ({len(data)} bytes)"
+                    )
                     print(f"  HEX: {data.hex().upper()}")
 
                     # Parse if starts with HEAD
@@ -77,7 +79,9 @@ def capture_raw(ip: str, port: int, duration: int = 30):
                     # Also try ASCII
                     try:
                         ascii_view = data.decode("ascii", errors="replace")
-                        printable = "".join(c if c.isprintable() else "." for c in ascii_view)
+                        printable = "".join(
+                            c if c.isprintable() else "." for c in ascii_view
+                        )
                         if any(c.isalnum() for c in printable):
                             print(f"  ASCII: {printable}")
                     except:

@@ -6,11 +6,10 @@ from datetime import datetime
 from unittest.mock import MagicMock
 
 import pytest
-from fastapi.testclient import TestClient
-
 from app.main import app
 from app.models.store import Store
 from app.services.database import get_db
+from fastapi.testclient import TestClient
 
 client = TestClient(app)
 

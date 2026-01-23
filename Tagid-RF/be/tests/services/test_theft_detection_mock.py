@@ -5,7 +5,6 @@ Mock-based tests for Theft Detection service.
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.services.theft_detection import TheftDetectionService
 from tests.mock_utils import MockModel
 
@@ -35,7 +34,9 @@ class TestTheftDetectionServiceMock:
         service = TheftDetectionService()
         service.push_service.send_notification = AsyncMock(return_value=True)
 
-        tag = MockModel(id="t1", epc="E1", isPaid=False, productDescription="Test Product")
+        tag = MockModel(
+            id="t1", epc="E1", isPaid=False, productDescription="Test Product"
+        )
         mock_prisma.client.rfidtag.find_unique = AsyncMock(return_value=tag)
 
         # Mock alert creation

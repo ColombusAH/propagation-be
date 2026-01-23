@@ -1,10 +1,9 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy import case, func
-from sqlalchemy.orm import Session
-
 from app.models.rfid_tag import RFIDTag
 from app.schemas.inventory import InventoryResponse, ProductSummary
 from app.services.database import get_db
+from fastapi import APIRouter, Depends
+from sqlalchemy import case, func
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 

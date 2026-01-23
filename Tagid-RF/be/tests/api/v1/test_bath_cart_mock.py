@@ -5,11 +5,10 @@ Mock-based tests for Bath Cart endpoints (no DB required).
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
-
 from app.api.v1.endpoints.bath_cart import _bath_carts
 from app.db.dependencies import get_db
 from app.main import app
+from fastapi.testclient import TestClient
 from tests.mock_utils import MockModel
 
 client = TestClient(app)
@@ -89,7 +88,9 @@ class TestBathCartEndpointsMock:
         _bath_carts["b1"] = ["t1", "t2"]
 
         tag1 = MockModel(id="t1", epc="E1", productId="p1")
-        tag2 = MockModel(id="t2", epc="E2", productId=None, productDescription="Loose Item")
+        tag2 = MockModel(
+            id="t2", epc="E2", productId=None, productDescription="Loose Item"
+        )
 
         async def mock_find_tag(where):
             if where["id"] == "t1":
@@ -146,7 +147,9 @@ class TestBathCartEndpointsMock:
 
         app.dependency_overrides[get_db] = lambda: mock_db
 
-        response = client.post("/api/v1/bath/b1/checkout", json={"payment_method": "card"})
+        response = client.post(
+            "/api/v1/bath/b1/checkout", json={"payment_method": "card"}
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True

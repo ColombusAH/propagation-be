@@ -98,7 +98,9 @@ class PaymentConfirmRequest(BaseModel):
     """Request to confirm a payment."""
 
     payment_id: str = Field(..., description="Payment ID")
-    payment_method_id: Optional[str] = Field(None, description="Payment method ID (for Stripe)")
+    payment_method_id: Optional[str] = Field(
+        None, description="Payment method ID (for Stripe)"
+    )
 
 
 class PaymentConfirmResponse(BaseModel):
@@ -146,4 +148,6 @@ class PaymentStatusResponse(BaseModel):
     currency: str = Field(..., description="Currency code")
     provider: PaymentProviderEnum = Field(..., description="Payment provider")
     created_at: datetime = Field(..., description="Creation timestamp")
-    paid_at: Optional[datetime] = Field(None, description="Payment completion timestamp")
+    paid_at: Optional[datetime] = Field(
+        None, description="Payment completion timestamp"
+    )

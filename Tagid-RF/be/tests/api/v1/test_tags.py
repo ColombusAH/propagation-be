@@ -7,9 +7,8 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from httpx import AsyncClient
-
 from app.main import app
+from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
@@ -156,7 +155,9 @@ async def test_get_tag_stats(client: AsyncClient):
         mock_db.query.return_value.filter.return_value.scalar.return_value = -55.5
 
         mock_most_scanned = SimpleNamespace(id=1, epc="MOST1", read_count=500)
-        mock_db.query.return_value.order_by.return_value.first.return_value = mock_most_scanned
+        mock_db.query.return_value.order_by.return_value.first.return_value = (
+            mock_most_scanned
+        )
 
         yield mock_db
 

@@ -332,7 +332,9 @@ class TestTranzilaGateway:
         """Test creating gateway with password."""
         from app.services.payment.tranzila import TranzilaGateway
 
-        gateway = TranzilaGateway(terminal_name="tagid_test", terminal_password="secret")
+        gateway = TranzilaGateway(
+            terminal_name="tagid_test", terminal_password="secret"
+        )
         assert gateway is not None
 
     def test_provider_property(self):
@@ -363,6 +365,8 @@ class TestTranzilaGateway:
 
             # Mock the async context manager
             async_mock = AsyncMock(return_value=mock_response)
-            with patch("httpx.AsyncClient.__aenter__", return_value=MagicMock(post=async_mock)):
+            with patch(
+                "httpx.AsyncClient.__aenter__", return_value=MagicMock(post=async_mock)
+            ):
                 # Test may need adjustment based on actual implementation
                 pass

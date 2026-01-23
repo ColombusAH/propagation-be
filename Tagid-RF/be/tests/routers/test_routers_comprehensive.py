@@ -6,15 +6,14 @@ Includes functional tests with mocked dependencies.
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
-
 from app.main import app
 from app.models.rfid_tag import RFIDTag
 from app.models.store import Store, User
 from app.schemas.cart import CartItem
 from app.services.database import SessionLocal, get_db
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 # Mark all tests as async by default
 pytestmark = pytest.mark.asyncio
@@ -67,7 +66,9 @@ class TestCartRouterLogic:
         mock_filter = mock_query.filter.return_value
         mock_filter.first.return_value = mock_tag
 
-        response = client.post(f"{API_V1}/cart/add", json={"qr_data": "tagid://product/SKU1"})
+        response = client.post(
+            f"{API_V1}/cart/add", json={"qr_data": "tagid://product/SKU1"}
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -79,7 +80,9 @@ class TestCartRouterLogic:
         """Test adding non-existent item."""
         mock_db_session.query.return_value.filter.return_value.first.return_value = None
 
-        response = client.post(f"{API_V1}/cart/add", json={"qr_data": "tagid://product/INVALID"})
+        response = client.post(
+            f"{API_V1}/cart/add", json={"qr_data": "tagid://product/INVALID"}
+        )
         assert response.status_code == 404
 
     def test_checkout_success(self, override_get_db, mock_db_session):
@@ -114,7 +117,9 @@ class TestCartRouterLogic:
 
                 # Mock DB tag for marking paid
                 mock_tag = MagicMock()
-                mock_db_session.query.return_value.filter.return_value.first.return_value = mock_tag
+                mock_db_session.query.return_value.filter.return_value.first.return_value = (
+                    mock_tag
+                )
 
                 response = client.post(
                     f"{API_V1}/cart/checkout", json={"payment_method_id": "pm_card"}
@@ -134,7 +139,9 @@ class TestCartRouterLogic:
 
         FAKE_CART_DB["demo_guest"] = []
 
-        response = client.post(f"{API_V1}/cart/checkout", json={"payment_method_id": "pm_card"})
+        response = client.post(
+            f"{API_V1}/cart/checkout", json={"payment_method_id": "pm_card"}
+        )
         assert response.status_code == 400
 
 
@@ -195,7 +202,9 @@ class TestStoresRouterLogic:
 
         mock_db_session.refresh.side_effect = refresh_side_effect
 
-        response = client.post(f"{API_V1}/stores", json={"name": "New Store", "address": "Addr"})
+        response = client.post(
+            f"{API_V1}/stores", json={"name": "New Store", "address": "Addr"}
+        )
 
         assert response.status_code == 201
         data = response.json()
@@ -224,7 +233,9 @@ class TestStoresRouterLogic:
         mock_store.manager_name = None
         mock_store.seller_count = 0
 
-        mock_db_session.query.return_value.filter.return_value.first.return_value = mock_store
+        mock_db_session.query.return_value.filter.return_value.first.return_value = (
+            mock_store
+        )
 
         response = client.put(f"{API_V1}/stores/1", json={"name": "New Name"})
 
@@ -238,7 +249,9 @@ class TestStoresRouterLogic:
         mock_store.id = 1
         mock_store.is_active = True
 
-        mock_db_session.query.return_value.filter.return_value.first.return_value = mock_store
+        mock_db_session.query.return_value.filter.return_value.first.return_value = (
+            mock_store
+        )
 
         response = client.delete(f"{API_V1}/stores/1")
 

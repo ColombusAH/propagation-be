@@ -3,9 +3,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
 import bcrypt
-from jose import JWTError, jwt
-
 from app.core.config import get_settings
+from jose import JWTError, jwt
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -15,13 +14,17 @@ ALGORITHM = settings.JWT_ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 
-def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(
+    data: Dict[str, Any], expires_delta: Optional[timedelta] = None
+) -> str:
     """Creates a JWT access token."""
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(
+            minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+        )
     to_encode.update({"exp": expire})
 
     try:
@@ -36,7 +39,9 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifies a plain password against a hashed password."""
     try:
-        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+        return bcrypt.checkpw(
+            plain_password.encode("utf-8"), hashed_password.encode("utf-8")
+        )
     except Exception as e:
         logger.error(f"Error verifying password: {e}")
         return False

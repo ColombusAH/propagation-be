@@ -1,7 +1,6 @@
 import pytest
-from httpx import AsyncClient
-
 from app.core.config import settings
+from httpx import AsyncClient
 
 pytestmark = pytest.mark.skip(reason="Integration tests require DB and business setup")
 

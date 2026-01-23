@@ -168,7 +168,9 @@ def main():
                                 if parsed["status"] == 0x00:
                                     log("  [OK] TAGS FOUND!")
                                     if parsed["data"]:
-                                        log(f"  Tag data: {parsed['data'].hex().upper()}")
+                                        log(
+                                            f"  Tag data: {parsed['data'].hex().upper()}"
+                                        )
                                         # Parse first tag
                                         td = parsed["data"]
                                         if len(td) >= 5:

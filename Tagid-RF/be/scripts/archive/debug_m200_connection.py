@@ -84,7 +84,9 @@ def test_m200_connection(ip: str, port: int, timeout: int = 10):
 
         # Step 5: Wait for response
         print(f"\n[Step 5] Waiting for response (timeout: {timeout}s)...")
-        print("Expecting response format: [HEAD][ADDR][CMD_H][CMD_L][LEN][STATUS][DATA...][CRC]")
+        print(
+            "Expecting response format: [HEAD][ADDR][CMD_H][CMD_L][LEN][STATUS][DATA...][CRC]"
+        )
 
         # Try to receive header (6 bytes minimum)
         print("\n  Reading header (6 bytes)...")
@@ -119,7 +121,9 @@ def test_m200_connection(ip: str, port: int, timeout: int = 10):
                     print("  ✗ Connection closed before receiving all data")
                     return False
                 remaining += chunk
-                print(f"  Received {len(chunk)} bytes, total: {len(remaining)}/{bytes_to_read}")
+                print(
+                    f"  Received {len(chunk)} bytes, total: {len(remaining)}/{bytes_to_read}"
+                )
 
             full_response = header + remaining
             print(f"\n  ✓ Complete response received ({len(full_response)} bytes):")
@@ -214,7 +218,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Debug M-200 RFID reader connection")
     parser.add_argument("--ip", default="169.254.128.161", help="M-200 IP address")
     parser.add_argument("--port", type=int, default=5000, help="M-200 port")
-    parser.add_argument("--timeout", type=int, default=10, help="Socket timeout in seconds")
+    parser.add_argument(
+        "--timeout", type=int, default=10, help="Socket timeout in seconds"
+    )
 
     args = parser.parse_args()
 

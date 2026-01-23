@@ -43,8 +43,12 @@ async def test_broadcast_tag_full_success(service):
     with (
         patch("app.db.prisma.prisma_client._client") as mock_client,
         patch("app.services.database.SessionLocal") as mock_session_cls,
-        patch("app.routers.websocket.manager.broadcast", new_callable=AsyncMock) as mock_broadcast,
-        patch("app.services.tag_encryption.get_encryption_service") as mock_encrypt_svc_func,
+        patch(
+            "app.routers.websocket.manager.broadcast", new_callable=AsyncMock
+        ) as mock_broadcast,
+        patch(
+            "app.services.tag_encryption.get_encryption_service"
+        ) as mock_encrypt_svc_func,
     ):
 
         # Setup Prisma mock - the service uses 'async with prisma_client.client as db:'
@@ -86,7 +90,9 @@ async def test_broadcast_tag_theft_alert(service):
     with (
         patch("app.db.prisma.prisma_client._client") as mock_client,
         patch("app.services.database.SessionLocal") as mock_session_cls,
-        patch("app.routers.websocket.manager.broadcast", new_callable=AsyncMock) as mock_broadcast,
+        patch(
+            "app.routers.websocket.manager.broadcast", new_callable=AsyncMock
+        ) as mock_broadcast,
     ):
 
         mock_client.__aenter__.return_value.tagmapping.find_unique.return_value = None

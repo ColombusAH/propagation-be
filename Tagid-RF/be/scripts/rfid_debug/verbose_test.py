@@ -32,7 +32,9 @@ def build_command(cmd: int, data: bytes = b"") -> bytes:
     return frame + struct.pack("<H", crc)
 
 
-def send_and_receive(sock: socket.socket, cmd_hex: int, cmd_name: str, data: bytes = b""):
+def send_and_receive(
+    sock: socket.socket, cmd_hex: int, cmd_name: str, data: bytes = b""
+):
     """Send command and print response"""
     cmd_bytes = build_command(cmd_hex, data)
 
@@ -88,7 +90,9 @@ def send_and_receive(sock: socket.socket, cmd_hex: int, cmd_name: str, data: byt
 
                         if offset + 5 + epc_len <= len(payload):
                             tag_num += 1
-                            epc = payload[offset + 5 : offset + 5 + epc_len].hex().upper()
+                            epc = (
+                                payload[offset + 5 : offset + 5 + epc_len].hex().upper()
+                            )
                             print(f"\n           📍 TAG #{tag_num}:")
                             print(f"              EPC:  {epc}")
                             print(f"              RSSI: {-rssi} dBm")
@@ -162,7 +166,9 @@ def verbose_test(ip: str, port: int):
         time.sleep(0.5)
 
         # 4. Inventory with different params
-        send_and_receive(sock, 0x0001, "INVENTORY (alt)", b"\x01\x01")  # type=1, count=1
+        send_and_receive(
+            sock, 0x0001, "INVENTORY (alt)", b"\x01\x01"
+        )  # type=1, count=1
         time.sleep(0.5)
 
         # 5. Try to read any remaining data

@@ -82,7 +82,9 @@ def try_command(sock: socket.socket, cmd: int, desc: str, timeout: float = 3.0) 
                         print(f"    DATA:   {data.hex().upper()}")
                         # Try ASCII decode
                         try:
-                            ascii_view = data.rstrip(b"\x00").decode("ascii", errors="replace")
+                            ascii_view = data.rstrip(b"\x00").decode(
+                                "ascii", errors="replace"
+                            )
                             if ascii_view.isprintable():
                                 print(f"    ASCII:  {ascii_view}")
                         except:

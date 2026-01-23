@@ -10,12 +10,11 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
 import pytest
-from httpx import AsyncClient
-from sqlalchemy.orm import Session
-
 from app.main import app
 from app.models.store import Notification, NotificationPreference, User
 from app.services.database import get_db
+from httpx import AsyncClient
+from sqlalchemy.orm import Session
 
 pytestmark = pytest.mark.skip(reason="Legacy router not mounted in app")
 
@@ -74,10 +73,16 @@ async def test_update_preferences_new(client: AsyncClient, mock_db, override_db)
     mock_query.first.side_effect = [mock_user, None]
 
     # Patch the model instantiation to return our mock
-    with patch("app.routers.notifications.NotificationPreference", return_value=mock_pref):
-        prefs_data = [{"notification_type": "SALE", "channel_push": True, "channel_sms": False}]
+    with patch(
+        "app.routers.notifications.NotificationPreference", return_value=mock_pref
+    ):
+        prefs_data = [
+            {"notification_type": "SALE", "channel_push": True, "channel_sms": False}
+        ]
 
-        response = await client.put("/api/v1/notifications/preferences?user_id=1", json=prefs_data)
+        response = await client.put(
+            "/api/v1/notifications/preferences?user_id=1", json=prefs_data
+        )
 
         assert response.status_code == 200
         assert len(response.json()) == 1

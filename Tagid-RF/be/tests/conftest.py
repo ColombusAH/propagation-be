@@ -7,9 +7,9 @@ os.environ["SECRET_KEY"] = "test-secret"
 os.environ["GOOGLE_CLIENT_ID"] = "test-google-id"
 
 import asyncio
+from types import SimpleNamespace
 from typing import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock, patch
-from types import SimpleNamespace
 
 import pytest
 import pytest_asyncio
@@ -45,9 +45,15 @@ patch(
     "app.services.rfid_reader.rfid_reader_service.start_scanning",
     new_callable=AsyncMock,
 ).start()
-patch("app.services.rfid_reader.rfid_reader_service.disconnect", new_callable=AsyncMock).start()
-patch("app.services.tag_listener_service.tag_listener_service.start", return_value=None).start()
-patch("app.services.tag_listener_service.tag_listener_service.stop", return_value=None).start()
+patch(
+    "app.services.rfid_reader.rfid_reader_service.disconnect", new_callable=AsyncMock
+).start()
+patch(
+    "app.services.tag_listener_service.tag_listener_service.start", return_value=None
+).start()
+patch(
+    "app.services.tag_listener_service.tag_listener_service.stop", return_value=None
+).start()
 
 # Mock DB initializations to prevent hangs in lifespan
 # patch("app.db.prisma.init_db", new_callable=AsyncMock).start()
@@ -71,12 +77,15 @@ mock_prisma_instance.connect = AsyncMock()
 mock_prisma_instance.disconnect = AsyncMock()
 mock_prisma_instance.is_connected = MagicMock(return_value=True)
 
+
 # Configure async context manager support (for `async with prisma_client.client as db:`)
 async def async_enter():
     return mock_prisma_instance
 
+
 async def async_exit(*args):
     pass
+
 
 mock_prisma_instance.__aenter__ = AsyncMock(side_effect=async_enter)
 mock_prisma_instance.__aexit__ = AsyncMock(side_effect=async_exit)
@@ -102,7 +111,7 @@ for model_name in [
     model_mock.find_many = AsyncMock(return_value=[])
     model_mock.upsert = AsyncMock()
     model_mock.count = AsyncMock(return_value=0)
-    
+
     # Provide a default user if requested
     if model_name == "user":
         # Create a serializable default user
@@ -118,13 +127,15 @@ for model_name in [
             name="Test User",
             phone="000-000-0000",
             address="Test Address",
-            verifiedBy="email"
+            verifiedBy="email",
         )
         model_mock.find_unique.return_value = default_user
         model_mock.find_first.return_value = default_user
         model_mock.create.return_value = default_user
     elif model_name == "business":
-        default_biz = SimpleNamespace(id="biz-1", name="Dev Business", slug="dev-business")
+        default_biz = SimpleNamespace(
+            id="biz-1", name="Dev Business", slug="dev-business"
+        )
         model_mock.find_first.return_value = default_biz
         model_mock.create.return_value = default_biz
     elif model_name == "rfidtag":
@@ -135,7 +146,7 @@ for model_name in [
             productDescription="Test Product",
             isPaid=False,
             status="ACTIVE",
-            encryptedQr="qr-1"
+            encryptedQr="qr-1",
         )
         model_mock.find_unique.return_value = default_tag
         model_mock.find_first.return_value = default_tag
@@ -148,7 +159,12 @@ patch("prisma.Prisma", return_value=mock_prisma_instance).start()
 
 # Patch the PrismaClient.client property to always return our mock
 from app.db.prisma import PrismaClient
-patch.object(PrismaClient, "client", new_callable=lambda: property(lambda self: mock_prisma_instance)).start()
+
+patch.object(
+    PrismaClient,
+    "client",
+    new_callable=lambda: property(lambda self: mock_prisma_instance),
+).start()
 
 from app.db.prisma import prisma_client
 from app.main import app
@@ -185,16 +201,18 @@ async def client(async_client):
 async def async_client() -> AsyncGenerator:
     """Async test client for FastAPI."""
     from app.api import deps
-    
+
     # Override get_db to yield our mock instance directly
     async def mock_get_db():
         yield mock_prisma_instance
-    
+
     app.dependency_overrides[deps.get_db] = mock_get_db
-    
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
         yield ac
-    
+
     # Clear overrides after test
     app.dependency_overrides.clear()
 
@@ -209,5 +227,8 @@ def db_session():
 def normal_user_token_headers():
     """Fixture for authenticated user headers (mocked)."""
     from app.core.security import create_access_token
-    token = create_access_token(data={"sub": "test@example.com", "user_id": "user-1", "role": "CUSTOMER"})
+
+    token = create_access_token(
+        data={"sub": "test@example.com", "user_id": "user-1", "role": "CUSTOMER"}
+    )
     return {"Authorization": f"Bearer {token}"}
