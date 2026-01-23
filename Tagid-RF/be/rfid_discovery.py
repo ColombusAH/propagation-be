@@ -63,9 +63,7 @@ def calculate_crc16(data: bytes) -> int:
 
 def build_command(cmd_code: int, data: bytes = b"", addr: int = 0xFF) -> bytes:
     head = 0xCF
-    frame_body = struct.pack(
-        ">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF
-    )
+    frame_body = struct.pack(">BBBB", head, addr, (cmd_code >> 8) & 0xFF, cmd_code & 0xFF)
     frame_body += struct.pack("B", len(data))
     frame_body += data
     crc = calculate_crc16(frame_body)

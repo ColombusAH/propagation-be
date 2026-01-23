@@ -1,179 +1,155 @@
 """
-Tests for NexiProvider payment service.
-Covers: __init__, create_payment_intent, confirm_payment, refund_payment, get_payment_status, cancel_payment
+Coverage tests for Nexi Provider.
 """
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from app.services.nexi_provider import NexiProvider
+from app.services.payment_provider import PaymentStatus
 
-class TestNexiProvider:
-    """Tests for NexiProvider."""
 
-    @pytest.fixture
-    def provider(self):
-        """Create NexiProvider instance with mocked settings."""
-        with patch("app.services.nexi_provider.settings") as mock_settings:
-            mock_settings.NEXI_TERMINAL_ID = "test_terminal"
-            mock_settings.NEXI_API_KEY = "test_api_key"
-            mock_settings.NEXI_API_ENDPOINT = "https://test.nexi.co.il"
-            mock_settings.NEXI_MERCHANT_ID = "test_merchant"
+class TestNexiProviderCoverage:
 
-            from app.services.nexi_provider import NexiProvider
-
-            return NexiProvider()
-
-    def test_init(self, provider):
-        """Test provider initialization."""
-        assert provider is not None
-        assert provider.terminal_id == "test_terminal"
-        assert provider.pending_transactions == {}
-
-    @pytest.mark.asyncio
-    async def test_create_payment_intent(self, provider):
-        """Test creating a payment intent."""
-        with patch("app.services.nexi_provider.httpx.AsyncClient") as mock_client:
-            mock_response = MagicMock()
-            mock_response.status_code = 200
-            mock_response.json.return_value = {
-                "transaction_id": "nexi_123",
-                "status": "pending",
-            }
-            mock_cm = MagicMock()
-            mock_cm.__aenter__ = AsyncMock(
-                return_value=MagicMock(post=AsyncMock(return_value=mock_response))
-            )
-            mock_cm.__aexit__ = AsyncMock()
-            mock_client.return_value = mock_cm
-
-            result = await provider.create_payment_intent(1000, "ILS", {"order": "123"})
-
-            assert "payment_id" in result
-            assert result["status"].value == "PENDING"
-
-    @pytest.mark.asyncio
-    async def test_create_payment_intent_error(self, provider):
-        """Test handling API error during payment creation."""
-        with patch("app.services.nexi_provider.httpx.AsyncClient") as mock_client:
-            mock_response = MagicMock()
-            mock_response.status_code = 400
-            mock_response.text = "Bad Request"
-            mock_cm = MagicMock()
-            mock_cm.__aenter__ = AsyncMock(
-                return_value=MagicMock(post=AsyncMock(return_value=mock_response))
-            )
-            mock_cm.__aexit__ = AsyncMock()
-            mock_client.return_value = mock_cm
-
-            with pytest.raises(ValueError):
-                await provider.create_payment_intent(1000, "ILS")
-
-    @pytest.mark.asyncio
-    async def test_confirm_payment(self, provider):
-        """Test confirming a payment."""
-        # First add transaction to pending
-        from app.services.nexi_provider import PaymentStatus
-
-        provider.pending_transactions["txn-123"] = {
+    def setup_method(self):
+        self.provider = NexiProvider()
+        # Pre-seed a transaction for some tests
+        self.provider.pending_transactions["tx1"] = {
             "amount": 1000,
             "currency": "ILS",
             "status": PaymentStatus.PENDING,
-            "metadata": {},
+            "created_at": "2023-01-01T00:00:00",
         }
 
-        with patch("app.services.nexi_provider.httpx.AsyncClient") as mock_client:
-            mock_response = MagicMock()
-            mock_response.status_code = 200
-            mock_response.json.return_value = {"status": "completed"}
-            mock_cm = MagicMock()
-            mock_cm.__aenter__ = AsyncMock(
-                return_value=MagicMock(post=AsyncMock(return_value=mock_response))
-            )
-            mock_cm.__aexit__ = AsyncMock()
-            mock_client.return_value = mock_cm
+    @patch("app.services.nexi_provider.httpx.AsyncClient")
+    async def test_create_payment_intent_network_error(self, mock_client):
+        """Test expected network/exception error handling."""
+        mock_client_ctx = AsyncMock()
+        mock_client.return_value.__aenter__.return_value = mock_client_ctx
+        mock_client_ctx.post.side_effect = Exception("Network Error")
 
-            result = await provider.confirm_payment("txn-123")
+        with pytest.raises(ValueError) as exc:
+            await self.provider.create_payment_intent(1000, "ILS")
+        assert "Failed to create" in str(exc.value)
 
-            assert "status" in result
+    @patch("app.services.nexi_provider.httpx.AsyncClient")
+    async def test_create_payment_intent_api_error(self, mock_client):
+        """Test API returning non-200 status."""
+        mock_client_ctx = AsyncMock()
+        mock_client.return_value.__aenter__.return_value = mock_client_ctx
 
-    @pytest.mark.asyncio
-    async def test_confirm_payment_not_found(self, provider):
-        """Test confirming a non-existent payment."""
-        with pytest.raises(ValueError, match="not found"):
-            await provider.confirm_payment("nonexistent")
+        response = MagicMock()
+        response.status_code = 400
+        response.text = "Bad Request"
+        mock_client_ctx.post.return_value = response
 
-    @pytest.mark.asyncio
-    async def test_refund_payment(self, provider):
-        """Test refunding a payment."""
-        from app.services.nexi_provider import PaymentStatus
+        with pytest.raises(ValueError) as exc:
+            await self.provider.create_payment_intent(1000, "ILS")
+        assert "Nexi API error: 400" in str(exc.value)
 
-        provider.pending_transactions["txn-123"] = {
-            "amount": 1000,
-            "currency": "ILS",
-            "status": PaymentStatus.COMPLETED,
-            "metadata": {},
-        }
+    async def test_confirm_payment_not_found(self):
+        """Test confirm payment for unknown ID."""
+        with pytest.raises(ValueError) as exc:
+            await self.provider.confirm_payment("unknown")
+        assert "not found" in str(exc.value)
 
-        with patch("app.services.nexi_provider.httpx.AsyncClient") as mock_client:
-            mock_response = MagicMock()
-            mock_response.status_code = 200
-            mock_response.json.return_value = {"refund_id": "ref-123", "amount": 500}
-            mock_cm = MagicMock()
-            mock_cm.__aenter__ = AsyncMock(
-                return_value=MagicMock(post=AsyncMock(return_value=mock_response))
-            )
-            mock_cm.__aexit__ = AsyncMock()
-            mock_client.return_value = mock_cm
+    @patch("app.services.nexi_provider.httpx.AsyncClient")
+    async def test_confirm_payment_network_error(self, mock_client):
+        """Test confirm payment network error."""
+        mock_client_ctx = AsyncMock()
+        mock_client.return_value.__aenter__.return_value = mock_client_ctx
+        mock_client_ctx.post.side_effect = Exception("Network Error")
 
-            result = await provider.refund_payment("txn-123", 500)
+        with pytest.raises(ValueError) as exc:
+            await self.provider.confirm_payment("tx1")
+        assert "Failed to confirm" in str(exc.value)
 
-            assert "refund_id" in result
+    @patch("app.services.nexi_provider.httpx.AsyncClient")
+    async def test_confirm_payment_api_failure(self, mock_client):
+        """Test confirm payment API failure."""
+        mock_client_ctx = AsyncMock()
+        mock_client.return_value.__aenter__.return_value = mock_client_ctx
 
-    @pytest.mark.asyncio
-    async def test_get_payment_status(self, provider):
-        """Test getting payment status."""
-        from app.services.nexi_provider import PaymentStatus
+        response = MagicMock()
+        response.status_code = 500
+        mock_client_ctx.post.return_value = response
 
-        provider.pending_transactions["txn-123"] = {"status": PaymentStatus.COMPLETED}
+        with pytest.raises(ValueError) as exc:
+            await self.provider.confirm_payment("tx1")
+        assert "confirmation failed: 500" in str(exc.value)
 
-        result = await provider.get_payment_status("txn-123")
+    async def test_refund_payment_not_found(self):
+        """Test refund for unknown ID."""
+        with pytest.raises(ValueError) as exc:
+            await self.provider.refund_payment("unknown")
+        assert "not found" in str(exc.value)
 
-        assert result == PaymentStatus.COMPLETED
+    @patch("app.services.nexi_provider.httpx.AsyncClient")
+    async def test_refund_payment_network_error(self, mock_client):
+        """Test refund network error."""
+        mock_client_ctx = AsyncMock()
+        mock_client.return_value.__aenter__.return_value = mock_client_ctx
+        mock_client_ctx.post.side_effect = Exception("Network Error")
 
-    @pytest.mark.asyncio
-    async def test_cancel_payment(self, provider):
-        """Test cancelling a payment."""
-        from app.services.nexi_provider import PaymentStatus
+        with pytest.raises(ValueError) as exc:
+            await self.provider.refund_payment("tx1")
+        assert "Failed to create refund" in str(exc.value)
 
-        provider.pending_transactions["txn-123"] = {
-            "amount": 1000,
-            "currency": "ILS",
-            "status": PaymentStatus.PENDING,
-            "metadata": {},
-        }
+    @patch("app.services.nexi_provider.httpx.AsyncClient")
+    async def test_refund_payment_api_failure(self, mock_client):
+        """Test refund API failure."""
+        mock_client_ctx = AsyncMock()
+        mock_client.return_value.__aenter__.return_value = mock_client_ctx
 
-        with patch("app.services.nexi_provider.httpx.AsyncClient") as mock_client:
-            mock_response = MagicMock()
-            mock_response.status_code = 200
-            mock_response.json.return_value = {"status": "cancelled"}
-            mock_cm = MagicMock()
-            mock_cm.__aenter__ = AsyncMock(
-                return_value=MagicMock(post=AsyncMock(return_value=mock_response))
-            )
-            mock_cm.__aexit__ = AsyncMock()
-            mock_client.return_value = mock_cm
+        response = MagicMock()
+        response.status_code = 400
+        mock_client_ctx.post.return_value = response
 
-            result = await provider.cancel_payment("txn-123")
+        with pytest.raises(ValueError) as exc:
+            await self.provider.refund_payment("tx1")
+        assert "refund failed: 400" in str(exc.value)
 
-            assert "status" in result
+    async def test_get_payment_status_not_found(self):
+        """Test get status for unknown ID."""
+        with pytest.raises(ValueError) as exc:
+            await self.provider.get_payment_status("unknown")
+        assert "not found" in str(exc.value)
 
-    @pytest.mark.asyncio
-    async def test_cancel_non_pending_fails(self, provider):
-        """Test cancelling a non-pending payment fails."""
-        from app.services.nexi_provider import PaymentStatus
+    async def test_cancel_payment_not_found(self):
+        """Test cancel for unknown ID."""
+        with pytest.raises(ValueError) as exc:
+            await self.provider.cancel_payment("unknown")
+        assert "not found" in str(exc.value)
 
-        provider.pending_transactions["txn-123"] = {"status": PaymentStatus.COMPLETED}
+    async def test_cancel_payment_invalid_state(self):
+        """Test cancel for non-pending transaction."""
+        self.provider.pending_transactions["tx_done"] = {"status": PaymentStatus.COMPLETED}
+        with pytest.raises(ValueError) as exc:
+            await self.provider.cancel_payment("tx_done")
+        assert "Cannot cancel" in str(exc.value)
 
-        with pytest.raises(ValueError, match="Cannot cancel"):
-            await provider.cancel_payment("txn-123")
+    @patch("app.services.nexi_provider.httpx.AsyncClient")
+    async def test_cancel_payment_network_error(self, mock_client):
+        """Test cancel network error."""
+        mock_client_ctx = AsyncMock()
+        mock_client.return_value.__aenter__.return_value = mock_client_ctx
+        mock_client_ctx.post.side_effect = Exception("Network Error")
+
+        with pytest.raises(ValueError) as exc:
+            await self.provider.cancel_payment("tx1")
+        assert "Failed to cancel" in str(exc.value)
+
+    @patch("app.services.nexi_provider.httpx.AsyncClient")
+    async def test_cancel_payment_api_failure(self, mock_client):
+        """Test cancel API failure."""
+        mock_client_ctx = AsyncMock()
+        mock_client.return_value.__aenter__.return_value = mock_client_ctx
+
+        response = MagicMock()
+        response.status_code = 500
+        mock_client_ctx.post.return_value = response
+
+        with pytest.raises(ValueError) as exc:
+            await self.provider.cancel_payment("tx1")
+        assert "cancellation failed: 500" in str(exc.value)

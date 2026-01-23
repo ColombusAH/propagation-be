@@ -100,9 +100,7 @@ def poll_for_tags(ip: str, port: int, duration: int = 30, poll_interval: float =
                                     is_new = epc_hex not in seen_tags
                                     seen_tags.add(epc_hex)
 
-                                    timestamp = datetime.now().strftime("%H:%M:%S.%f")[
-                                        :-3
-                                    ]
+                                    timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
                                     marker = "🆕" if is_new else "  "
 
                                     print(

@@ -192,7 +192,7 @@ export function ScanPage() {
     addByProductId,
     getProductById
   } = useStore();
-  useTranslation();
+  const { t } = useTranslation();
   const [manualBarcode, setManualBarcode] = useState('');
   const [scanResult, setScanResult] = useState<ScanResultData | null>(null);
   const [cameraError, setCameraError] = useState<Error | null>(null);
@@ -219,17 +219,18 @@ export function ScanPage() {
           }
         });
 
+        const totalItems = container.products.reduce((sum, p) => sum + p.qty, 0);
         showScanResult({
           type: 'container',
-          title: `מיכל: ${container.name}`,
-          message: `נוספו ${container.products.reduce((sum, p) => sum + p.qty, 0)} מוצרים לעגלה`,
+          title: t('scan.containerFound', { container: container.name }),
+          message: t('scan.containerAdded', { count: totalItems }),
           products: productNames
         });
       } else {
         showScanResult({
           type: 'container',
-          title: 'מיכל ריק',
-          message: 'המיכל לא מכיל מוצרים'
+          title: t('scan.containerEmpty'),
+          message: t('scan.containerEmptyMessage')
         });
       }
       return;
@@ -240,14 +241,14 @@ export function ScanPage() {
       const product = getProductByBarcode(barcode);
       showScanResult({
         type: 'product',
-        title: 'מוצר נוסף',
-        message: product?.name || 'מוצר'
+        title: t('scan.productFound'),
+        message: product?.name || t('scan.product')
       });
     } else {
       showScanResult({
         type: 'product',
-        title: 'מוצר לא נמצא',
-        message: 'הברקוד לא מזוהה במערכת'
+        title: t('scan.productNotFound'),
+        message: t('scan.barcodeNotRecognized')
       });
     }
   };
@@ -280,8 +281,8 @@ export function ScanPage() {
           <ErrorContainer>
             <EmptyState
               icon="photo_camera"
-              title="מצלמה לא זמינה"
-              message={`${cameraError.message}. אנא השתמש בהזנה ידנית או בדוק הרשאות מצלמה.`}
+              title={t('scan.cameraUnavailable')}
+              message={t('errors.cameraPermission')}
             />
           </ErrorContainer>
         ) : (
@@ -303,7 +304,7 @@ export function ScanPage() {
                 onChange={(e) => setManualBarcode(e.target.value)}
               />
               <Button type="submit" disabled={!manualBarcode.trim()}>
-                <MaterialIcon name="add" /> הוסף
+                <MaterialIcon name="add" /> {t('scan.add')}
               </Button>
             </InputGroup>
           </form>
@@ -311,7 +312,7 @@ export function ScanPage() {
 
         <FallbackSection>
           <Button onClick={() => navigate('/catalog')} style={{ width: '100%', justifyContent: 'center' }}>
-            <MaterialIcon name="inventory_2" /> עבור לקטלוג
+            <MaterialIcon name="inventory_2" /> {t('scan.browseCatalog')}
           </Button>
         </FallbackSection>
       </Container>

@@ -127,9 +127,7 @@ def scan_ports(ip: str):
         print(f"\nUpdate your .env file:")
         print(f"  RFID_READER_PORT={rfid_ports[0]['port']}")
     elif open_ports:
-        print(
-            f"\n⚠️  Found {len(open_ports)} open port(s), but none respond to RFID commands:"
-        )
+        print(f"\n⚠️  Found {len(open_ports)} open port(s), but none respond to RFID commands:")
         for r in open_ports:
             print(f"  - Port {r['port']}")
         print(f"\nPossible issues:")

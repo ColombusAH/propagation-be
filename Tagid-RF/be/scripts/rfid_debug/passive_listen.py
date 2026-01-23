@@ -46,8 +46,7 @@ def passive_listen(ip: str, port: int, duration: int = 30):
                     try:
                         ascii_data = data.decode("ascii", errors="replace")
                         printable = "".join(
-                            c if c.isprintable() or c in "\n\r\t" else "."
-                            for c in ascii_data
+                            c if c.isprintable() or c in "\n\r\t" else "." for c in ascii_data
                         )
                         if printable.strip():
                             print(f"  ASCII: {printable[:200]}")
@@ -59,9 +58,7 @@ def passive_listen(ip: str, port: int, duration: int = 30):
                         cmd = (data[2] << 8) | data[3]
                         length = data[4]
                         status = data[5] if len(data) > 5 else 0
-                        print(
-                            f"  RFID Frame: CMD=0x{cmd:04X}, LEN={length}, STATUS=0x{status:02X}"
-                        )
+                        print(f"  RFID Frame: CMD=0x{cmd:04X}, LEN={length}, STATUS=0x{status:02X}")
                 else:
                     print("Connection closed by remote")
                     break

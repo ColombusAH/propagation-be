@@ -13,6 +13,7 @@ async def test_prisma_connect_error():
     pc = PrismaClient.__new__(PrismaClient)
     pc._client = MagicMock()
     pc._client.connect = AsyncMock(side_effect=PrismaError("Connection failed"))
+    pc._client.is_connected = MagicMock(return_value=False)
 
     with pytest.raises(PrismaError):
         await pc.connect()

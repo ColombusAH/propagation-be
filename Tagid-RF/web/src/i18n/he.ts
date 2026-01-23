@@ -4,7 +4,9 @@ import type { TranslationKeys } from './en';
 export const he: TranslationKeys = {
     // Common
     app: {
-        name: 'סרוק ושלם',
+        name: 'Tagid RF',
+        title: 'מערכת ניהול RFID',
+        logout: 'יציאה',
     },
 
     // Navigation
@@ -18,6 +20,21 @@ export const he: TranslationKeys = {
         containers: 'מיכלים',
         tagMapping: 'סנכרון תגיות',
         admin: 'ניהול',
+        // New Sidebar Items
+        dashboard: 'סקירה כללית',
+        main: 'ראשי',
+        shopping: 'קניות',
+        tagManagement: 'ניהול תגים',
+        operations: 'תפעול',
+        settings: 'הגדרות',
+        readers: 'קוראים',
+        general: 'כללי',
+        users: 'משתמשים',
+        tagScanner: 'סריקה',
+        tagLinking: 'צימוד',
+        tubs: 'אמבטים',
+        exitGate: 'שער יציאה',
+        bathSetup: 'אמבטים',
     },
 
     // Scan Page
@@ -30,7 +47,13 @@ export const he: TranslationKeys = {
         browseCatalog: 'עיין בקטלוג',
         productAdded: '{product} נוסף לעגלה',
         productNotFound: 'המוצר לא נמצא',
-        containerAdded: 'מיכל {container} נוסף לעגלה',
+        barcodeNotRecognized: 'הברקוד לא מזוהה במערכת',
+        containerAdded: 'נוספו {count} מוצרים מהמיכל',
+        containerFound: 'מיכל: {container}',
+        containerEmpty: 'מיכל ריק',
+        containerEmptyMessage: 'המיכל לא מכיל מוצרים',
+        productFound: 'מוצר נוסף',
+        product: 'מוצר',
     },
 
     // Catalog Page
@@ -115,6 +138,20 @@ export const he: TranslationKeys = {
         eur: '€ (יורו)',
     },
 
+    // Banks
+    banks: {
+        leumi: 'בנק לאומי',
+        hapoalim: 'בנק הפועלים',
+        discount: 'בנק דיסקונט',
+        mizrahi: 'בנק מזרחי טפחות',
+        fibi: 'הבנק הבינלאומי',
+        mercantile: 'בנק מרכנתיל',
+        otsar: 'בנק אוצר החייל',
+        igud: 'בנק איגוד',
+        yahav: 'בנק יהב',
+        massad: 'בנק מסד',
+    },
+
     // Language
     language: {
         he: 'עברית',
@@ -146,7 +183,13 @@ export const he: TranslationKeys = {
         darkMode: 'מצב כהה',
         darkModeDesc: 'החלף בין מצב בהיר לכהה (בפיתוח)',
         notifications: 'התראות',
-        notificationsDesc: 'קבל התראות על פעילות חשובה (בפיתוח)',
+        notificationsDesc: 'קבל התראות על פעילות חשובה',
+        notificationsPush: 'התראות פוש (Push)',
+        notificationsPushDesc: 'קבל התראות ישירות לדפדפן או לנייד',
+        notificationsSms: 'התראות SMS',
+        notificationsSmsDesc: 'קבל עדכונים חשובים בהודעת טקסט',
+        notificationsEmail: 'התראות אימייל (Email)',
+        notificationsEmailDesc: 'קבל דוחות וסיכומי פעילות לתיבת הדואר',
         receipts: 'הגדרות קבלות',
         autoPrint: 'הדפסה אוטומטית',
         autoPrintDesc: 'הדפס קבלה אוטומטית לאחר כל עסקה (בפיתוח)',
@@ -165,6 +208,55 @@ export const he: TranslationKeys = {
         roleDesc: 'רמת ההרשאה שלך במערכת',
         saveSettings: 'שמור הגדרות',
         settingsSaved: 'הגדרות נשמרו בהצלחה!',
+
+        // Network Settings
+        networkDetails: 'פרטי הרשת',
+        networkProfileCompletion: 'השלמת פרופיל הרשת',
+        missingFields: 'חסרים:',
+        networkName: 'שם הרשת',
+        networkNameDesc: 'שם רשת החנויות שלך',
+        networkLogo: 'לוגו הרשת',
+        networkLogoDesc: 'העלה את הלוגו של הרשת (PNG, JPG)',
+        uploadLogo: 'העלה לוגו',
+        deleteLogo: 'מחק לוגו',
+        businessId: 'ח.פ / מספר עוסק',
+        businessIdDesc: 'מספר הזיהוי העסקי שלך (9 ספרות)',
+        contactDetails: 'פרטי קשר',
+        phone: 'טלפון',
+        phoneDesc: 'מספר הטלפון הראשי של הרשת',
+        email: 'דוא"ל',
+        emailDesc: 'כתובת האימייל הראשית',
+        address: 'כתובת',
+        addressDesc: 'כתובת המשרד הראשי',
+        website: 'אתר אינטרנט',
+        websiteDesc: 'כתובת האתר של הרשת',
+        bankDetails: 'פרטי בנק',
+        bankName: 'שם הבנק',
+        bankNameDesc: 'הבנק בו מנוהל חשבון העסק',
+        bankBranch: 'מספר סניף',
+        bankBranchDesc: 'מספר הסניף של הבנק (3 ספרות)',
+        bankAccount: 'מספר חשבון',
+        bankAccountDesc: 'מספר חשבון הבנק של העסק',
+
+        // Placeholders & Fields
+        networkNamePlaceholder: 'לדוגמה: רשת סופר-פארם',
+        businessIdPlaceholder: '000000000',
+        phonePlaceholder: '03-1234567',
+        emailPlaceholder: 'info@company.co.il',
+        addressPlaceholder: 'רחוב הרצל 1, תל אביב',
+        websitePlaceholder: 'https://www.example.co.il',
+        bankPlaceholder: 'בחר בנק...',
+        bankBranchPlaceholder: '000',
+        bankAccountPlaceholder: '000000000',
+    },
+
+    // Roles
+    roles: {
+        superAdmin: 'מנהל על',
+        networkAdmin: 'מנהל רשת',
+        storeManager: 'מנהל חנות',
+        seller: 'מוכר',
+        customer: 'לקוח',
     },
 
     // Common actions
@@ -185,5 +277,8 @@ export const he: TranslationKeys = {
         generic: 'משהו השתבש',
         notFound: 'לא נמצא',
         networkError: 'שגיאת רשת',
+        cameraPermission: 'אין גישה למצלמה. אנא אפשר גישה למצלמה בהגדרות הדפדפן.',
+        scanError: 'שגיאת סריקה',
+        manualEntry: 'הזנה ידנית',
     },
 };

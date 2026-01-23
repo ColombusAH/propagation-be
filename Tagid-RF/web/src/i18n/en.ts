@@ -2,7 +2,9 @@
 export const en = {
     // Common
     app: {
-        name: 'Scan & Pay',
+        name: 'Tagid RF',
+        title: 'RFID Management System',
+        logout: 'Logout',
     },
 
     // Navigation
@@ -16,6 +18,21 @@ export const en = {
         containers: 'Containers',
         tagMapping: 'Tag Sync',
         admin: 'Admin',
+        // New Sidebar Items
+        dashboard: 'Dashboard',
+        main: 'Main',
+        shopping: 'Shopping',
+        tagManagement: 'Tag Management',
+        operations: 'Operations',
+        settings: 'Settings',
+        readers: 'Readers',
+        general: 'General',
+        users: 'Users',
+        tagScanner: 'Scanner',
+        tagLinking: 'Linking',
+        tubs: 'Tubs',
+        exitGate: 'Exit Gate',
+        bathSetup: 'Bath Setup',
     },
 
     // Scan Page
@@ -28,7 +45,13 @@ export const en = {
         browseCatalog: 'Browse Catalog',
         productAdded: 'Added {product} to cart',
         productNotFound: 'Product not found',
-        containerAdded: 'Added container {container} to cart',
+        barcodeNotRecognized: 'Barcode not recognized',
+        containerAdded: 'Added {count} products from container',
+        containerFound: 'Container: {container}',
+        containerEmpty: 'Empty Container',
+        containerEmptyMessage: 'This container has no products',
+        productFound: 'Product Added',
+        product: 'Product',
     },
 
     // Catalog Page
@@ -113,6 +136,20 @@ export const en = {
         eur: 'EUR (€)',
     },
 
+    // Banks
+    banks: {
+        leumi: 'Bank Leumi',
+        hapoalim: 'Bank Hapoalim',
+        discount: 'Bank Discount',
+        mizrahi: 'Mizrahi Tefahot Bank',
+        fibi: 'The First International Bank',
+        mercantile: 'Mercantile Bank',
+        otsar: 'Otsar HaHayal Bank',
+        igud: 'Union Bank',
+        yahav: 'Bank Yahav',
+        massad: 'Bank Massad',
+    },
+
     // Language
     language: {
         he: 'עברית',
@@ -144,7 +181,13 @@ export const en = {
         darkMode: 'Dark Mode',
         darkModeDesc: 'Switch between light and dark mode (in development)',
         notifications: 'Notifications',
-        notificationsDesc: 'Receive notifications about important activity (in development)',
+        notificationsDesc: 'Receive notifications about important activity',
+        notificationsPush: 'Push Notifications',
+        notificationsPushDesc: 'Receive notifications directly to browser or mobile',
+        notificationsSms: 'SMS Notifications',
+        notificationsSmsDesc: 'Receive important updates via text message',
+        notificationsEmail: 'Email Notifications',
+        notificationsEmailDesc: 'Receive reports and activity summaries to email',
         receipts: 'Receipt Settings',
         autoPrint: 'Auto Print',
         autoPrintDesc: 'Automatically print receipt after each transaction (in development)',
@@ -163,6 +206,55 @@ export const en = {
         roleDesc: 'Your permission level in the system',
         saveSettings: 'Save Settings',
         settingsSaved: 'Settings saved successfully!',
+
+        // Network Settings
+        networkDetails: 'Network Details',
+        networkProfileCompletion: 'Profile Completion',
+        missingFields: 'Missing:',
+        networkName: 'Network Name',
+        networkNameDesc: 'Name of your store chain',
+        networkLogo: 'Network Logo',
+        networkLogoDesc: 'Upload chain logo (PNG, JPG)',
+        uploadLogo: 'Upload Logo',
+        deleteLogo: 'Delete Logo',
+        businessId: 'Business ID',
+        businessIdDesc: 'Your business identification number (9 digits)',
+        contactDetails: 'Contact Details',
+        phone: 'Phone',
+        phoneDesc: 'Main chain phone number',
+        email: 'Email',
+        emailDesc: 'Main email address',
+        address: 'Address',
+        addressDesc: 'Head office address',
+        website: 'Website',
+        websiteDesc: 'Chain website URL',
+        bankDetails: 'Bank Details',
+        bankName: 'Bank Name',
+        bankNameDesc: 'Bank where business account is managed',
+        bankBranch: 'Branch Number',
+        bankBranchDesc: 'Bank branch number (3 digits)',
+        bankAccount: 'Account Number',
+        bankAccountDesc: 'Business bank account number',
+
+        // Placeholders & Fields
+        networkNamePlaceholder: 'Example: Super Pharm Chain',
+        businessIdPlaceholder: '000000000',
+        phonePlaceholder: '03-1234567',
+        emailPlaceholder: 'info@company.co.il',
+        addressPlaceholder: '1 Herzl St, Tel Aviv',
+        websitePlaceholder: 'https://www.example.com',
+        bankPlaceholder: 'Select Bank...',
+        bankBranchPlaceholder: '000',
+        bankAccountPlaceholder: '000000000',
+    },
+
+    // Roles
+    roles: {
+        superAdmin: 'Super Admin',
+        networkAdmin: 'Network Admin',
+        storeManager: 'Store Manager',
+        seller: 'Seller',
+        customer: 'Customer',
     },
 
     // Common actions
@@ -183,6 +275,9 @@ export const en = {
         generic: 'Something went wrong',
         notFound: 'Not found',
         networkError: 'Network error',
+        cameraPermission: 'Camera permission denied. Please allow camera access in your browser settings.',
+        scanError: 'Scan Error',
+        manualEntry: 'Manual Entry',
     },
 };
 

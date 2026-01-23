@@ -115,9 +115,7 @@ def log_frame_breakdown(data: bytes, is_response: bool = False):
 
     # HEAD
     head = data[offset]
-    print(
-        f"   [0] HEAD    = 0x{head:02X} {'OK' if head == HEAD else 'ERROR Expected 0xCF'}"
-    )
+    print(f"   [0] HEAD    = 0x{head:02X} {'OK' if head == HEAD else 'ERROR Expected 0xCF'}")
     offset += 1
 
     # ADDR
@@ -164,9 +162,7 @@ def log_frame_breakdown(data: bytes, is_response: bool = False):
         # Command DATA
         if data_len > 0 and len(data) > offset:
             payload = data[offset : offset + data_len]
-            print(
-                f"   [5-{4+data_len}] DATA = {payload.hex().upper()} ({data_len} bytes)"
-            )
+            print(f"   [5-{4+data_len}] DATA = {payload.hex().upper()} ({data_len} bytes)")
             offset += data_len
 
     # CRC (last 2 bytes)
@@ -174,11 +170,7 @@ def log_frame_breakdown(data: bytes, is_response: bool = False):
         crc = struct.unpack(">H", data[-2:])[0]
         # Verify CRC
         calculated_crc = calculate_crc16(data[:-2])
-        crc_match = (
-            "OK"
-            if crc == calculated_crc
-            else f"ERROR (calculated: 0x{calculated_crc:04X})"
-        )
+        crc_match = "OK" if crc == calculated_crc else f"ERROR (calculated: 0x{calculated_crc:04X})"
         print(f"   [{len(data)-2}-{len(data)-1}] CRC = 0x{crc:04X} {crc_match}")
 
 
@@ -409,9 +401,7 @@ class DocumentedReader:
             return []
 
         if status != STATUS_SUCCESS:
-            print(
-                f"\n   [!] Status: {STATUS_DESCRIPTIONS.get(status, 'Unknown')} (0x{status:02X})"
-            )
+            print(f"\n   [!] Status: {STATUS_DESCRIPTIONS.get(status, 'Unknown')} (0x{status:02X})")
             return []
 
         # Parse tag data

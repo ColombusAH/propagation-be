@@ -34,7 +34,7 @@ async def test_check_tag_paid_returns_true(theft_service):
     mock_tag.epc = "E200PAID"
 
     with patch("app.services.theft_detection.prisma_client") as mock_prisma:
-        mock_prisma.client.tagmapping.find_unique = AsyncMock(return_value=mock_tag)
+        mock_prisma.client.rfidtag.find_unique = AsyncMock(return_value=mock_tag)
 
         result = await theft_service.check_tag_payment_status("E200PAID")
 
@@ -45,7 +45,7 @@ async def test_check_tag_paid_returns_true(theft_service):
 async def test_check_tag_unpaid_returns_false(theft_service, mock_tag):
     """Unpaid tags should return False and trigger alert."""
     with patch("app.services.theft_detection.prisma_client") as mock_prisma:
-        mock_prisma.client.tagmapping.find_unique = AsyncMock(return_value=mock_tag)
+        mock_prisma.client.rfidtag.find_unique = AsyncMock(return_value=mock_tag)
         mock_prisma.client.theftalert.create = AsyncMock(return_value=MagicMock(id="alert_1"))
         mock_prisma.client.user.find_many = AsyncMock(return_value=[])
 

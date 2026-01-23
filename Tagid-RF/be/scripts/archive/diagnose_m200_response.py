@@ -102,9 +102,7 @@ def test_connection(ip: str, port: int, timeout: int = 10):
         # Check if it looks like HTTP
         if response_2.startswith(b"HTTP") or response_2.startswith(b"C"):
             print("\n⚠️  Response appears to be text-based (HTTP or text protocol)")
-            print(
-                "   The M-200 might be using HTTP/REST API instead of binary protocol"
-            )
+            print("   The M-200 might be using HTTP/REST API instead of binary protocol")
 
         sock.close()
         print("\n✓ Connection closed")
@@ -139,9 +137,7 @@ if __name__ == "__main__":
         default=int(os.getenv("RFID_READER_PORT", "2022")),
         help="M-200 port",
     )
-    parser.add_argument(
-        "--timeout", type=int, default=10, help="Socket timeout in seconds"
-    )
+    parser.add_argument("--timeout", type=int, default=10, help="Socket timeout in seconds")
 
     args = parser.parse_args()
     test_connection(args.ip, args.port, args.timeout)

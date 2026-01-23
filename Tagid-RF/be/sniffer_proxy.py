@@ -71,12 +71,8 @@ def main():
             print(f"✅ Connected to Real Reader at {READER_IP}:{READER_PORT}")
 
             # Start Forwarding Threads
-            t1 = threading.Thread(
-                target=forward, args=(client_sock, reader_sock, "APP->READER")
-            )
-            t2 = threading.Thread(
-                target=forward, args=(reader_sock, client_sock, "READER->APP")
-            )
+            t1 = threading.Thread(target=forward, args=(client_sock, reader_sock, "APP->READER"))
+            t2 = threading.Thread(target=forward, args=(reader_sock, client_sock, "READER->APP"))
             t1.start()
             t2.start()
 

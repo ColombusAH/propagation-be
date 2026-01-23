@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { LanguageSwitch } from './LanguageSwitch';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const Header = styled.header`
   background: ${props => props.theme.colors.surface};
@@ -97,7 +98,7 @@ const RoleOption = styled.button<{ $active: boolean }>`
   border-radius: ${props => props.theme.borderRadius.md};
   font-size: 0.875rem;
   cursor: pointer;
-  text-align: right;
+  text-align: start;
   transition: all ${props => props.theme.transitions.fast};
 
   &:hover {
@@ -134,18 +135,19 @@ const MaterialIcon = ({ name, size = 18 }: { name: string; size?: number }) => (
   <span className="material-symbols-outlined" style={{ fontSize: size }}>{name}</span>
 );
 
-const roles: { id: UserRole; name: string; icon: string }[] = [
-  { id: 'SUPER_ADMIN', name: 'מנהל על', icon: 'shield_person' },
-  { id: 'NETWORK_ADMIN', name: 'מנהל רשת', icon: 'hub' },
-  { id: 'STORE_MANAGER', name: 'מנהל חנות', icon: 'storefront' },
-  { id: 'SELLER', name: 'מוכר', icon: 'badge' },
-  { id: 'CUSTOMER', name: 'לקוח', icon: 'person' },
-];
-
 export function TopBar() {
   const { userRole, logout, login } = useAuth();
+  const { t } = useTranslation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const roles: { id: UserRole; name: string; icon: string }[] = [
+    { id: 'SUPER_ADMIN', name: t('roles.superAdmin'), icon: 'shield_person' },
+    { id: 'NETWORK_ADMIN', name: t('roles.networkAdmin'), icon: 'hub' },
+    { id: 'STORE_MANAGER', name: t('roles.storeManager'), icon: 'storefront' },
+    { id: 'SELLER', name: t('roles.seller'), icon: 'badge' },
+    { id: 'CUSTOMER', name: t('roles.customer'), icon: 'person' },
+  ];
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -168,7 +170,7 @@ export function TopBar() {
     <Header>
       <NavContainer>
         <LeftSection>
-          <PageTitle>מערכת ניהול RFID</PageTitle>
+          <PageTitle>{t('app.title')}</PageTitle>
         </LeftSection>
 
         <RightSection>
@@ -193,7 +195,7 @@ export function TopBar() {
           </RoleSwitcher>
           <LanguageSwitch />
           <LogoutButton onClick={logout}>
-            <MaterialIcon name="logout" size={14} /> יציאה
+            <MaterialIcon name="logout" size={14} /> {t('app.logout')}
           </LogoutButton>
         </RightSection>
       </NavContainer>
