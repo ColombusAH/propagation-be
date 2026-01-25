@@ -298,9 +298,22 @@ async def test_stop_scanning_already_stopped(reader):
 
 
 @pytest.mark.asyncio
-async def test_write_tag_not_implemented(reader):
-    """Test write_tag returns False."""
-    assert await reader.write_tag("E123", {}) is False
+async def test_write_tag_success(reader):
+    """Test successful tag writing."""
+    with patch.object(reader, "_send_command") as mock_send:
+        # Build valid response
+        header = struct.pack(
+            ">BBHB", HEAD, 0x00, M200Commands.RFM_WRITEISO_TAG, 0x01
+        )
+        frame = header + bytes([M200Status.SUCCESS])
+        crc = calculate_crc16(frame)
+        mock_send.return_value = frame + struct.pack(">H", crc)
+
+        with patch.object(reader, "select_tag", new_callable=AsyncMock) as mock_select:
+            mock_select.return_value = True
+            result = await reader.write_tag("E123", 2, 0, b"\x11\x22")
+            assert result is True
+            mock_select.assert_called_with("E123")
 
 
 @pytest.mark.asyncio
@@ -865,7 +878,7 @@ async def test_truly_exhaustive_methods(reader):
         await reader.set_query_params()
         await reader.select_tag("E123")
         await reader.read_single_tag()
-        await reader.write_tag("E123", {})
+        await reader.write_tag("E123", 1, 0, b"\x00\x00")
 
     # Disconnected failure paths
     reader.is_connected = False
@@ -883,5 +896,5 @@ async def test_truly_exhaustive_methods(reader):
     assert await reader.set_query_params() is False
     assert await reader.select_tag("E123") is False
     assert await reader.control_relay(1, True) is False
-    # write_tag always returns False currently
-    assert await reader.write_tag("E123", {}) is False
+    # write_tag returns False if not connected
+    assert await reader.write_tag("E123", 1, 0, b"\x00\x00") is False

@@ -46,6 +46,7 @@ from app.services.m200_protocol import (  # noqa: F401 - Full protocol API expos
     build_set_query_param_command,
     build_set_rssi_filter_command,
     build_stop_inventory_command,
+    build_write_tag_command,
     parse_device_info,
     parse_gate_status,
     parse_gpio_levels,
@@ -139,9 +140,11 @@ class RFIDReaderService:
             device_info = await self.get_reader_info()
             if device_info.get("connected"):
                 self._device_info = device_info
-                logger.info(f"✓ M-200 device info: {device_info.get('serial_number', 'Unknown')}")
+                logger.info(
+                    f"✓ M-200 connection verified. Model: {device_info.get('model', 'Unknown')}, SN: {device_info.get('rfid_serial_number', 'Unknown')}"
+                )
             else:
-                logger.warning("Connected but could not retrieve device info")
+                logger.warning("! Connected but could not retrieve device info - reader might be busy")
 
             return True
 
@@ -481,7 +484,7 @@ class RFIDReaderService:
             return
 
         self.is_scanning = True
-        logger.info("Starting continuous tag scanning...")
+        logger.info("▶ Starting continuous tag scanning loop...")
 
         self._scan_task = asyncio.create_task(self._scan_loop(callback))
 
@@ -629,21 +632,46 @@ class RFIDReaderService:
 
         logger.info("✓ Stopped tag scanning")
 
-    async def write_tag(self, epc: str, data: Dict[str, Any]) -> bool:
+    async def write_tag(
+        self, epc: str, bank: int, start_addr: int, data: bytes
+    ) -> bool:
         """
         Write data to RFID tag.
 
-        TODO: Implement tag writing using M-200 protocol
-
         Args:
             epc: Tag EPC to write to
-            data: Data to write
+            bank: Memory bank (0=Reserved, 1=EPC, 2=TID, 3=User)
+            start_addr: Starting address in words
+            data: Binary data to write
 
         Returns:
             True if successful
         """
-        logger.warning("Tag writing not yet implemented for M-200")
-        return False
+        if not self.is_connected:
+            return False
+
+        try:
+            # 1. Select the tag first
+            selected = await self.select_tag(epc)
+            if not selected:
+                logger.error(f"Failed to select tag {epc} for writing")
+                return False
+
+            # 2. Send write command
+            cmd = build_write_tag_command(bank, start_addr, data)
+            response_bytes = await asyncio.to_thread(self._send_command, cmd)
+            response = M200ResponseParser.parse(response_bytes, strict_crc=False)
+
+            if response.success:
+                logger.info(f"✓ Successfully wrote data to tag {epc}")
+                return True
+            else:
+                error_desc = M200Status.get_description(response.status)
+                logger.error(f"Failed to write to tag {epc}: {error_desc}")
+                return False
+        except Exception as e:
+            logger.error(f"Error writing to tag {epc}: {e}")
+            return False
 
     # =========================================================================
     # HIGH PRIORITY - Module Control

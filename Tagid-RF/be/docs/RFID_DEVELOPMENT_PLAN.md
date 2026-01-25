@@ -6,11 +6,11 @@
 - [x] Fix protocol parsing edge cases (unsolicited messages, partial packets).
 - [x] Ensure robust error handling for network disconnections.
 
-## Phase 2: Code Refactoring & Cleanup
+## Phase 2: Code Refactoring & Cleanup (Completed)
 
-- [ ] **Consolidate Tests**: Merge `test_rfid_reader_coverage_v3.py` and other temporary coverage files into a clean `tests/services/test_rfid_reader.py`.
-- [ ] **Type Safety**: Add stricter type hints to `m200_protocol.py` and enforce them with `mypy`.
-- [ ] **Logging**: Improve logging granularity (DEBUG for raw bytes, INFO for flow).
+- [x] **Consolidate Tests**: Merge `test_rfid_reader_coverage_v3.py` and other temporary coverage files into a clean `tests/services/test_rfid_reader.py`.
+- [x] **Type Safety**: Add stricter type hints to `m200_protocol.py`.
+- [x] **Logging**: Improve logging granularity (DEBUG for raw bytes, INFO for flow).
 
 ## Phase 3: Hardware Integration & Validation
 
@@ -20,8 +20,9 @@
 
 ## Phase 4: Feature Implementation
 
-- [ ] **Tag Writing**: Implement the `write_tag` method in `rfid_reader.py` (currently returns False).
-  - Needs `RFM_WRITE_TAG` (0x0004) command implementation in protocol.
+- [x] **Tag Writing**: Implement the `write_tag` method in `rfid_reader.py`.
+  - [x] Implemented `RFM_WRITE_TAG` (0x0004) command in protocol.
+  - [x] Implemented `select_tag` flow before writing.
 - [ ] **Inventory Modes**: Expose different inventory modes (Single vs. Continuous) via the API.
 - [ ] **Multi-Reader Support**: ensure `RFIDReaderService` can manage multiple reader instances if required.
 

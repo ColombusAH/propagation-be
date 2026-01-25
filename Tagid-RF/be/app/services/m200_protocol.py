@@ -189,6 +189,7 @@ class M200Commands:
 
     # ISO 18000-6C Protocol Commands
     RFM_READISO_TAG = 0x0003
+    RFM_WRITEISO_TAG = 0x0004
     RFM_SETISO_SELECTMASK = 0x0007
     RFM_SET_SELPRM = 0x0010
     RFM_GET_SELPRM = 0x0011
@@ -450,6 +451,26 @@ def build_read_tag_command(mem_bank: int, start_addr: int, word_count: int) -> M
     """
     data = struct.pack("BBB", mem_bank, start_addr, word_count)
     return M200Command(M200Commands.RFM_READISO_TAG, data, addr=BROADCAST_ADDR)
+
+
+def build_write_tag_command(mem_bank: int, start_addr: int, data: bytes) -> M200Command:
+    """
+    Build write tag data command (Section 2.3.4).
+
+    Args:
+        mem_bank: Memory bank (0=Reserved, 1=EPC, 2=TID, 3=User)
+        start_addr: Starting address in words
+        data: Bytes to write (must be multiple of 2)
+
+    Returns:
+        M200Command to write tag data
+    """
+    if len(data) % 2 != 0:
+        raise ValueError("Data length must be a multiple of 2 (word aligned)")
+
+    word_count = len(data) // 2
+    header = struct.pack("BBB", mem_bank, start_addr, word_count)
+    return M200Command(M200Commands.RFM_WRITEISO_TAG, header + data, addr=BROADCAST_ADDR)
 
 
 def build_get_all_params_command() -> M200Command:
