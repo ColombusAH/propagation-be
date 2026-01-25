@@ -2,13 +2,16 @@
 Coverage tests for Users API endpoints.
 """
 
-import pytest
 from datetime import datetime
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
-from app.main import app
+
+import pytest
+
 from app.api.dependencies.auth import get_current_user
 from app.db.dependencies import get_db
-from types import SimpleNamespace
+from app.main import app
+
 
 # Create a mock user
 def create_mock_user(id="u1", role="SUPER_ADMIN"):
@@ -27,8 +30,9 @@ def create_mock_user(id="u1", role="SUPER_ADMIN"):
         deletedAt=None,
         latitude=None,
         longitude=None,
-        receiveTheftAlerts=False
+        receiveTheftAlerts=False,
     )
+
 
 @pytest.fixture
 def auth_override():
@@ -37,6 +41,7 @@ def auth_override():
     app.dependency_overrides[get_db] = lambda: MagicMock()
     yield
     app.dependency_overrides.clear()
+
 
 class TestUsersEndpointCoverage:
 
@@ -85,13 +90,13 @@ class TestUsersEndpointCoverage:
         app.dependency_overrides[get_current_user] = lambda: create_mock_user(role="CUSTOMER")
         try:
             payload = {
-                "email": "n@example.com", 
-                "password": "password123", 
-                "name": "n", 
+                "email": "n@example.com",
+                "password": "password123",
+                "name": "n",
                 "role": "EMPLOYEE",
                 "phone": "0",
                 "address": "a",
-                "businessId": "b"
+                "businessId": "b",
             }
             response = await client.post("/api/v1/users/", json=payload)
             assert response.status_code == 403
@@ -104,13 +109,13 @@ class TestUsersEndpointCoverage:
         app.dependency_overrides[get_current_user] = lambda: create_mock_user(role="STORE_MANAGER")
         try:
             payload = {
-                "email": "n@example.com", 
-                "password": "password123", 
-                "name": "n", 
+                "email": "n@example.com",
+                "password": "password123",
+                "name": "n",
                 "role": "NETWORK_MANAGER",
                 "phone": "0",
                 "address": "a",
-                "businessId": "b"
+                "businessId": "b",
             }
             response = await client.post("/api/v1/users/", json=payload)
             assert response.status_code == 403
@@ -122,13 +127,13 @@ class TestUsersEndpointCoverage:
         with patch("app.api.v1.endpoints.users.create_user") as mock_create:
             mock_create.side_effect = Exception("Unique constraint failed")
             payload = {
-                "email": "dup@example.com", 
-                "password": "password123", 
-                "name": "n", 
+                "email": "dup@example.com",
+                "password": "password123",
+                "name": "n",
                 "role": "CUSTOMER",
                 "phone": "0",
                 "address": "a",
-                "businessId": "b"
+                "businessId": "b",
             }
             response = await client.post("/api/v1/users/", json=payload)
             assert response.status_code == 400
@@ -144,13 +149,13 @@ class TestUsersEndpointCoverage:
         with patch("app.api.v1.endpoints.users.create_user") as mock_create:
             mock_create.return_value = create_mock_user("u-new")
             payload = {
-                "email": "new@example.com", 
-                "password": "password123", 
-                "name": "New User", 
+                "email": "new@example.com",
+                "password": "password123",
+                "name": "New User",
                 "role": "CUSTOMER",
                 "phone": "000",
                 "address": "Addr",
-                "businessId": "b1"
+                "businessId": "b1",
             }
             response = await client.post("/api/v1/users/", json=payload)
             assert response.status_code == 201
