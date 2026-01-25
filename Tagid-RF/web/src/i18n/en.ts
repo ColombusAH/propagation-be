@@ -279,6 +279,11 @@ export const en = {
         scanError: 'Scan Error',
         manualEntry: 'Manual Entry',
     },
+
+    // Alerts
+    alerts: {
+        theftDetected: 'Theft Detected',
+    },
 };
 
 export type TranslationKeys = typeof en;

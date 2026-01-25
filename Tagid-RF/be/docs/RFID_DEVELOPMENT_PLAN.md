@@ -8,31 +8,32 @@
 
 ## Phase 2: Code Refactoring & Cleanup (Completed)
 
-- [x] **Consolidate Tests**: Merge `test_rfid_reader_coverage_v3.py` and other temporary coverage files into a clean `tests/services/test_rfid_reader.py`.
+- [x] **Consolidate Tests**: Merge temporary coverage files into a clean `tests/services/test_rfid_reader.py`.
 - [x] **Type Safety**: Add stricter type hints to `m200_protocol.py`.
 - [x] **Logging**: Improve logging granularity (DEBUG for raw bytes, INFO for flow).
 
-## Phase 3: Hardware Integration & Validation
+## Phase 3: Hardware Integration & Validation (PAUSED - No Power)
 
-- [ ] **Live Testing**: Connect to the physical M-200 reader and validate the "Happy Path" scenarios.
-- [ ] **Latency Tuning**: Measure the latency of tag reads -> WebSocket broadcast. Optimize `_scan_loop` sleep times.
-- [ ] **GPIO Testing**: Validate that setting GPIO/Relays actually triggers the physical ports.
+- [ ] **Live Testing**: Connect to the physical M-200 reader.
+- [ ] **Latency Tuning**: Optimize `_scan_loop` sleep times.
+- [ ] **GPIO Testing**: Validate relay/buzzer triggers.
 
 ## Phase 4: Feature Implementation
 
-- [x] **Tag Writing**: Implement the `write_tag` method in `rfid_reader.py`.
-  - [x] Implemented `RFM_WRITE_TAG` (0x0004) command in protocol.
-  - [x] Implemented `select_tag` flow before writing.
-- [ ] **Inventory Modes**: Expose different inventory modes (Single vs. Continuous) via the API.
-- [ ] **Multi-Reader Support**: ensure `RFIDReaderService` can manage multiple reader instances if required.
+- [x] **Tag Writing**: Implement `write_tag` method in `rfid_reader.py`.
+- [x] **Inventory Modes**: Expose Single vs. Continuous scan via API.
+- [ ] **Multi-Reader Support**: Manage multiple reader instances.
 
-## Phase 5: Frontend Integration (Next Steps)
+## Phase 5: Frontend Integration (In Progress)
 
-- [ ] **WebSocket Client**: Updates the React `ScanPage` to handle `tag_scanned` mock events vs real events.
-- [ ] **Dashboard**: Display RSSI signal strength visually.
-- [ ] **Device Settings**: Create a UI page to call `set_power`, `set_network`, etc.
+- [x] **WebSocket Client**: Real-time `tag_scanned` events in `ScanPage`.
+- [x] **Visual RSSI**: Added gauge bars in `ScanPage`.
+- [x] **Push UI**: Display theft/system alerts in the frontend UI.
 
-## Phase 6: Persistence
+## Phase 6: Persistence & Business Logic
 
-- [ ] **Configuration Storage**: Save reader settings (IP, Power, etc.) to the PostgreSQL database so they persist across restarts.
-- [ ] **Scan History**: Ensure efficient storage of high-volume scan data (potentially buffering writes).
+- [x] **Configuration Storage**: Persistent reader settings (IP, Power, etc.) in DB.
+- [ ] **Scan History Optimization**: Buffer writes for high-volume scans.
+- [ ] **Payment Verification**: Test Tranzila flow and bank settlement validation.
+- [ ] **RBAC Flow**: Super Admin login -> Create Store Manager -> Verify permissions.
+- [ ] **Push Notifications**: Connect to real push service (Firebase/FCM) for theft alerts.

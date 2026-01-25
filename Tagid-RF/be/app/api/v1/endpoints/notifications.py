@@ -136,3 +136,29 @@ async def update_notification_settings(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/test-push")
+async def test_push_notification(
+    db: Prisma = Depends(get_db),
+    current_user: Any = Depends(get_current_user),
+):
+    """
+    Send a test push notification to the current user.
+    """
+    from app.services.push_notification_service import PushNotificationService
+    
+    service = PushNotificationService(db)
+    
+    # Trigger a simulated theft alert for this user
+    # Note: we pass actual user data to make it real
+    result = await service.send_theft_alert(
+        tag_id="test-tag-123",
+        epc="E1234567890ABCDEF",
+        location="Testing Zone",
+    )
+    
+    return {
+        "message": "Test push notification triggered",
+        "result": result
+    }

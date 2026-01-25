@@ -350,3 +350,32 @@ class RFIDTagStatsResponse(BaseModel):
     tags_by_location: Dict[str, int] = Field(
         description="Count of tags per location. Key=location, Value=count"
     )
+
+
+class RFIDReaderConfigBase(BaseModel):
+    """Base schema for RFID reader configuration."""
+
+    reader_id: str = Field(..., max_length=100)
+    ip_address: str = Field(..., max_length=45)
+    port: int = Field(4001, ge=1, le=65535)
+    power_dbm: int = Field(26, ge=0, le=30)
+    antenna_mask: int = Field(1, ge=0, le=15)
+    rssi_filter: int = Field(0, ge=0, le=255)
+    is_enabled: bool = True
+    meta: Optional[Dict[str, Any]] = Field(None, alias="metadata")
+
+
+class RFIDReaderConfigCreate(RFIDReaderConfigBase):
+    """Schema for creating/updating reader config."""
+
+    pass
+
+
+class RFIDReaderConfigResponse(RFIDReaderConfigBase):
+    """Schema for reader config responses."""
+
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

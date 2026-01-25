@@ -281,4 +281,9 @@ export const he: TranslationKeys = {
         scanError: 'שגיאת סריקה',
         manualEntry: 'הזנה ידנית',
     },
+
+    // Alerts
+    alerts: {
+        theftDetected: 'זוהתה גניבה',
+    },
 };

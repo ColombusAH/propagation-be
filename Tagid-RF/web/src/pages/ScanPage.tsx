@@ -7,6 +7,8 @@ import { EmptyState } from '@/components/EmptyState';
 import { useStore } from '@/store';
 import { theme } from '@/styles/theme';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useWebSocket } from '@/hooks/useWebSocket';
+import { useEffect } from 'react';
 
 const Container = styled.div`
   max-width: 800px;
@@ -171,6 +173,86 @@ const ErrorContainer = styled.div`
   margin-top: ${theme.spacing.lg};
 `;
 
+const RFIDSection = styled.div`
+  background-color: ${theme.colors.surface};
+  border: 1px solid ${theme.colors.border};
+  border-radius: ${theme.borderRadius.lg};
+  padding: ${theme.spacing.lg};
+  margin-top: ${theme.spacing.lg};
+`;
+
+const SectionHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: ${theme.spacing.md};
+`;
+
+const StatusIndicator = styled.div<{ $connected: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.xs};
+  font-size: ${theme.typography.fontSize.xs};
+  color: ${props => props.$connected ? theme.colors.success : theme.colors.error};
+  
+  &::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: currentColor;
+    box-shadow: 0 0 5px currentColor;
+  }
+`;
+
+const TagList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${theme.spacing.sm};
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: ${theme.spacing.xs};
+`;
+
+const TagItem = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: ${theme.spacing.sm} ${theme.spacing.md};
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: ${theme.borderRadius.md};
+  border-right: 3px solid ${theme.colors.primary};
+`;
+
+const TagInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const TagEpc = styled.span`
+  font-family: monospace;
+  font-size: ${theme.typography.fontSize.sm};
+  font-weight: ${theme.typography.fontWeight.medium};
+`;
+
+const TagRssi = styled.div<{ $level: number }>`
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  
+  & > div {
+    width: 3px;
+    background: ${props => props.$level > 1 ? theme.colors.success : theme.colors.textMuted};
+    border-radius: 1px;
+  }
+`;
+
+const RSSIBar = styled.div<{ $active: boolean, $height: string }>`
+  height: ${props => props.$height};
+  width: 3px;
+  background: ${props => props.$active ? theme.colors.success : 'rgba(255,255,255,0.1)'};
+`;
+
 interface ScanResultData {
   type: 'product' | 'container';
   title: string;
@@ -196,6 +278,23 @@ export function ScanPage() {
   const [manualBarcode, setManualBarcode] = useState('');
   const [scanResult, setScanResult] = useState<ScanResultData | null>(null);
   const [cameraError, setCameraError] = useState<Error | null>(null);
+  const [recentTags, setRecentTags] = useState<any[]>([]);
+
+  const { status: wsStatus } = useWebSocket({
+    url: '/ws/rfid',
+    onMessage: (message) => {
+      if (message.type === 'tag_scanned') {
+        const tag = message.data;
+        handleScan(tag.epc, 'rfid', tag);
+
+        // Add to recent tags list
+        setRecentTags(prev => {
+          const filtered = prev.filter(t => t.epc !== tag.epc);
+          return [tag, ...filtered].slice(0, 10);
+        });
+      }
+    }
+  });
 
   const showScanResult = (result: ScanResultData) => {
     setScanResult(result);
@@ -204,9 +303,11 @@ export function ScanPage() {
     }, 4000);
   };
 
-  const handleScan = (barcode: string) => {
-    if (isContainer(barcode)) {
-      const container = getContainerByBarcode(barcode);
+  const handleScan = (code: string, method: 'barcode' | 'rfid' = 'barcode', extraData?: any) => {
+    const isRfid = method === 'rfid';
+
+    if (isContainer(code)) {
+      const container = getContainerByBarcode(code);
       if (container && container.products.length > 0) {
         const productNames: string[] = [];
         container.products.forEach(({ productId, qty }) => {
@@ -236,19 +337,19 @@ export function ScanPage() {
       return;
     }
 
-    const success = addByBarcode(barcode);
+    const success = addByBarcode(code);
     if (success) {
-      const product = getProductByBarcode(barcode);
+      const product = getProductByBarcode(code);
       showScanResult({
         type: 'product',
-        title: t('scan.productFound'),
-        message: product?.name || t('scan.product')
+        title: isRfid ? 'תג RFID סרוק' : t('scan.productFound'),
+        message: product?.name || (isRfid ? `EPC: ${code}` : t('scan.product'))
       });
     } else {
       showScanResult({
         type: 'product',
-        title: t('scan.productNotFound'),
-        message: t('scan.barcodeNotRecognized')
+        title: isRfid ? 'תג RFID לא מוכר' : t('scan.productNotFound'),
+        message: isRfid ? `EPC: ${code} - לא משויך למוצר` : t('scan.barcodeNotRecognized')
       });
     }
   };
@@ -256,7 +357,10 @@ export function ScanPage() {
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (manualBarcode.trim()) {
-      handleScan(manualBarcode.trim());
+      // Logic for testing: if it looks like EPC (hex, long), treat as RFID
+      const isHex = /^[0-9A-Fa-f]+$/.test(manualBarcode.trim());
+      const method = (isHex && manualBarcode.length > 12) ? 'rfid' : 'barcode';
+      handleScan(manualBarcode.trim(), method);
       setManualBarcode('');
     }
   };
@@ -299,7 +403,7 @@ export function ScanPage() {
             <InputGroup>
               <Input
                 type="text"
-                placeholder="הזן ברקוד או QR באופן ידני..."
+                placeholder="הזןEPC ,ברקוד או QR באופן ידני..."
                 value={manualBarcode}
                 onChange={(e) => setManualBarcode(e.target.value)}
               />
@@ -309,6 +413,49 @@ export function ScanPage() {
             </InputGroup>
           </form>
         </FallbackSection>
+
+        <RFIDSection>
+          <SectionHeader>
+            <FallbackTitle>
+              <MaterialIcon name="sensors" /> קורא RFID
+            </FallbackTitle>
+            <StatusIndicator $connected={wsStatus === 'connected'}>
+              {wsStatus === 'connected' ? 'מחובר' : 'מנסה להתחבר...'}
+            </StatusIndicator>
+          </SectionHeader>
+
+          {recentTags.length === 0 ? (
+            <div style={{ textAlign: 'center', opacity: 0.5, padding: '20px' }}>
+              ממתין לתגים...
+            </div>
+          ) : (
+            <TagList>
+              {recentTags.map((tag, idx) => {
+                // Calculate RSSI level for bars (0 to 4)
+                // Assuming RSSI is between -90 and -30
+                const rssi = tag.rssi || -70;
+                const level = Math.max(0, Math.min(4, Math.floor((rssi + 90) / 15)));
+
+                return (
+                  <TagItem key={`${tag.epc}-${idx}`}>
+                    <TagInfo>
+                      <TagEpc>{tag.epc}</TagEpc>
+                      <span style={{ fontSize: '10px', opacity: 0.7 }}>
+                        RSSI: {rssi} dBm | Ant: {tag.antenna_port || 1}
+                      </span>
+                    </TagInfo>
+                    <TagRssi $level={level}>
+                      <RSSIBar $active={level >= 1} $height="4px" />
+                      <RSSIBar $active={level >= 2} $height="8px" />
+                      <RSSIBar $active={level >= 3} $height="12px" />
+                      <RSSIBar $active={level >= 4} $height="16px" />
+                    </TagRssi>
+                  </TagItem>
+                );
+              })}
+            </TagList>
+          )}
+        </RFIDSection>
 
         <FallbackSection>
           <Button onClick={() => navigate('/catalog')} style={{ width: '100%', justifyContent: 'center' }}>

@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional
 
 from app.core.config import get_settings
-from app.models.rfid_tag import RFIDScanHistory, RFIDTag
+from app.models.rfid_tag import RFIDReaderConfig, RFIDScanHistory, RFIDTag
 from app.routers.websocket import manager
 from app.services.database import SessionLocal
 from app.services.m200_protocol import (  # noqa: F401 - Full protocol API exposed for comprehensive reader control
@@ -62,10 +62,14 @@ class RFIDReaderService:
     """Service for managing M-200 RFID reader connection and operations."""
 
     def __init__(self):
+        # Default settings from env/config (fallback)
         self.reader_ip = getattr(settings, "RFID_READER_IP", "192.168.1.100")
         self.reader_port = getattr(settings, "RFID_READER_PORT", 4001)
         self.socket_timeout = getattr(settings, "RFID_SOCKET_TIMEOUT", 10)
         self.reader_id = getattr(settings, "RFID_READER_ID", "M-200")
+
+        self.power_level = 26
+        self.antenna_mask = 1
 
         self.is_connected = False
         self.is_scanning = False
@@ -74,6 +78,58 @@ class RFIDReaderService:
         self._scan_task: Optional[asyncio.Task] = None
         self._device_info: Optional[Dict[str, Any]] = None
 
+        # Load from DB if available
+        try:
+            self.load_config_from_db()
+        except Exception as e:
+            logger.warning(f"Could not load RFID config from DB: {e}. Using defaults.")
+
+    def load_config_from_db(self):
+        """Load configuration from database."""
+        db = SessionLocal()
+        try:
+            config = db.query(RFIDReaderConfig).filter(RFIDReaderConfig.reader_id == self.reader_id).first()
+            if config:
+                self.reader_ip = config.ip_address
+                self.reader_port = config.port
+                self.power_level = config.power_dbm
+                self.antenna_mask = config.antenna_mask
+                logger.info(f"✓ Loaded RFID reader config from DB: {self.reader_ip}:{self.reader_port}")
+            else:
+                # Create default config in DB
+                new_config = RFIDReaderConfig(
+                    reader_id=self.reader_id,
+                    ip_address=self.reader_ip,
+                    port=self.reader_port,
+                    power_dbm=self.power_level,
+                    antenna_mask=self.antenna_mask
+                )
+                db.add(new_config)
+                db.commit()
+                logger.info(f"✓ Created default RFID reader config in DB for {self.reader_id}")
+        finally:
+            db.close()
+
+    def save_config_to_db(self, **kwargs):
+        """Save current or specific configuration to database."""
+        db = SessionLocal()
+        try:
+            config = db.query(RFIDReaderConfig).filter(RFIDReaderConfig.reader_id == self.reader_id).first()
+            if not config:
+                config = RFIDReaderConfig(reader_id=self.reader_id)
+                db.add(config)
+            
+            # Update fields
+            if "ip" in kwargs: config.ip_address = kwargs["ip"]
+            if "port" in kwargs: config.port = kwargs["port"]
+            if "power" in kwargs: config.power_dbm = kwargs["power"]
+            if "antenna_mask" in kwargs: config.antenna_mask = kwargs["antenna_mask"]
+            
+            db.commit()
+            logger.info(f"✓ Saved RFID reader config to DB for {self.reader_id}")
+        finally:
+            db.close()
+
     def get_status(self) -> Dict[str, Any]:
         """Get current service status."""
         return {
@@ -81,6 +137,8 @@ class RFIDReaderService:
             "is_scanning": self.is_scanning,
             "reader_ip": self.reader_ip,
             "reader_port": self.reader_port,
+            "power_level": self.power_level,
+            "antenna_mask": self.antenna_mask,
             "device_info": self._device_info,
         }
 
@@ -430,7 +488,7 @@ class RFIDReaderService:
 
         try:
             # Build inventory command (1 cycle, non-continuous)
-            cmd = build_inventory_command(inv_type=0x00, inv_param=0)
+            cmd = build_inventory_command(inv_type=0x01, inv_param=1)
             response_bytes = await asyncio.to_thread(self._send_command, cmd)
 
             # Parse response (use lenient CRC checking - device may use proprietary variant)
@@ -699,6 +757,8 @@ class RFIDReaderService:
             response_bytes = await asyncio.to_thread(self._send_command, cmd)
             response = M200ResponseParser.parse(response_bytes, strict_crc=False)
             if response.success:
+                self.power_level = power_dbm
+                self.save_config_to_db(power=power_dbm)
                 logger.info(f"Set RF power to {power_dbm} dBm")
             return response.success
         except Exception as e:
@@ -761,6 +821,10 @@ class RFIDReaderService:
             cmd = build_set_network_command(ip, subnet, gateway, port)
             response_bytes = await asyncio.to_thread(self._send_command, cmd)
             response = M200ResponseParser.parse(response_bytes, strict_crc=False)
+            if response.success:
+                self.reader_ip = ip
+                self.reader_port = port
+                self.save_config_to_db(ip=ip, port=port)
             return response.success
         except Exception as e:
             logger.error(f"Failed to set network: {e}")

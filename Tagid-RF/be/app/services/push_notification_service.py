@@ -92,13 +92,29 @@ class PushNotificationService:
             except Exception as e:
                 logger.error(f"Failed to notify {user.email}: {e}")
 
-        return {
+        result = {
             "alert_id": alert.id,
             "tag_epc": epc,
             "product": product_description,
             "recipients_notified": recipients_notified,
             "timestamp": datetime.now().isoformat(),
         }
+
+        # Broadcast to frontend
+        await self._broadcast_alert(result)
+
+        return result
+
+    async def _broadcast_alert(self, alert_data: dict):
+        """Broadcast alert via WebSocket"""
+        try:
+            from app.routers.websocket import manager
+            await manager.broadcast({
+                "type": "theft_alert",
+                "data": alert_data
+            })
+        except Exception as e:
+            logger.error(f"Failed to broadcast alert: {e}")
 
     async def check_gate_scan(self, epc: str, reader_id: str) -> dict:
         """

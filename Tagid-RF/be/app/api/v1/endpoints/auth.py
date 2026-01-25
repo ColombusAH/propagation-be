@@ -325,6 +325,7 @@ async def login_with_email(credentials: UserLogin, db: Prisma = Depends(get_db))
         HTTPException: 401 if credentials are invalid.
     """
     logger.info(f"Email login attempt for: {credentials.email}")
+    logger.debug(f"Password length received: {len(credentials.password)}")
 
     try:
         # Authenticate user

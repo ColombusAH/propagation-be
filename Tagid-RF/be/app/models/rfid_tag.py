@@ -115,3 +115,24 @@ class RFIDScanHistory(Base):
         Index("idx_rfid_scan_history_scanned_at", "scanned_at"),
         Index("idx_rfid_scan_history_reader_id", "reader_id"),
     )
+
+
+class RFIDReaderConfig(Base):
+    """Stores configuration for RFID readers."""
+
+    __tablename__ = "rfid_reader_configs"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    reader_id = Column(String(100), unique=True, nullable=False, index=True)
+    ip_address = Column(String(45), nullable=False)  # Supports IPv4 and IPv6
+    port = Column(Integer, default=4001, nullable=False)
+    power_dbm = Column(Integer, default=26, nullable=False)
+    antenna_mask = Column(Integer, default=1, nullable=False)  # Bitmask (1=Ant1, 2=Ant2, 4=Ant3, 8=Ant4)
+    rssi_filter = Column(Integer, default=0, nullable=False)
+    is_enabled = Column(Boolean, default=True, nullable=False)
+    meta = Column("metadata", JSON, nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )

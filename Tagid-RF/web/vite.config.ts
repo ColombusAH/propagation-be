@@ -19,7 +19,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5000,
+    port: 5173,
     host: true,
     allowedHosts: true,
     proxy: {

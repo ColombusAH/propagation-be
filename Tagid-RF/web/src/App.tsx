@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
 import { GlobalStyles } from './styles/global';
@@ -9,11 +9,14 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastContainer } from './components/Toast/ToastContainer';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { GlobalAlerts } from './components/GlobalAlerts';
 
 function AppContent() {
   const locale = useStore((state) => state.locale);
   const darkMode = useStore((state) => state.darkMode);
   const { isAuthenticated, login } = useAuth();
+  const [view, setView] = useState<'login' | 'register'>('login');
 
   // Set RTL direction based on locale
   useEffect(() => {
@@ -22,7 +25,15 @@ function AppContent() {
   }, [locale]);
 
   if (!isAuthenticated) {
-    return <LoginPage onLogin={login} />;
+    if (view === 'register') {
+      return (
+        <RegisterPage
+          onBackToLogin={() => setView('login')}
+          onRegisterSuccess={() => setView('login')}
+        />
+      );
+    }
+    return <LoginPage onLogin={login} onToggleRegister={() => setView('register')} />;
   }
 
   const currentTheme = darkMode ? darkTheme : lightTheme;
@@ -31,6 +42,7 @@ function AppContent() {
     <ErrorBoundary>
       <ThemeProvider theme={currentTheme}>
         <GlobalStyles />
+        <GlobalAlerts />
         <BrowserRouter>
           <AppRoutes />
         </BrowserRouter>
