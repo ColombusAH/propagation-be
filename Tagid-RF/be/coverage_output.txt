@@ -1,0 +1,177 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.13.5, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\eliran_ha\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\eliran_ha\Documents\Eliran\propagation-be\Tagid-RF\be
+configfile: pytest.ini
+plugins: anyio-4.12.0, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 34 items
+
+tests/services/test_rfid_reader_coverage_v3.py::test_send_command_unsolicited_and_retries PASSED [  2%]
+tests/services/test_rfid_reader_coverage_v3.py::test_send_command_unexpected_first_byte PASSED [  5%]
+tests/services/test_rfid_reader_coverage_v3.py::test_get_reader_info_debugpy_detection PASSED [  8%]
+tests/services/test_rfid_reader_coverage_v3.py::test_read_single_tag_inventory_complete PASSED [ 11%]
+tests/services/test_rfid_reader_coverage_v3.py::test_scan_loop_exception_handling PASSED [ 14%]
+tests/services/test_rfid_reader_coverage_v3.py::test_process_tag_new_and_existing PASSED [ 17%]
+tests/services/test_rfid_reader_coverage_v3.py::test_connect_buffered_data PASSED [ 20%]
+tests/services/test_rfid_reader_coverage_v3.py::test_connect_exception PASSED [ 23%]
+tests/services/test_rfid_reader_coverage_v3.py::test_disconnect_exception FAILED [ 26%]
+tests/services/test_rfid_reader_coverage_v3.py::test_send_command_extra_errors PASSED [ 29%]
+tests/services/test_rfid_reader_coverage_v3.py::test_read_single_tag_success_data PASSED [ 32%]
+tests/services/test_rfid_reader_coverage_v3.py::test_start_scanning_logic PASSED [ 35%]
+tests/services/test_rfid_reader_coverage_v3.py::test_process_tag_mappings_error PASSED [ 38%]
+tests/services/test_rfid_reader_coverage_v3.py::test_stop_scanning_already_stopped PASSED [ 41%]
+tests/services/test_rfid_reader_coverage_v3.py::test_write_tag_not_implemented PASSED [ 44%]
+tests/services/test_rfid_reader_coverage_v3.py::test_get_reader_info_status_error PASSED [ 47%]
+tests/services/test_rfid_reader_coverage_v3.py::test_get_reader_info_timeout PASSED [ 50%]
+tests/services/test_rfid_reader_coverage_v3.py::test_get_reader_info_general_exception PASSED [ 52%]
+tests/services/test_rfid_reader_comprehensive.py::test_reader_initialization PASSED [ 55%]
+tests/services/test_rfid_reader_comprehensive.py::test_get_status PASSED [ 58%]
+tests/services/test_rfid_reader_comprehensive.py::test_connect_success PASSED [ 61%]
+tests/services/test_rfid_reader_comprehensive.py::test_connect_already_connected PASSED [ 64%]
+tests/services/test_rfid_reader_comprehensive.py::test_connect_timeout PASSED [ 67%]
+tests/services/test_rfid_reader_comprehensive.py::test_connect_refused PASSED [ 70%]
+tests/services/test_rfid_reader_comprehensive.py::test_disconnect_when_connected PASSED [ 73%]
+tests/services/test_rfid_reader_comprehensive.py::test_disconnect_when_not_connected PASSED [ 76%]
+tests/services/test_rfid_reader_comprehensive.py::test_disconnect_stops_scanning_first PASSED [ 79%]
+tests/services/test_rfid_reader_comprehensive.py::test_send_command_basic PASSED [ 82%]
+tests/services/test_rfid_reader_comprehensive.py::test_get_all_config_alias PASSED [ 85%]
+tests/services/test_rfid_reader_comprehensive.py::test_set_network_alias PASSED [ 88%]
+tests/services/test_rfid_reader_comprehensive.py::test_send_command_alias PASSED [ 91%]
+tests/services/test_rfid_reader_exhaustive_coverage.py::test_get_reader_info_protocol_mismatch_json PASSED [ 94%]
+tests/services/test_rfid_reader_exhaustive_coverage.py::test_get_reader_info_status_failure PASSED [ 97%]
+tests/services/test_rfid_reader_exhaustive_coverage.py::test_rfid_reader_config_methods PASSED [100%]
+
+================================== FAILURES ===================================
+__________________________ test_disconnect_exception __________________________
+tests\services\test_rfid_reader_coverage_v3.py:204: in test_disconnect_exception
+    assert reader.is_connected is False
+E   assert True is False
+E    +  where True = <app.services.rfid_reader.RFIDReaderService object at 0x0000016F04FE4450>.is_connected
+------------------------------ Captured log call ------------------------------
+ERROR    app.services.rfid_reader:rfid_reader.py:180 Error during disconnect: Close error
+Traceback (most recent call last):
+  File "C:\Users\eliran_ha\Documents\Eliran\propagation-be\Tagid-RF\be\app\services\rfid_reader.py", line 172, in disconnect
+    self._socket.close()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\eliran_ha\AppData\Local\Programs\Python\Python313\Lib\unittest\mock.py", line 1169, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\eliran_ha\AppData\Local\Programs\Python\Python313\Lib\unittest\mock.py", line 1173, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\eliran_ha\AppData\Local\Programs\Python\Python313\Lib\unittest\mock.py", line 1228, in _execute_mock_call
+    raise effect
+Exception: Close error
+============================== warnings summary ===============================
+..\..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\applications.py:18
+  C:\Users\eliran_ha\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\applications.py:18: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    from fastapi.exception_handlers import (
+
+..\..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\applications.py:30
+  C:\Users\eliran_ha\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\applications.py:30: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    from fastapi.openapi.utils import get_openapi
+
+..\..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\_internal\_config.py:323
+..\..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\_internal\_config.py:323
+  C:\Users\eliran_ha\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\_internal\_config.py:323: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+tests/services/test_rfid_reader_coverage_v3.py::test_process_tag_mappings_error
+  C:\Users\eliran_ha\AppData\Local\Programs\Python\Python313\Lib\unittest\mock.py:2247: RuntimeWarning: coroutine 'RFIDReaderService._scan_loop' was never awaited
+    def __init__(self, name, parent):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+..\..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\cacheprovider.py:475
+  C:\Users\eliran_ha\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\cacheprovider.py:475: PytestCacheWarning: could not create cache path C:\Users\eliran_ha\Documents\Eliran\propagation-be\Tagid-RF\be\.pytest_cache\v\cache\nodeids: [WinError 5] Access is denied: 'C:\\Users\\eliran_ha\\Documents\\Eliran\\propagation-be\\Tagid-RF\\be\\.pytest_cache\\v\\cache'
+    config.cache.set("cache/nodeids", sorted(self.cached_nodeids))
+
+..\..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\cacheprovider.py:429
+  C:\Users\eliran_ha\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\cacheprovider.py:429: PytestCacheWarning: could not create cache path C:\Users\eliran_ha\Documents\Eliran\propagation-be\Tagid-RF\be\.pytest_cache\v\cache\lastfailed: [WinError 5] Access is denied: 'C:\\Users\\eliran_ha\\Documents\\Eliran\\propagation-be\\Tagid-RF\\be\\.pytest_cache\\v\\cache'
+    config.cache.set("cache/lastfailed", self.lastfailed)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.13.5-final-0 _______________
+
+Name                                        Stmts   Miss   Cover   Missing
+--------------------------------------------------------------------------
+app\__init__.py                                 0      0 100.00%
+app\api\__init__.py                             0      0 100.00%
+app\api\dependencies\auth.py                   38     26  31.58%   34-78
+app\api\deps.py                                 1      0 100.00%
+app\api\v1\api.py                              19      0 100.00%
+app\api\v1\endpoints\alerts.py                 81     45  44.44%   59-85, 103-132, 148-170, 188-197, 210-233
+app\api\v1\endpoints\auth.py                  160    124  22.50%   61, 79-159, 170-173, 200-318, 339-376, 400-456
+app\api\v1\endpoints\bath_cart.py             138     91  34.06%   81-83, 88, 106-147, 161-178, 185-220, 241-288, 301-316
+app\api\v1\endpoints\cart.py                   69     50  27.54%   24-26, 38-90, 102-123, 131-132, 140-141, 145-146
+app\api\v1\endpoints\inventory.py              39     12  69.23%   51-61, 75-76, 87-92, 104
+app\api\v1\endpoints\network.py                53     30  43.40%   38-58, 68-89, 100-118
+app\api\v1\endpoints\notifications.py          54     30  44.44%   48-72, 84-138
+app\api\v1\endpoints\payment.py               146    121  17.12%   41-43, 58-133, 147-221, 235-275, 289-353, 366-386, 397-406, 411-418
+app\api\v1\endpoints\reader_config.py          92     50  45.65%   64-80, 85-86, 97-103, 121-126, 144-163, 174-186, 195-215, 223-225
+app\api\v1\endpoints\rfid_scan.py             199     99  50.25%   60, 74-84, 93-94, 104-123, 137-141, 155-201, 225-228, 238-244, 254-259, 285-286, 296-304, 314-321, 330-331, 351-352, 362-365, 385-391, 411-412, 422-427, 452-457, 467-470
+app\api\v1\endpoints\schedules.py               5      1  80.00%   8
+app\api\v1\endpoints\shifts.py                  5      1  80.00%   8
+app\api\v1\endpoints\tag_mapping.py            95     40  57.89%   81, 101-124, 145-150, 162-180, 190-195, 209-214, 236-240, 246-250, 270-284
+app\api\v1\endpoints\tag_registration.py      119     59  50.42%   92-108, 114-116, 133-176, 187-198, 210-212, 221-225, 243-257, 268-291, 306-315
+app\api\v1\endpoints\users.py                  39     21  46.15%   22, 30, 45-58, 77-121
+app\api\v1\endpoints\verify.py                 40     22  45.00%   36-80, 91-110
+app\core\config.py                             46      0 100.00%
+app\core\deps.py                               27     15  44.44%   18-19, 26-42, 51
+app\core\logging.py                             9      3  66.67%   10-58
+app\core\permissions.py                        28     16  42.86%   29-41, 67-72, 79, 84, 98-111
+app\core\security.py                           46     31  32.61%   20-33, 38-42, 47-49, 54-65
+app\crud\user.py                               68     58  14.71%   13-24, 29-48, 53-63, 77-99, 104-126
+app\db\dependencies.py                         27     22  18.52%   17-56
+app\db\prisma.py                               71     48  32.39%   24-26, 30-40, 44-51, 56-60, 68-99, 104-108
+app\main.py                                    90     51  43.33%   36-48, 62-127, 160, 188, 194
+app\models\__init__.py                          3      0 100.00%
+app\models\rfid_tag.py                         43      0 100.00%
+app\models\store.py                            55      0 100.00%
+app\routers\__init__.py                         0      0 100.00%
+app\routers\cart.py                            82     60  26.83%   32-34, 43-102, 108-109, 121-210, 214-215
+app\routers\exit_scan.py                       96     63  34.38%   74-194, 211-223, 235-245
+app\routers\inventory.py                       22     13  40.91%   34-74
+app\routers\notifications.py                  109    109   0.00%   5-300
+app\routers\products.py                        23     14  39.13%   21-49
+app\routers\stores.py                          91     51  43.96%   68-112, 122-128, 142-160, 174-192, 208-216, 228-242
+app\routers\tags.py                           226    183  19.03%   127-221, 269-290, 313-316, 346-349, 391-423, 456-462, 500-508, 566-604, 657-675, 709-719, 758-774, 809-816, 870-884, 940-959, 1006-1021, 1036-1049
+app\routers\users.py                          124     79  36.29%   80-112, 124-156, 171-181, 196-229, 246-254, 262-273
+app\routers\websocket.py                       59     43  27.12%   60-62, 74-76, 106-119, 141-145, 313-375
+app\schemas\__init__.py                         2      0 100.00%
+app\schemas\cart.py                            22      0 100.00%
+app\schemas\inventory.py                       13      0 100.00%
+app\schemas\payment.py                         58      0 100.00%
+app\schemas\rfid_tag.py                        61      0 100.00%
+app\schemas\user.py                            28      0 100.00%
+app\services\__init__.py                        0      0 100.00%
+app\services\cash_provider.py                  48     48   0.00%   6-159
+app\services\database.py                       18      5  72.22%   43-47, 55
+app\services\inventory.py                      56     47  16.07%   29-67, 74-94, 101-120, 127-158
+app\services\m200_protocol.py                 280     84  70.00%   107, 118, 145, 162, 172-178, 247-259, 274-327, 355, 363, 403, 435-436, 451-452, 470, 480-481, 486-487, 530, 552-553, 564-570, 616, 621-622, 627, 652-653, 664, 713, 739-740, 750-751, 756-757, 775-780, 785-786, 798-802, 807-808, 819-823, 828-829, 834-836, 841-842
+app\services\nexi_provider.py                  89     75  15.73%   25-30, 46-96, 111-148, 161-197, 209-212, 224-255
+app\services\payment\__init__.py                3      0 100.00%
+app\services\payment\base.py                   46      0 100.00%
+app\services\payment\cash_gateway.py           21     21   0.00%   3-55
+app\services\payment\factory.py                44     33  25.00%   18-33, 38-46, 51-67, 72-74, 79-90
+app\services\payment\stripe_gateway.py         59     59   0.00%   3-130
+app\services\payment\tranzila.py               66     66   0.00%   3-165
+app\services\payment_provider.py               20      0 100.00%
+app\services\push_notification_service.py      49     49   0.00%   10-155
+app\services\push_notifications.py             28     13  53.57%   37-38, 55-82, 103-109
+app\services\rfid_reader.py                   471    224  52.44%   144, 174, 178, 181-200, 204, 209, 213-215, 219-222, 227, 232-234, 238-241, 248, 250-254, 259, 263, 269-271, 277-300, 303-305, 309, 313, 317-327, 334-337, 341, 355-356, 366-404, 410, 417-424, 426-430, 434-440, 442-447, 455, 459-475, 479, 483, 486-490, 493, 496, 500-502, 504-505, 509-517, 523-527, 543, 556, 560-565, 568, 573, 592, 594-606, 610-645, 652-678, 691-710, 712, 719-720, 730, 732, 738-743, 745, 751-756, 758, 764-772, 774, 781-787, 789, 795-804, 806, 812, 815, 821-830, 832, 839-840, 846, 848, 854-863, 865, 871-876, 878, 884-889
+app\services\tag_encryption.py                 53     34  35.85%   35-41, 46-54, 67-74, 86-100, 113-117, 132-133, 143-145
+app\services\tag_listener_service.py          107     80  25.23%   33-48, 65-66, 70-71, 75-93, 97-98, 102-105, 109, 114-122, 126-222, 226, 230
+app\services\tag_store.py                      34     34   0.00%   1-62
+app\services\theft_detection.py                62     46  25.81%   37-60, 70-91, 100-125, 136-166, 178-179, 190-205
+app\utils\__init__.py                           0      0 100.00%
+app\utils\helpers.py                           18     18   0.00%   5-71
+--------------------------------------------------------------------------
+TOTAL                                        4493   2617  41.75%
+Coverage HTML written to dir htmlcov
+Coverage XML written to file coverage.xml
+=========================== short test summary info ===========================
+FAILED tests/services/test_rfid_reader_coverage_v3.py::test_disconnect_exception
+================== 1 failed, 33 passed, 7 warnings in 2.59s ===================

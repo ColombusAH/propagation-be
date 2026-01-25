@@ -1,0 +1,269 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - heading "מערכת ניהול RFID" [level=1] [ref=e7]
+      - generic [ref=e8]:
+        - button "hub מנהל רשת expand_more" [ref=e10] [cursor=pointer]:
+          - generic [ref=e11]: hub
+          - text: מנהל רשת
+          - generic [ref=e12]: expand_more
+        - generic [ref=e13]:
+          - button "Toggle language" [ref=e14] [cursor=pointer]:
+            - generic [ref=e15]: 🇮🇱
+            - generic [ref=e16]: עב
+          - combobox "Select currency" [ref=e17] [cursor=pointer]:
+            - option "₪" [selected]
+            - option "$"
+            - option "€"
+        - button "logout יציאה" [ref=e18] [cursor=pointer]:
+          - generic [ref=e19]: logout
+          - text: יציאה
+  - generic [ref=e20]:
+    - complementary [ref=e21]:
+      - generic [ref=e22]:
+        - generic [ref=e24]: sensors
+        - generic [ref=e25]: Tagid RF
+      - generic [ref=e26]:
+        - generic [ref=e27]: ראשי
+        - link "space_dashboard סקירה כללית" [ref=e28] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e29]: space_dashboard
+          - text: סקירה כללית
+        - link "storefront קטלוג" [ref=e30] [cursor=pointer]:
+          - /url: /catalog
+          - generic [ref=e31]: storefront
+          - text: קטלוג
+      - generic [ref=e32]:
+        - generic [ref=e33]: ניהול תגים
+        - link "contactless סריקה" [ref=e34] [cursor=pointer]:
+          - /url: /tag-scanner
+          - generic [ref=e35]: contactless
+          - text: סריקה
+        - link "link צימוד" [ref=e36] [cursor=pointer]:
+          - /url: /tag-linking
+          - generic [ref=e37]: link
+          - text: צימוד
+      - generic [ref=e38]:
+        - generic [ref=e39]: תפעול
+        - link "shopping_basket אמבטים" [ref=e40] [cursor=pointer]:
+          - /url: /bath-setup
+          - generic [ref=e41]: shopping_basket
+          - text: אמבטים
+        - link "door_sensor שער יציאה" [ref=e42] [cursor=pointer]:
+          - /url: /exit-gate
+          - generic [ref=e43]: door_sensor
+          - text: שער יציאה
+        - link "receipt_long טרנזקציות" [ref=e44] [cursor=pointer]:
+          - /url: /transactions
+          - generic [ref=e45]: receipt_long
+          - text: טרנזקציות
+      - generic [ref=e47]:
+        - generic [ref=e48]: הגדרות
+        - link "router קוראים" [ref=e49] [cursor=pointer]:
+          - /url: /reader-settings
+          - generic [ref=e50]: router
+          - text: קוראים
+        - link "tune כללי" [ref=e51] [cursor=pointer]:
+          - /url: /settings
+          - generic [ref=e52]: tune
+          - text: כללי
+        - link "group משתמשים" [ref=e53] [cursor=pointer]:
+          - /url: /users
+          - generic [ref=e54]: group
+          - text: משתמשים
+    - main [ref=e55]:
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - heading "הגדרות" [level=1] [ref=e58]
+          - paragraph [ref=e59]: נהל את ההעדפות והאפשרויות שלך
+        - generic [ref=e60]:
+          - heading "הגדרות כלליות" [level=2] [ref=e61]
+          - generic [ref=e62]:
+            - generic [ref=e63]:
+              - generic [ref=e64]: שפה
+              - generic [ref=e65]: בחר את שפת הממשק (עברית ⇄ English)
+            - combobox [ref=e66] [cursor=pointer]:
+              - option "עברית" [selected]
+              - option "English"
+          - generic [ref=e67]:
+            - generic [ref=e68]:
+              - generic [ref=e69]: מטבע
+              - generic [ref=e70]: בחר את המטבע המועדף
+            - combobox [ref=e71] [cursor=pointer]:
+              - option "שקל ₪" [selected]
+              - option "דולר $"
+              - option "יורו €"
+          - generic [ref=e72]:
+            - generic [ref=e73]:
+              - generic [ref=e74]: התראות פוש (Push)
+              - generic [ref=e75]: קבל התראות ישירות לדפדפן או לנייד
+            - generic [ref=e76]:
+              - checkbox [checked]
+          - generic [ref=e78]:
+            - generic [ref=e79]:
+              - generic [ref=e80]: התראות SMS
+              - generic [ref=e81]: קבל עדכונים חשובים בהודעת טקסט
+            - generic [ref=e82]:
+              - checkbox
+          - generic [ref=e84]:
+            - generic [ref=e85]:
+              - generic [ref=e86]: התראות אימייל (Email)
+              - generic [ref=e87]: קבל דוחות וסיכומי פעילות לתיבת הדואר
+            - generic [ref=e88]:
+              - checkbox [checked]
+          - generic [ref=e90]:
+            - generic [ref=e91]:
+              - generic [ref=e92]: מצב כהה
+              - generic [ref=e93]: החלף בין מצב בהיר לכהה (בפיתוח)
+            - generic [ref=e94]:
+              - checkbox
+        - generic [ref=e96]:
+          - heading "פרטי הרשת" [level=2] [ref=e97]
+          - generic [ref=e98]:
+            - generic [ref=e99]:
+              - generic [ref=e100]:
+                - generic [ref=e101]: task_alt
+                - text: השלמת פרופיל הרשת
+              - generic [ref=e102]: 0%
+            - generic [ref=e104]:
+              - generic [ref=e105]: "חסרים:"
+              - generic [ref=e106]:
+                - generic [ref=e107]: circle
+                - text: שם הרשת
+              - generic [ref=e108]:
+                - generic [ref=e109]: circle
+                - text: לוגו
+              - generic [ref=e110]:
+                - generic [ref=e111]: circle
+                - text: ח.פ
+              - generic [ref=e112]:
+                - generic [ref=e113]: circle
+                - text: טלפון
+              - generic [ref=e114]:
+                - generic [ref=e115]: circle
+                - text: דוא"ל
+              - generic [ref=e116]:
+                - generic [ref=e117]: circle
+                - text: בנק
+              - generic [ref=e118]:
+                - generic [ref=e119]: circle
+                - text: סניף
+              - generic [ref=e120]:
+                - generic [ref=e121]: circle
+                - text: חשבון
+          - generic [ref=e122]:
+            - generic [ref=e123]:
+              - generic [ref=e124]: שם הרשת
+              - generic [ref=e125]: שם רשת החנויות שלך
+            - 'textbox "לדוגמה: רשת סופר-פארם" [ref=e126]'
+          - generic [ref=e127]:
+            - generic [ref=e128]:
+              - generic [ref=e129]: לוגו הרשת
+              - generic [ref=e130]: העלה את הלוגו של הרשת (PNG, JPG)
+            - generic [ref=e131]:
+              - generic [ref=e133]: image
+              - generic [ref=e134] [cursor=pointer]:
+                - generic [ref=e135]: upload
+                - text: העלה לוגו
+          - generic [ref=e136]:
+            - generic [ref=e137]:
+              - generic [ref=e138]: ח.פ / מספר עוסק
+              - generic [ref=e139]: מספר הזיהוי העסקי שלך (9 ספרות)
+            - textbox "000000000" [ref=e140]
+          - generic [ref=e141]:
+            - generic [ref=e142]: contact_phone
+            - text: פרטי קשר
+          - generic [ref=e143]:
+            - generic [ref=e144]:
+              - generic [ref=e145]: טלפון
+              - generic [ref=e146]: מספר הטלפון הראשי של הרשת
+            - textbox "03-1234567" [ref=e147]
+          - generic [ref=e148]:
+            - generic [ref=e149]:
+              - generic [ref=e150]: דוא"ל
+              - generic [ref=e151]: כתובת האימייל הראשית
+            - textbox "info@company.co.il" [ref=e152]
+          - generic [ref=e153]:
+            - generic [ref=e154]:
+              - generic [ref=e155]: כתובת
+              - generic [ref=e156]: כתובת המשרד הראשי
+            - textbox "רחוב הרצל 1, תל אביב" [ref=e157]
+          - generic [ref=e158]:
+            - generic [ref=e159]:
+              - generic [ref=e160]: אתר אינטרנט
+              - generic [ref=e161]: כתובת האתר של הרשת
+            - textbox "https://www.example.co.il" [ref=e162]
+          - generic [ref=e163]:
+            - generic [ref=e164]: account_balance
+            - text: פרטי בנק
+            - generic [ref=e165]:
+              - generic [ref=e166]: lock
+              - text: מאובטח
+          - generic [ref=e167]:
+            - generic [ref=e168]:
+              - generic [ref=e169]: שם הבנק
+              - generic [ref=e170]: הבנק בו מנוהל חשבון העסק
+            - combobox [ref=e171] [cursor=pointer]:
+              - option "בחר בנק..." [selected]
+              - option "בנק לאומי"
+              - option "בנק הפועלים"
+              - option "בנק דיסקונט"
+              - option "בנק מזרחי טפחות"
+              - option "הבנק הבינלאומי"
+              - option "בנק מרכנתיל"
+              - option "בנק אוצר החייל"
+              - option "בנק איגוד"
+              - option "בנק יהב"
+              - option "בנק מסד"
+          - generic [ref=e172]:
+            - generic [ref=e173]:
+              - generic [ref=e174]: מספר סניף
+              - generic [ref=e175]: מספר הסניף של הבנק (3 ספרות)
+            - textbox "000" [ref=e176]
+          - generic [ref=e177]:
+            - generic [ref=e178]:
+              - generic [ref=e179]: מספר חשבון
+              - generic [ref=e180]: מספר חשבון הבנק של העסק
+            - textbox "000000000" [ref=e181]
+        - generic [ref=e182]:
+          - heading "הגדרות קבלות" [level=2] [ref=e183]
+          - generic [ref=e184]:
+            - generic [ref=e185]:
+              - generic [ref=e186]: הדפסה אוטומטית
+              - generic [ref=e187]: הדפס קבלה אוטומטית לאחר כל עסקה (בפיתוח)
+            - generic [ref=e188]:
+              - checkbox [checked]
+        - generic [ref=e190]:
+          - heading "הגדרות דוחות" [level=2] [ref=e191]
+          - generic [ref=e192]:
+            - generic [ref=e193]:
+              - generic [ref=e194]: פורמט דוח
+              - generic [ref=e195]: בחר פורמט ברירת מחדל לייצוא דוחות
+            - combobox [ref=e196] [cursor=pointer]:
+              - option "PDF" [selected]
+              - option "Excel"
+              - option "CSV"
+        - generic [ref=e197]:
+          - heading "הגדרות מערכת" [level=2] [ref=e198]
+          - generic [ref=e199]:
+            - generic [ref=e200]:
+              - generic [ref=e201]: ניהול משתמשים
+              - generic [ref=e202]: הוסף, ערוך או הסר משתמשים מהמערכת (בפיתוח)
+            - button "נהל משתמשים" [ref=e203] [cursor=pointer]
+          - generic [ref=e204]:
+            - generic [ref=e205]:
+              - generic [ref=e206]: גיבוי מערכת
+              - generic [ref=e207]: צור גיבוי של כל נתוני המערכת (בפיתוח)
+            - button "צור גיבוי" [ref=e208] [cursor=pointer]
+        - generic [ref=e209]:
+          - heading "פרטי חשבון" [level=2] [ref=e210]
+          - generic [ref=e211]:
+            - generic [ref=e212]:
+              - generic [ref=e213]: התנתק
+              - generic [ref=e214]: התנתק מהחשבון שלך
+            - button "התנתק" [ref=e215] [cursor=pointer]
+        - button "שמור הגדרות" [ref=e216] [cursor=pointer]
+```

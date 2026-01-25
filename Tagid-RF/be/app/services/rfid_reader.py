@@ -171,13 +171,12 @@ class RFIDReaderService:
             if self._socket:
                 self._socket.close()
                 self._socket = None
-
-            self.is_connected = False
-            self._device_info = None
             logger.info("✓ Disconnected from M-200")
-
         except Exception as e:
             logger.error(f"Error during disconnect: {e}", exc_info=True)
+        finally:
+            self.is_connected = False
+            self._device_info = None
 
     def _send_command(self, command: M200Command, max_retries: int = 3) -> bytes:
         """
@@ -251,7 +250,8 @@ class RFIDReaderService:
                 data_len = response[4]
 
                 # Calculate remaining bytes: DATA + CRC(2)
-                remaining = data_len + 2
+                # data_len (LEN) includes STATUS byte, which is already read in header_size=6
+                remaining = data_len - 1 + 2
                 while remaining > 0:
                     chunk = self._socket.recv(remaining)
                     if not chunk:
