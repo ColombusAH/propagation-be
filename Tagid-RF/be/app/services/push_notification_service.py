@@ -109,10 +109,8 @@ class PushNotificationService:
         """Broadcast alert via WebSocket"""
         try:
             from app.routers.websocket import manager
-            await manager.broadcast({
-                "type": "theft_alert",
-                "data": alert_data
-            })
+
+            await manager.broadcast({"type": "theft_alert", "data": alert_data})
         except Exception as e:
             logger.error(f"Failed to broadcast alert: {e}")
 

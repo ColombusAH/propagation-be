@@ -147,9 +147,9 @@ async def test_push_notification(
     Send a test push notification to the current user.
     """
     from app.services.push_notification_service import PushNotificationService
-    
+
     service = PushNotificationService(db)
-    
+
     # Trigger a simulated theft alert for this user
     # Note: we pass actual user data to make it real
     result = await service.send_theft_alert(
@@ -157,8 +157,5 @@ async def test_push_notification(
         epc="E1234567890ABCDEF",
         location="Testing Zone",
     )
-    
-    return {
-        "message": "Test push notification triggered",
-        "result": result
-    }
+
+    return {"message": "Test push notification triggered", "result": result}

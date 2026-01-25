@@ -88,13 +88,19 @@ class RFIDReaderService:
         """Load configuration from database."""
         db = SessionLocal()
         try:
-            config = db.query(RFIDReaderConfig).filter(RFIDReaderConfig.reader_id == self.reader_id).first()
+            config = (
+                db.query(RFIDReaderConfig)
+                .filter(RFIDReaderConfig.reader_id == self.reader_id)
+                .first()
+            )
             if config:
                 self.reader_ip = config.ip_address
                 self.reader_port = config.port
                 self.power_level = config.power_dbm
                 self.antenna_mask = config.antenna_mask
-                logger.info(f"✓ Loaded RFID reader config from DB: {self.reader_ip}:{self.reader_port}")
+                logger.info(
+                    f"✓ Loaded RFID reader config from DB: {self.reader_ip}:{self.reader_port}"
+                )
             else:
                 # Create default config in DB
                 new_config = RFIDReaderConfig(
@@ -102,7 +108,7 @@ class RFIDReaderService:
                     ip_address=self.reader_ip,
                     port=self.reader_port,
                     power_dbm=self.power_level,
-                    antenna_mask=self.antenna_mask
+                    antenna_mask=self.antenna_mask,
                 )
                 db.add(new_config)
                 db.commit()
@@ -114,17 +120,25 @@ class RFIDReaderService:
         """Save current or specific configuration to database."""
         db = SessionLocal()
         try:
-            config = db.query(RFIDReaderConfig).filter(RFIDReaderConfig.reader_id == self.reader_id).first()
+            config = (
+                db.query(RFIDReaderConfig)
+                .filter(RFIDReaderConfig.reader_id == self.reader_id)
+                .first()
+            )
             if not config:
                 config = RFIDReaderConfig(reader_id=self.reader_id)
                 db.add(config)
-            
+
             # Update fields
-            if "ip" in kwargs: config.ip_address = kwargs["ip"]
-            if "port" in kwargs: config.port = kwargs["port"]
-            if "power" in kwargs: config.power_dbm = kwargs["power"]
-            if "antenna_mask" in kwargs: config.antenna_mask = kwargs["antenna_mask"]
-            
+            if "ip" in kwargs:
+                config.ip_address = kwargs["ip"]
+            if "port" in kwargs:
+                config.port = kwargs["port"]
+            if "power" in kwargs:
+                config.power_dbm = kwargs["power"]
+            if "antenna_mask" in kwargs:
+                config.antenna_mask = kwargs["antenna_mask"]
+
             db.commit()
             logger.info(f"✓ Saved RFID reader config to DB for {self.reader_id}")
         finally:
@@ -202,7 +216,9 @@ class RFIDReaderService:
                     f"✓ M-200 connection verified. Model: {device_info.get('model', 'Unknown')}, SN: {device_info.get('rfid_serial_number', 'Unknown')}"
                 )
             else:
-                logger.warning("! Connected but could not retrieve device info - reader might be busy")
+                logger.warning(
+                    "! Connected but could not retrieve device info - reader might be busy"
+                )
 
             return True
 
@@ -690,9 +706,7 @@ class RFIDReaderService:
 
         logger.info("✓ Stopped tag scanning")
 
-    async def write_tag(
-        self, epc: str, bank: int, start_addr: int, data: bytes
-    ) -> bool:
+    async def write_tag(self, epc: str, bank: int, start_addr: int, data: bytes) -> bool:
         """
         Write data to RFID tag.
 

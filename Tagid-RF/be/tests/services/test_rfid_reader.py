@@ -302,9 +302,7 @@ async def test_write_tag_success(reader):
     """Test successful tag writing."""
     with patch.object(reader, "_send_command") as mock_send:
         # Build valid response
-        header = struct.pack(
-            ">BBHB", HEAD, 0x00, M200Commands.RFM_WRITEISO_TAG, 0x01
-        )
+        header = struct.pack(">BBHB", HEAD, 0x00, M200Commands.RFM_WRITEISO_TAG, 0x01)
         frame = header + bytes([M200Status.SUCCESS])
         crc = calculate_crc16(frame)
         mock_send.return_value = frame + struct.pack(">H", crc)
