@@ -78,6 +78,12 @@ class RFIDReaderService:
         self._scan_task: Optional[asyncio.Task] = None
         self._device_info: Optional[Dict[str, Any]] = None
 
+        # Buffering for high-volume scans
+        self._scan_buffer: List[Dict[str, Any]] = []
+        self._last_flush_time = datetime.now(timezone.utc)
+        self._flush_interval_seconds = 5.0
+        self._flush_batch_size = 100
+
         # Load from DB if available
         try:
             self.load_config_from_db()
@@ -573,11 +579,23 @@ class RFIDReaderService:
                 for tag_data in tags:
                     await self._process_tag(tag_data, callback)
 
+                # Check if we need to flush buffer
+                time_since_flush = (
+                    datetime.now(timezone.utc) - self._last_flush_time
+                ).total_seconds()
+                if (
+                    len(self._scan_buffer) >= self._flush_batch_size
+                    or time_since_flush >= self._flush_interval_seconds
+                ):
+                    await self._flush_history_buffer()
+
                 # Small delay between scans
                 await asyncio.sleep(0.1)
 
             except asyncio.CancelledError:
                 logger.info("Scan loop cancelled")
+                # Flush remaining buffer on exit
+                await self._flush_history_buffer()
                 break
             except Exception as e:
                 logger.error(f"Error in scan loop: {e}", exc_info=True)
@@ -622,16 +640,18 @@ class RFIDReaderService:
                     db.refresh(new_tag)
                     tag_id = new_tag.id
 
-                # Create scan history
-                history = RFIDScanHistory(
-                    epc=epc,
-                    rssi=tag_data.get("rssi"),
-                    antenna_port=tag_data.get("antenna_port"),
-                    reader_id=self.reader_id,
-                    scanned_at=datetime.now(timezone.utc),
-                )
-                db.add(history)
-                db.commit()
+                    db.refresh(new_tag)
+                    tag_id = new_tag.id
+
+                # Add to scan history buffer (don't write to DB immediately)
+                history_record = {
+                    "epc": epc,
+                    "rssi": tag_data.get("rssi"),
+                    "antenna_port": tag_data.get("antenna_port"),
+                    "reader_id": self.reader_id,
+                    "scanned_at": datetime.now(timezone.utc),
+                }
+                self._scan_buffer.append(history_record)
 
                 # Check for existing mapping
                 from app.db.prisma import prisma_client
@@ -677,6 +697,29 @@ class RFIDReaderService:
 
         except Exception as e:
             logger.error(f"Error processing tag: {e}", exc_info=True)
+
+    async def _flush_history_buffer(self):
+        """Flush buffered scan history to database."""
+        if not self._scan_buffer:
+            return
+
+        buffer_copy = list(self._scan_buffer)
+        self._scan_buffer.clear()
+        self._last_flush_time = datetime.now(timezone.utc)
+
+        try:
+            db = SessionLocal()
+            try:
+                # Bulk insert scan history
+                db.bulk_insert_mappings(RFIDScanHistory, buffer_copy)
+                db.commit()
+                logger.debug(f"✓ Flushed {len(buffer_copy)} scan history records to DB")
+            finally:
+                db.close()
+        except Exception as e:
+            logger.error(f"Failed to flush scan history buffer: {e}")
+            # Optional: Put back into buffer or discard? For now, we discard to avoid overflow
+
 
     async def stop_scanning(self):
         """Stop continuous scanning."""

@@ -33,7 +33,7 @@
 ## Phase 6: Persistence & Business Logic
 
 - [x] **Configuration Storage**: Persistent reader settings (IP, Power, etc.) in DB.
-- [ ] **Scan History Optimization**: Buffer writes for high-volume scans.
-- [ ] **Payment Verification**: Test Tranzila flow and bank settlement validation.
-- [ ] **RBAC Flow**: Super Admin login -> Create Store Manager -> Verify permissions.
+- [x] **Scan History Optimization**: Buffer writes for high-volume scans.
+- [x] **Payment Verification**: Validated payment creation, confirmation, and refund logic via integration tests.
+- [x] **RBAC Flow**: Verified hierarchical permissions (Super Admin -> Store Manager -> Employee) and API protection.
 - [ ] **Push Notifications**: Connect to real push service (Firebase/FCM) for theft alerts.
