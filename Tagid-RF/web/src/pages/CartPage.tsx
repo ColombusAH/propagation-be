@@ -150,12 +150,11 @@ const Actions = styled.div`
 const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
   flex: 1;
   background-color: ${(props) =>
-    props.variant === 'secondary'
-      ? 'transparent'
-      : theme.colors.gray[800]};
+    props.variant === 'secondary' ? 'transparent' : theme.colors.primary};
   color: ${(props) =>
-    props.variant === 'secondary' ? theme.colors.textSecondary : theme.colors.text};
-  border: 1px solid ${theme.colors.border};
+    props.variant === 'secondary' ? theme.colors.textSecondary : theme.colors.textInverse};
+  border: ${(props) =>
+    props.variant === 'secondary' ? `1px solid ${theme.colors.border}` : 'none'};
   border-radius: ${theme.borderRadius.md};
   padding: ${theme.spacing.md} ${theme.spacing.lg};
   font-weight: ${theme.typography.fontWeight.medium};
@@ -166,13 +165,14 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
   align-items: center;
   justify-content: center;
   gap: ${theme.spacing.sm};
+  box-shadow: ${(props) => (props.variant === 'secondary' ? 'none' : theme.shadows.sm)};
 
   &:hover {
     background-color: ${(props) =>
-      props.variant === 'secondary'
-        ? theme.colors.surfaceHover
-        : theme.colors.gray[700]};
-    border-color: ${theme.colors.borderDark};
+    props.variant === 'secondary' ? theme.colors.surfaceHover : theme.colors.primaryDark};
+    border-color: ${(props) =>
+    props.variant === 'secondary' ? theme.colors.borderDark : 'none'};
+    box-shadow: ${(props) => (props.variant === 'secondary' ? 'none' : theme.shadows.md)};
   }
 `;
 

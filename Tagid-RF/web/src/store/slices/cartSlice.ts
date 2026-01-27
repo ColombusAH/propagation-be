@@ -22,18 +22,20 @@ export const createCartSlice: StateCreator<
   items: [],
 
   addByProductId: (productId: string, qty = 1) => {
-    const existingItem = get().items.find((i) => i.productId === productId);
-    if (existingItem) {
-      set({
-        items: get().items.map((i) =>
-          i.productId === productId
-            ? { ...i, qty: Math.min(i.qty + qty, 99) }
-            : i
-        ),
-      });
-    } else {
-      set({ items: [...get().items, { productId, qty }] });
-    }
+    console.log('Adding product to cart:', productId);
+    set((state) => {
+      const existingItem = state.items.find((i) => i.productId === productId);
+      if (existingItem) {
+        return {
+          items: state.items.map((i) =>
+            i.productId === productId
+              ? { ...i, qty: Math.min(i.qty + qty, 99) }
+              : i
+          ),
+        };
+      }
+      return { items: [...state.items, { productId, qty }] };
+    });
   },
 
   addByBarcode: (barcode: string, qty = 1) => {
@@ -47,15 +49,17 @@ export const createCartSlice: StateCreator<
 
   setQty: (productId: string, qty: number) => {
     const clampedQty = Math.max(1, Math.min(qty, 99));
-    set({
-      items: get().items.map((i) =>
+    set((state) => ({
+      items: state.items.map((i) =>
         i.productId === productId ? { ...i, qty: clampedQty } : i
       ),
-    });
+    }));
   },
 
   remove: (productId: string) => {
-    set({ items: get().items.filter((i) => i.productId !== productId) });
+    set((state) => ({
+      items: state.items.filter((i) => i.productId !== productId),
+    }));
   },
 
   clear: () => {

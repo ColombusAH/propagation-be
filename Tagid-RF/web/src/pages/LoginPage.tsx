@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { theme } from '@/styles/theme';
 import { slideInUp, fadeIn } from '@/styles/animations';
 import { UserRole } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/useToast';
+import { useGoogleLogin } from '@react-oauth/google';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -235,8 +236,11 @@ const GoogleButton = styled.button`
   border-radius: ${theme.borderRadius.lg};
   font-size: ${theme.typography.fontSize.base};
   font-weight: ${theme.typography.fontWeight.medium};
-  cursor: pointer;
   transition: all ${theme.transitions.base};
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   
   &:hover {
     background: #f8f9fa;
@@ -247,6 +251,40 @@ const GoogleButton = styled.button`
   img {
     width: 20px;
     height: 20px;
+    margin-left: 8px;
+  }
+`;
+
+const FacebookButton = styled(GoogleButton)`
+  background: #1877f2;
+  color: white;
+  border-color: #1877f2;
+  
+  &:hover {
+    background: #166fe5;
+    border-color: #166fe5;
+  }
+
+  .material-symbols-outlined {
+    margin-left: 8px;
+    font-size: 20px;
+  }
+`;
+
+const SocialButtonsContainer = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: ${theme.spacing.md};
+  width: 100%;
+  margin-top: ${theme.spacing.sm};
+  
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+    gap: ${theme.spacing.sm};
+  }
+  
+  & > * {
+    flex: 1;
   }
 `;
 
@@ -324,6 +362,93 @@ export function LoginPage({ onLogin, onToggleRegister }: LoginPageProps) {
   // const { t } = useTranslation(); // Use when translations allow
   const toast = useToast();
 
+  const loginWithGoogle = useGoogleLogin({
+    flow: 'implicit',
+    onSuccess: async (tokenResponse) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch('/api/v1/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: tokenResponse.access_token,
+            is_access_token: true
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          onLogin(data.role as UserRole, data.token);
+          toast.success('התחברת בהצלחה עם Google');
+        } else {
+          const err = await response.json();
+          setError(err.detail || 'התחברות עם Google נכשלה');
+          toast.error(err.detail || 'שגיאה בהתחברות עם Google');
+        }
+      } catch (err) {
+        setError('שגיאת תקשורת');
+        toast.error('שגיאת תקשורת בהתחברות עם Google');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    onError: () => {
+      toast.error('התחברות עם Google בוטלה או נכשלה');
+    }
+  });
+  useEffect(() => {
+    // Check for Facebook access token in URL hash (Redirect Flow)
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token=')) {
+      const token = new URLSearchParams(hash.replace('#', '?')).get('access_token');
+      if (token) {
+        handleFacebookToken(token);
+        // Clean up hash from URL
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    }
+  }, []);
+
+  const handleFacebookToken = async (fbToken: string) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/v1/auth/facebook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: fbToken }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        onLogin(data.role as UserRole, data.token);
+        toast.success('התחברת בהצלחה עם Facebook');
+      } else {
+        const err = await response.json();
+        toast.error(err.detail || 'התחברות עם Facebook נכשלה');
+      }
+    } catch (err) {
+      toast.error('שגיאת תקשורת עם Facebook');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFacebookLogin = () => {
+    console.log('Facebook login button clicked');
+    const fbAppId = import.meta.env.VITE_FACEBOOK_APP_ID;
+    if (!fbAppId) {
+      toast.error('Facebook App ID חסר');
+      return;
+    }
+
+    // Manual Redirect Flow (Works over HTTP for localhost)
+    const redirectUri = window.location.origin + '/';
+    const fbLoginUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${fbAppId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=public_profile`;
+
+    window.location.href = fbLoginUrl;
+  };
+
   const handleStandardLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -369,13 +494,14 @@ export function LoginPage({ onLogin, onToggleRegister }: LoginPageProps) {
           const data = await response.json();
           onLogin(selectedRole, data.token);
         } else {
-          console.error('API login failed');
-          // Fallback to demo login if API fails (useful for UI only testing)
-          onLogin(selectedRole);
+          const errorData = await response.json();
+          setError(errorData.detail || 'API login failed');
+          setIsLoading(false);
+          return;
         }
       } catch (error) {
         console.error('Connection error during login:', error);
-        onLogin(selectedRole);
+        setError('Connection error during login');
       } finally {
         setIsLoading(false);
       }
@@ -438,10 +564,38 @@ export function LoginPage({ onLogin, onToggleRegister }: LoginPageProps) {
               <span>או</span>
             </Divider>
 
-            <GoogleButton type="button" onClick={() => toast.info('התחברות עם גוגל בפיתוח...')}>
-              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
-              התחבר עם Google
-            </GoogleButton>
+            <SocialButtonsContainer>
+              <GoogleButton
+                type="button"
+                onClick={() => loginWithGoogle()}
+                disabled={isLoading}
+              >
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
+                Google
+              </GoogleButton>
+
+              <FacebookButton
+                type="button"
+                onClick={handleFacebookLogin}
+                disabled={isLoading}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>facebook</span>
+                Facebook
+              </FacebookButton>
+            </SocialButtonsContainer>
+
+            <div style={{
+              marginTop: '1rem',
+              fontSize: '11px',
+              color: theme.colors.textMuted,
+              textAlign: 'center',
+              background: '#f8fafc',
+              padding: '8px',
+              borderRadius: '8px',
+              border: '1px dashed #e2e8f0'
+            }}>
+              💡 <b>הערה:</b> התחברות גוגל/פייסבוק עשויה להיחסם בכתובות זמניות (Tunnel). במקרה זה, השתמש ב"מצב פיתוח" למעלה.
+            </div>
 
             <RegisterLink>
               אין לך חשבון? <button type="button" onClick={onToggleRegister}>הירשם כאן</button>

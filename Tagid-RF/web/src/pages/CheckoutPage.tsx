@@ -1,12 +1,24 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import styled from 'styled-components';
+import { loadStripe } from '@stripe/stripe-js';
+import {
+  Elements,
+  CardElement,
+  useStripe,
+  useElements,
+} from '@stripe/react-stripe-js';
 import { Layout } from '@/components/Layout';
 import { EmptyState } from '@/components/EmptyState';
 import { useStore } from '@/store';
 import { formatCurrency } from '@/lib/utils/currency';
-import { paySimple } from '@/payment/SimplePaymentProvider';
+import { payWithStripe, confirmPayment } from '@/payment/StripePaymentProvider';
 import { theme } from '@/styles/theme';
+import { useToast } from '@/hooks/useToast';
+
+// @ts-ignore
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
 
 const Container = styled.div`
   max-width: 600px;
@@ -29,87 +41,49 @@ const Title = styled.h1`
 `;
 
 const Section = styled.section`
-  background-color: ${theme.colors.surface};
-  border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.borderRadius.lg};
-  padding: ${theme.spacing.lg};
+  background: white;
+  border: 1px solid ${theme.colors.borderLight};
+  border-radius: ${theme.borderRadius.xl};
+  padding: ${theme.spacing.xl};
   margin-bottom: ${theme.spacing.lg};
+  box-shadow: ${theme.shadows.md};
+  transition: all ${theme.transitions.base};
+
+  &:hover {
+    box-shadow: ${theme.shadows.lg};
+    border-color: ${theme.colors.primaryLight};
+  }
 `;
 
 const SectionTitle = styled.h2`
-  font-size: ${theme.typography.fontSize.base};
-  font-weight: ${theme.typography.fontWeight.medium};
-  margin: 0 0 ${theme.spacing.md} 0;
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.bold};
+  margin: 0 0 ${theme.spacing.lg} 0;
   color: ${theme.colors.text};
   display: flex;
   align-items: center;
   gap: ${theme.spacing.sm};
-`;
+  border-bottom: 2px solid ${theme.colors.gray[50]};
+  padding-bottom: ${theme.spacing.sm};
 
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: ${theme.spacing.md};
-`;
-
-const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${theme.spacing.xs};
-`;
-
-const Label = styled.label`
-  font-size: ${theme.typography.fontSize.sm};
-  font-weight: ${theme.typography.fontWeight.medium};
-  color: ${theme.colors.textSecondary};
-`;
-
-const Input = styled.input<{ hasError?: boolean }>`
-  padding: ${theme.spacing.sm} ${theme.spacing.md};
-  border: 1px solid ${(props) => (props.hasError ? theme.colors.error : theme.colors.border)};
-  border-radius: ${theme.borderRadius.md};
-  font-size: ${theme.typography.fontSize.sm};
-  background: ${theme.colors.backgroundAlt};
-  color: ${theme.colors.text};
-  transition: all ${theme.transitions.fast};
-
-  &::placeholder {
-    color: ${theme.colors.textMuted};
-  }
-
-  &:focus {
-    outline: none;
-    border-color: ${(props) => (props.hasError ? theme.colors.error : theme.colors.borderFocus)};
-    background: ${theme.colors.surface};
+  .material-symbols-outlined {
+    color: ${theme.colors.primary};
   }
 `;
 
-const Textarea = styled.textarea`
-  padding: ${theme.spacing.sm} ${theme.spacing.md};
+const CardElementContainer = styled.div`
+  padding: ${theme.spacing.lg};
   border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.borderRadius.md};
-  font-size: ${theme.typography.fontSize.sm};
-  min-height: 80px;
-  resize: vertical;
-  font-family: inherit;
-  background: ${theme.colors.backgroundAlt};
-  color: ${theme.colors.text};
+  border-radius: ${theme.borderRadius.lg};
+  background: ${theme.colors.gray[50]};
+  margin: ${theme.spacing.md} 0;
   transition: all ${theme.transitions.fast};
 
-  &::placeholder {
-    color: ${theme.colors.textMuted};
+  &:focus-within {
+    border-color: ${theme.colors.primary};
+    background: white;
+    box-shadow: 0 0 0 4px ${theme.colors.primary}15;
   }
-
-  &:focus {
-    outline: none;
-    border-color: ${theme.colors.borderFocus};
-    background: ${theme.colors.surface};
-  }
-`;
-
-const ErrorMessage = styled.span`
-  font-size: ${theme.typography.fontSize.xs};
-  color: ${theme.colors.error};
 `;
 
 const OrderSummary = styled.div`
@@ -118,136 +92,165 @@ const OrderSummary = styled.div`
   gap: ${theme.spacing.sm};
 `;
 
-const OrderItem = styled.div`
-  display: flex;
-  justify-content: space-between;
-  font-size: ${theme.typography.fontSize.sm};
-  color: ${theme.colors.textSecondary};
-  padding: ${theme.spacing.xs} 0;
-`;
-
 const OrderTotal = styled.div`
   display: flex;
   justify-content: space-between;
-  padding-top: ${theme.spacing.md};
-  border-top: 1px solid ${theme.colors.border};
-  font-size: ${theme.typography.fontSize.xl};
+  padding: ${theme.spacing.md} 0;
+  font-size: ${theme.typography.fontSize['2xl']};
   font-weight: ${theme.typography.fontWeight.bold};
-  color: ${theme.colors.text};
+  color: ${theme.colors.primary};
 `;
 
-const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
-  background-color: ${(props) =>
-    props.variant === 'secondary' ? 'transparent' : theme.colors.primary};
-  color: ${(props) =>
-    props.variant === 'secondary' ? theme.colors.primary : theme.colors.textInverse};
-  border: 1px solid ${(props) =>
-    props.variant === 'secondary' ? theme.colors.border : theme.colors.primary};
-  border-radius: ${theme.borderRadius.lg};
-  padding: ${theme.spacing.md} ${theme.spacing.lg};
-  font-weight: ${theme.typography.fontWeight.medium};
-  font-size: ${theme.typography.fontSize.sm};
+const Button = styled.button`
+  width: 100%;
+  background: ${theme.colors.primaryGradient};
+  color: white;
+  border: none;
+  border-radius: ${theme.borderRadius.xl};
+  padding: ${theme.spacing.xl};
+  font-weight: ${theme.typography.fontWeight.bold};
+  font-size: ${theme.typography.fontSize.lg};
   cursor: pointer;
-  transition: all ${theme.transitions.fast};
+  transition: all ${theme.transitions.base};
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: ${theme.spacing.sm};
+  gap: ${theme.spacing.md};
+  box-shadow: 0 10px 20px ${theme.colors.primary}30;
 
-  &:hover {
-    background-color: ${(props) =>
-      props.variant === 'secondary' ? theme.colors.surfaceHover : theme.colors.primaryDark};
-    border-color: ${(props) =>
-      props.variant === 'secondary' ? theme.colors.borderDark : theme.colors.primaryDark};
+  &:hover:not(:disabled) {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 30px ${theme.colors.primary}50;
+    filter: brightness(1.1);
+  }
+
+  &:active {
+    transform: translateY(-2px);
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.6;
     cursor: not-allowed;
   }
-`;
-
-const Actions = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${theme.spacing.md};
 `;
 
 const MaterialIcon = ({ name, size = 18 }: { name: string; size?: number }) => (
   <span className="material-symbols-outlined" style={{ fontSize: size }}>{name}</span>
 );
 
-export function CheckoutPage() {
+function StripeCheckoutForm() {
+  const stripe = useStripe();
+  const elements = useElements();
   const navigate = useNavigate();
-  const { items, getProductById, getTotalInCents, clear } = useStore();
-
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    note: '',
-  });
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { getTotalInCents, clear } = useStore();
+  const { isAuthenticated } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
-
-  const cartItems = items.map((item) => ({
-    ...item,
-    product: getProductById(item.productId)!,
-  }));
+  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   const total = getTotalInCents();
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'שם מלא הוא שדה חובה';
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'אימייל הוא שדה חובה';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'אנא הזן כתובת אימייל תקינה';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) return;
+    if (!stripe || !elements) return;
 
     setIsProcessing(true);
+    setError(null);
 
     try {
-      const orderItems = items.map(item => ({
-        productId: item.productId,
-        qty: item.qty,
-        priceInCents: getProductById(item.productId)?.priceInCents || 0
-      }));
-      
-      const customer = {
-        name: formData.name,
-        email: formData.email,
-        note: formData.note || undefined,
-      };
+      // 1. Create order and get payment intent from backend
+      const result = await payWithStripe('REAL_ORDER_' + Date.now(), total);
 
-      const result = await paySimple(orderItems, customer, total);
-
-      if (result.ok) {
-        clear();
-        navigate(`/orders/${result.orderId}/success`);
-      } else {
-        setErrors({ submit: 'התשלום נכשל, אנא נסה שוב' });
+      if (!result.ok || !result.clientSecret) {
+        throw new Error(result.error || 'Failed to initialize payment');
       }
-    } catch {
-      setErrors({ submit: 'שגיאת תשלום, אנא נסה שוב' });
+
+      const clientSecret = result.clientSecret as string;
+      const paymentId = result.paymentId as string;
+
+      // 2. Confirm payment with Stripe
+      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
+        clientSecret,
+        {
+          payment_method: {
+            card: elements.getElement(CardElement)!,
+          },
+        }
+      );
+
+      if (stripeError) {
+        throw new Error(stripeError.message);
+      }
+
+      if (paymentIntent && paymentIntent.status === 'succeeded') {
+        // Update payment status in our database
+        await confirmPayment(paymentId);
+
+        clear();
+        toast.success('התשלום בוצע בהצלחה. תודה על הרכישה.');
+        navigate(`/orders/${paymentId}/success`);
+      }
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setIsProcessing(false);
     }
   };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <Section>
+        <SectionTitle>
+          <MaterialIcon name="credit_card" /> פרטי תשלום (Stripe)
+        </SectionTitle>
+        <CardElementContainer>
+          <CardElement
+            options={{
+              hidePostalCode: true,
+              style: {
+                base: {
+                  fontSize: '16px',
+                  color: theme.colors.text,
+                  '::placeholder': {
+                    color: theme.colors.textMuted,
+                  },
+                },
+              },
+            }}
+          />
+        </CardElementContainer>
+        {error && <div style={{ color: theme.colors.error, marginTop: '10px', fontSize: '14px' }}>{error}</div>}
+      </Section>
+
+      <Section>
+        <SectionTitle>
+          <MaterialIcon name="receipt" /> סיכום
+        </SectionTitle>
+        <OrderSummary>
+          <OrderTotal>
+            <span>סה"כ</span>
+            <span>{formatCurrency(total)}</span>
+          </OrderTotal>
+        </OrderSummary>
+      </Section>
+
+      <Button type="submit" disabled={(isAuthenticated && !stripe) || isProcessing}>
+        <MaterialIcon name={isProcessing ? 'sync' : (isAuthenticated ? 'payments' : 'login')} />
+        {isProcessing ? 'מעבד תשלום...' : (isAuthenticated ? 'בצע תשלום' : 'התחבר כדי לשלם')}
+      </Button>
+    </form>
+  );
+}
+
+export function CheckoutPage() {
+  const { items } = useStore();
+  const navigate = useNavigate();
 
   if (items.length === 0) {
     return (
@@ -257,11 +260,7 @@ export function CheckoutPage() {
             icon="shopping_cart"
             title="העגלה ריקה"
             message="הוסף מוצרים לעגלה כדי להמשיך לתשלום."
-            action={
-              <Button onClick={() => navigate('/scan')}>
-                <MaterialIcon name="qr_code_scanner" /> סרוק מוצרים
-              </Button>
-            }
+            action={<Button onClick={() => navigate('/scan')}>חזור לסריקה</Button>}
           />
         </Container>
       </Layout>
@@ -272,86 +271,13 @@ export function CheckoutPage() {
     <Layout>
       <Container>
         <TitleRow>
-          <MaterialIcon name="payment" size={24} />
-          <Title>תשלום</Title>
+          <MaterialIcon name="verified_user" size={32} />
+          <Title>תשלום מאובטח</Title>
         </TitleRow>
 
-        <Form onSubmit={handleSubmit}>
-          <Section>
-            <SectionTitle>
-              <MaterialIcon name="person" /> פרטי לקוח
-            </SectionTitle>
-
-            <FormGroup>
-              <Label>שם מלא *</Label>
-              <Input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                hasError={!!errors.name}
-                placeholder="הזן שם מלא"
-              />
-              {errors.name && <ErrorMessage>{errors.name}</ErrorMessage>}
-            </FormGroup>
-
-            <FormGroup>
-              <Label>אימייל *</Label>
-              <Input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                hasError={!!errors.email}
-                placeholder="example@email.com"
-              />
-              {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
-            </FormGroup>
-
-            <FormGroup>
-              <Label>הערות (אופציונלי)</Label>
-              <Textarea
-                value={formData.note}
-                onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                placeholder="הוסף הערות להזמנה..."
-              />
-            </FormGroup>
-          </Section>
-
-          <Section>
-            <SectionTitle>
-              <MaterialIcon name="receipt" /> סיכום הזמנה
-            </SectionTitle>
-
-            <OrderSummary>
-              {cartItems.map(({ product, qty }) => (
-                <OrderItem key={product.id}>
-                  <span>{product.name} × {qty}</span>
-                  <span>{formatCurrency(product.priceInCents * qty)}</span>
-                </OrderItem>
-              ))}
-
-              <OrderTotal>
-                <span>סה"כ לתשלום</span>
-                <span>{formatCurrency(total)}</span>
-              </OrderTotal>
-            </OrderSummary>
-          </Section>
-
-          {errors.submit && (
-            <ErrorMessage style={{ textAlign: 'center', display: 'block' }}>
-              {errors.submit}
-            </ErrorMessage>
-          )}
-
-          <Actions>
-            <Button type="submit" disabled={isProcessing}>
-              <MaterialIcon name="lock" />
-              {isProcessing ? 'מעבד...' : `שלם ${formatCurrency(total)}`}
-            </Button>
-            <Button type="button" variant="secondary" onClick={() => navigate('/cart')}>
-              <MaterialIcon name="arrow_back" /> חזור לעגלה
-            </Button>
-          </Actions>
-        </Form>
+        <Elements stripe={stripePromise}>
+          <StripeCheckoutForm />
+        </Elements>
       </Container>
     </Layout>
   );

@@ -1,8 +1,11 @@
 import { MoneyCents } from '@/store/types';
 
 export interface PaymentResult {
-  ok: true;
+  ok: boolean;
   orderId: string;
+  clientSecret?: string;
+  paymentId?: string;
+  error?: string;
 }
 
 export interface PaymentRequest {
@@ -18,4 +21,3 @@ export interface PaymentRequest {
   };
   totalInCents: MoneyCents;
 }
-

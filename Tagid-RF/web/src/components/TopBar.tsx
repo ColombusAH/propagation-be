@@ -131,15 +131,54 @@ const LogoutButton = styled.button`
   }
 `;
 
-const MaterialIcon = ({ name, size = 18 }: { name: string; size?: number }) => (
-  <span className="material-symbols-outlined" style={{ fontSize: size }}>{name}</span>
-);
+const NotificationButton = styled(Link)`
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: ${props => props.theme.colors.textSecondary};
+  background: transparent;
+  border-radius: 50%;
+  transition: all ${props => props.theme.transitions.fast};
+  text-decoration: none;
+
+  &:hover {
+    background: ${props => props.theme.colors.surfaceHover};
+    color: ${props => props.theme.colors.primary};
+  }
+`;
+
+const NotificationBadge = styled.span`
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 10px;
+  height: 10px;
+  background: ${props => props.theme.colors.error};
+  border: 2px solid ${props => props.theme.colors.surface};
+  border-radius: 50%;
+`;
+
+import { Link } from 'react-router-dom';
+import { useWebSocket } from '@/hooks/useWebSocket';
 
 export function TopBar() {
   const { userRole, logout, login } = useAuth();
   const { t } = useTranslation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [hasNewNotifications, setHasNewNotifications] = useState(false);
+
+  useWebSocket({
+    url: '/ws/rfid',
+    onMessage: (msg) => {
+      if (msg.type === 'theft_alert') {
+        setHasNewNotifications(true);
+      }
+    }
+  });
 
   const roles: { id: UserRole; name: string; icon: string }[] = [
     { id: 'SUPER_ADMIN', name: t('roles.superAdmin'), icon: 'shield_person' },
@@ -166,6 +205,8 @@ export function TopBar() {
     setDropdownOpen(false);
   };
 
+  const isStaff = userRole && ['SUPER_ADMIN', 'NETWORK_ADMIN', 'STORE_MANAGER', 'SELLER'].includes(userRole);
+
   return (
     <Header>
       <NavContainer>
@@ -174,6 +215,12 @@ export function TopBar() {
         </LeftSection>
 
         <RightSection>
+          {isStaff && (
+            <NotificationButton to="/notifications" onClick={() => setHasNewNotifications(false)}>
+              <MaterialIcon name="notifications" size={20} />
+              {hasNewNotifications && <NotificationBadge />}
+            </NotificationButton>
+          )}
           <RoleSwitcher ref={dropdownRef}>
             <RoleBadge onClick={() => setDropdownOpen(!dropdownOpen)}>
               <MaterialIcon name={currentRole?.icon || 'person'} size={14} />

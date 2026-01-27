@@ -574,6 +574,40 @@ export function SettingsPage() {
               <ToggleSlider />
             </ToggleSwitch>
           </SettingRow>
+
+          <SettingRow>
+            <SettingInfo>
+              <SettingLabel>בדיקת התראות פוש</SettingLabel>
+              <SettingDescription>שלח התראה לנייד/דסקטופ כדי לוודא שהכל עובד</SettingDescription>
+            </SettingInfo>
+            <Button onClick={async () => {
+              // 1. Request Browser Permission
+              const permission = await Notification.requestPermission();
+              if (permission !== 'granted') {
+                alert('יש לאשר התראות בדפדפן כדי לקבל פוש');
+                return;
+              }
+
+              // 2. Local test
+              new Notification('Tagid RF', {
+                body: 'התראות פוש פעילות בהצלחה! 🎉',
+                icon: '/logo192.png'
+              });
+
+              // 3. Backend test (if possible)
+              try {
+                fetch('/api/v1/notifications/test-push', {
+                  method: 'POST',
+                  headers: { 'Authorization': `Bearer ${token}` }
+                });
+              } catch (e) {
+                console.error('Backend test failed', e);
+              }
+            }}>
+              <span className="material-symbols-outlined">notifications_active</span>
+              שלח התראת בדיקה
+            </Button>
+          </SettingRow>
         </Section>
 
         {/* Network Settings - Network Admin+ */}

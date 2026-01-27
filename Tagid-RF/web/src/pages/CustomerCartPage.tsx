@@ -1,7 +1,9 @@
-import { useState } from 'react';
 import styled from 'styled-components';
 import { Layout } from '@/components/Layout';
 import { theme } from '@/styles/theme';
+import { useNavigate } from 'react-router-dom';
+import { useStore } from '@/store';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const Container = styled.div`
   padding: ${theme.spacing.xl};
@@ -52,9 +54,9 @@ const ScanSection = styled.div`
 
 const ScanButton = styled.button`
   width: 100%;
-  max-width: 300px;
+  max-width: 320px;
   padding: ${theme.spacing.xl};
-  background: linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.primaryDark} 100%);
+  background: ${theme.colors.primaryGradient};
   color: white;
   border: none;
   border-radius: ${theme.borderRadius.xl};
@@ -62,16 +64,16 @@ const ScanButton = styled.button`
   font-weight: ${theme.typography.fontWeight.bold};
   cursor: pointer;
   display: inline-flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: ${theme.spacing.md};
   transition: all ${theme.transitions.base};
-  box-shadow: ${theme.shadows.lg};
+  box-shadow: ${theme.shadows.md};
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 40px ${theme.colors.primary}40;
+    box-shadow: 0 12px 30px ${theme.colors.primary}30;
   }
 
   &:active {
@@ -79,7 +81,7 @@ const ScanButton = styled.button`
   }
 
   .material-symbols-outlined {
-    font-size: 48px;
+    font-size: 32px;
   }
 `;
 
@@ -88,99 +90,169 @@ const CartSection = styled.div`
   border: 1px solid ${theme.colors.border};
   border-radius: ${theme.borderRadius.xl};
   padding: ${theme.spacing.xl};
-  box-shadow: ${theme.shadows.md};
+  box-shadow: ${theme.shadows.lg};
   animation: ${theme.animations.slideUp};
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 4px;
+    background: ${theme.colors.primaryGradient};
+  }
 `;
 
 const CartTitle = styled.h2`
-  font-size: ${theme.typography.fontSize.xl};
+  font-size: ${theme.typography.fontSize['xl']};
   font-weight: ${theme.typography.fontWeight.bold};
   color: ${theme.colors.text};
-  margin: 0 0 ${theme.spacing.lg} 0;
+  margin: 0 0 ${theme.spacing.xl} 0;
   display: flex;
   align-items: center;
-  gap: ${theme.spacing.sm};
+  justify-content: space-between;
+  border-bottom: 2px solid ${theme.colors.gray[100]};
+  padding-bottom: ${theme.spacing.md};
 
   .material-symbols-outlined {
     font-size: 28px;
     color: ${theme.colors.primary};
   }
+
+  span.count {
+    background: ${theme.colors.primaryLight}20;
+    color: ${theme.colors.primary};
+    padding: 2px 12px;
+    border-radius: ${theme.borderRadius.full};
+    font-size: ${theme.typography.fontSize.sm};
+  }
 `;
 
-const CartItem = styled.div`
+const CartItemElement = styled.div`
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: ${theme.spacing.md};
-  border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.borderRadius.lg};
-  margin-bottom: ${theme.spacing.sm};
-  transition: all ${theme.transitions.fast};
+  gap: ${theme.spacing.md};
+  padding: ${theme.spacing.lg};
+  background: ${theme.colors.gray[50]};
+  border: 1px solid ${theme.colors.borderLight};
+  border-radius: ${theme.borderRadius.xl};
+  margin-bottom: ${theme.spacing.md};
+  transition: all ${theme.transitions.base};
 
   &:hover {
-    background: ${theme.colors.gray[50]};
+    background: white;
+    border-color: ${theme.colors.primary};
+    transform: translateX(-4px);
+    box-shadow: ${theme.shadows.md};
+  }
+`;
+
+const ItemIcon = styled.div`
+  width: 48px;
+  height: 48px;
+  background: white;
+  border-radius: ${theme.borderRadius.lg};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${theme.colors.primary};
+  box-shadow: ${theme.shadows.sm};
+
+  .material-symbols-outlined {
+    font-size: 28px;
   }
 `;
 
 const ItemInfo = styled.div`
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+  min-width: 0;
 `;
 
 const ItemName = styled.span`
+  font-size: ${theme.typography.fontSize.base};
   font-weight: ${theme.typography.fontWeight.semibold};
   color: ${theme.colors.text};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const ItemMeta = styled.span`
-  font-size: ${theme.typography.fontSize.xs};
+  font-size: ${theme.typography.fontSize.sm};
   color: ${theme.colors.textMuted};
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+const PriceWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
 `;
 
 const ItemPrice = styled.span`
   font-size: ${theme.typography.fontSize.lg};
   font-weight: ${theme.typography.fontWeight.bold};
   color: ${theme.colors.primary};
+  white-space: nowrap;
 `;
 
 const RemoveButton = styled.button`
-  padding: ${theme.spacing.xs};
+  width: 32px;
+  height: 32px;
   color: ${theme.colors.error};
-  border-radius: ${theme.borderRadius.sm};
+  background: white;
+  border: 1px solid ${theme.colors.error}20;
+  border-radius: ${theme.borderRadius.full};
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all ${theme.transitions.fast};
+  cursor: pointer;
 
   &:hover {
-    background: ${theme.colors.errorLight};
+    background: ${theme.colors.error};
+    color: white;
+    transform: rotate(90deg);
   }
 
   .material-symbols-outlined {
-    font-size: 20px;
+    font-size: 18px;
   }
 `;
 
 const TotalSection = styled.div`
   margin-top: ${theme.spacing.xl};
-  padding-top: ${theme.spacing.xl};
-  border-top: 2px solid ${theme.colors.border};
+  padding: ${theme.spacing.xl};
+  background: ${theme.colors.gray[50]};
+  border-radius: ${theme.borderRadius.xl};
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border: 1px dashed ${theme.colors.primary}40;
 `;
 
 const TotalLabel = styled.span`
   font-size: ${theme.typography.fontSize.xl};
   font-weight: ${theme.typography.fontWeight.semibold};
-  color: ${theme.colors.text};
+  color: ${theme.colors.textLight};
 `;
 
 const TotalAmount = styled.span`
   font-size: ${theme.typography.fontSize['3xl']};
   font-weight: ${theme.typography.fontWeight.bold};
   color: ${theme.colors.primary};
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
 `;
 
 const PayButton = styled.button`
@@ -199,21 +271,25 @@ const PayButton = styled.button`
   justify-content: center;
   gap: ${theme.spacing.md};
   transition: all ${theme.transitions.base};
-  box-shadow: ${theme.shadows.lg};
+  box-shadow: 0 10px 20px ${theme.colors.success}30;
 
-  &:hover {
+  &:hover:not(:disabled) {
     transform: translateY(-4px);
-    box-shadow: 0 12px 40px ${theme.colors.success}40;
+    box-shadow: 0 15px 30px ${theme.colors.success}50;
+    filter: brightness(1.1);
+  }
+
+  &:active {
+    transform: translateY(-2px);
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.6;
     cursor: not-allowed;
-    transform: none;
   }
 
   .material-symbols-outlined {
-    font-size: 28px;
+    font-size: 32px;
   }
 `;
 
@@ -233,168 +309,95 @@ const EmptyCart = styled.div`
   }
 `;
 
-const SuccessOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: ${theme.colors.success}F2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  color: white;
-  animation: ${theme.animations.fadeIn};
-
-  .material-symbols-outlined {
-    font-size: 120px;
-    margin-bottom: ${theme.spacing.xl};
-  }
-
-  h1 {
-    font-size: ${theme.typography.fontSize['4xl']};
-    margin: 0 0 ${theme.spacing.md} 0;
-  }
-
-  p {
-    font-size: ${theme.typography.fontSize.xl};
-    opacity: 0.9;
-  }
-`;
-
-interface CartProduct {
-    id: string;
-    epc: string;
-    name: string;
-    price: number;
-    category: string;
-}
-
 export function CustomerCartPage() {
-    const [cartItems, setCartItems] = useState<CartProduct[]>([]);
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [showSuccess, setShowSuccess] = useState(false);
+  const navigate = useNavigate();
+  const { items, getProductById, remove, getTotalInCents } = useStore();
+  const { formatPrice } = useTranslation();
 
-    const simulateScan = () => {
-        const products = [
-            { name: 'חולצת טי כחולה', price: 89.90, category: 'ביגוד' },
-            { name: 'מכנסי ג\'ינס', price: 199.90, category: 'ביגוד' },
-            { name: 'נעלי ספורט', price: 349.90, category: 'הנעלה' },
-            { name: 'שעון יד', price: 299.90, category: 'אביזרים' },
-            { name: 'תיק גב', price: 149.90, category: 'אביזרים' },
-        ];
+  const cartProducts = items.map(item => ({
+    ...item,
+    product: getProductById(item.productId)
+  })).filter(item => item.product !== undefined);
 
-        const randomProduct = products[Math.floor(Math.random() * products.length)];
-        const newItem: CartProduct = {
-            id: crypto.randomUUID(),
-            epc: `E2${Math.random().toString(16).substring(2, 18).toUpperCase()}`,
-            name: randomProduct.name,
-            price: randomProduct.price,
-            category: randomProduct.category,
-        };
+  const totalInCents = getTotalInCents();
 
-        if (!cartItems.find(item => item.epc === newItem.epc)) {
-            setCartItems(prev => [...prev, newItem]);
-        }
-    };
+  const handlePayment = () => {
+    navigate('/checkout');
+  };
 
-    const removeItem = (id: string) => {
-        setCartItems(prev => prev.filter(item => item.id !== id));
-    };
+  return (
+    <Layout>
+      <Container>
+        <Header>
+          <Title>עגלת קניות</Title>
+          <Subtitle>מוצרים שנוספו לעגלה</Subtitle>
+        </Header>
 
-    const totalAmount = cartItems.reduce((sum, item) => sum + item.price, 0);
+        <ScanSection>
+          <ScanButton onClick={() => navigate('/scan')}>
+            <span className="material-symbols-outlined">qr_code_scanner</span>
+            סרוק מוצר נוסף
+          </ScanButton>
+          <p style={{ marginTop: theme.spacing.md, color: theme.colors.textMuted, fontSize: theme.typography.fontSize.sm }}>
+            סרוק את קוד ה-QR על התג או את הברקוד
+          </p>
+        </ScanSection>
 
-    const handlePayment = () => {
-        setIsProcessing(true);
+        <CartSection>
+          <CartTitle>
+            <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+              <span className="material-symbols-outlined">shopping_cart</span>
+              המוצרים שלך
+            </div>
+            <span className="count">{cartProducts.length}</span>
+          </CartTitle>
 
-        setTimeout(() => {
-            setIsProcessing(false);
-            setShowSuccess(true);
-            setCartItems([]);
+          {cartProducts.length === 0 ? (
+            <EmptyCart>
+              <span className="material-symbols-outlined">shopping_basket</span>
+              <p style={{ fontSize: theme.typography.fontSize.lg, fontWeight: 600 }}>העגלה ריקה</p>
+              <p>הוסף מוצרים מהקטלוג או סרוק אותם כדי להתחיל</p>
+            </EmptyCart>
+          ) : (
+            <>
+              {cartProducts.map(({ product, productId, qty }) => (
+                <CartItemElement key={productId}>
+                  <ItemIcon>
+                    <span className="material-symbols-outlined">inventory_2</span>
+                  </ItemIcon>
+                  <ItemInfo>
+                    <ItemName>{product?.name}</ItemName>
+                    <ItemMeta>
+                      <span className="material-symbols-outlined" style={{ fontSize: 16 }}>layers</span>
+                      כמות: {qty}
+                    </ItemMeta>
+                  </ItemInfo>
+                  <PriceWrapper>
+                    <ItemPrice>{formatPrice(product?.priceInCents || 0)}</ItemPrice>
+                    <RemoveButton onClick={() => remove(productId)} title="הסר פריט">
+                      <span className="material-symbols-outlined">close</span>
+                    </RemoveButton>
+                  </PriceWrapper>
+                </CartItemElement>
+              ))}
 
-            setTimeout(() => {
-                setShowSuccess(false);
-            }, 3000);
-        }, 2000);
-    };
+              <TotalSection>
+                <TotalLabel>סה"כ לתשלום:</TotalLabel>
+                <TotalAmount>{formatPrice(totalInCents)}</TotalAmount>
+              </TotalSection>
 
-    if (showSuccess) {
-        return (
-            <SuccessOverlay>
-                <span className="material-symbols-outlined">check_circle</span>
-                <h1>התשלום הושלם!</h1>
-                <p>תודה על הקנייה</p>
-            </SuccessOverlay>
-        );
-    }
-
-    return (
-        <Layout>
-            <Container>
-                <Header>
-                    <Title>עגלת קניות</Title>
-                    <Subtitle>סרוק מוצרים והוסף לעגלה</Subtitle>
-                </Header>
-
-                <ScanSection>
-                    <ScanButton onClick={simulateScan}>
-                        <span className="material-symbols-outlined">qr_code_scanner</span>
-                        סרוק מוצר
-                    </ScanButton>
-                    <p style={{ marginTop: theme.spacing.md, color: theme.colors.textMuted, fontSize: theme.typography.fontSize.sm }}>
-                        סרוק את קוד ה-QR על התג או הנח מוצרים באמבט
-                    </p>
-                </ScanSection>
-
-                <CartSection>
-                    <CartTitle>
-                        <span className="material-symbols-outlined">shopping_cart</span>
-                        המוצרים שלך ({cartItems.length})
-                    </CartTitle>
-
-                    {cartItems.length === 0 ? (
-                        <EmptyCart>
-                            <span className="material-symbols-outlined">shopping_cart</span>
-                            <p style={{ fontSize: theme.typography.fontSize.lg, fontWeight: 500 }}>העגלה ריקה</p>
-                            <p>סרוק מוצרים כדי להוסיף לעגלה</p>
-                        </EmptyCart>
-                    ) : (
-                        <>
-                            {cartItems.map(item => (
-                                <CartItem key={item.id}>
-                                    <ItemInfo>
-                                        <ItemName>{item.name}</ItemName>
-                                        <ItemMeta>{item.category}</ItemMeta>
-                                    </ItemInfo>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md }}>
-                                        <ItemPrice>{item.price.toFixed(2)} ש"ח</ItemPrice>
-                                        <RemoveButton onClick={() => removeItem(item.id)}>
-                                            <span className="material-symbols-outlined">close</span>
-                                        </RemoveButton>
-                                    </div>
-                                </CartItem>
-                            ))}
-
-                            <TotalSection>
-                                <TotalLabel>סה"כ לתשלום:</TotalLabel>
-                                <TotalAmount>{totalAmount.toFixed(2)} ש"ח</TotalAmount>
-                            </TotalSection>
-
-                            <PayButton
-                                onClick={handlePayment}
-                                disabled={isProcessing}
-                            >
-                                <span className="material-symbols-outlined">
-                                    {isProcessing ? 'autorenew' : 'credit_card'}
-                                </span>
-                                {isProcessing ? 'מעבד תשלום...' : 'לתשלום'}
-                            </PayButton>
-                        </>
-                    )}
-                </CartSection>
-            </Container>
-        </Layout>
-    );
+              <PayButton
+                onClick={handlePayment}
+              >
+                <span className="material-symbols-outlined">
+                  credit_card
+                </span>
+                לתשלום
+              </PayButton>
+            </>
+          )}
+        </CartSection>
+      </Container>
+    </Layout>
+  );
 }

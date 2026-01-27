@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Layout } from '@/components/Layout';
 import { ProductCard } from '@/components/ProductCard';
@@ -93,17 +93,45 @@ const Toast = styled.div<{ show: boolean }>`
   font-size: ${theme.typography.fontSize.sm};
 `;
 
-const MaterialIcon = ({ name, size = 20 }: { name: string; size?: number }) => (
-  <span className="material-symbols-outlined" style={{ fontSize: size }}>{name}</span>
+const MaterialIcon = ({ name, size = 20, className }: { name: string; size?: number; className?: string }) => (
+  <span className={`material-symbols-outlined ${className || ''}`} style={{ fontSize: size }}>{name}</span>
 );
 
 export function CatalogPage() {
-  const { products, searchProducts, addByProductId, getProductById } =
+  const { products, searchProducts, addByProductId, getProductById, loadProducts } =
     useStore();
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/v1/products/?t=' + new Date().getTime());
+      if (response.ok) {
+        const data = await response.json();
+        const mappedProducts = data.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          priceInCents: Math.round(p.price * 100),
+          sku: p.sku,
+          barcode: p.sku || p.id,
+          description: p.description
+        }));
+        loadProducts(mappedProducts);
+      }
+    } catch (error) {
+      console.error('Failed to fetch products:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, [loadProducts]);
 
   const displayProducts = searchQuery
     ? searchProducts(searchQuery)
@@ -138,14 +166,34 @@ export function CatalogPage() {
           </SearchContainer>
         </Header>
 
-        {displayProducts.length === 0 ? (
+        {isLoading ? (
+          <div style={{ textAlign: 'center', padding: '2rem', color: theme.colors.textMuted }}>
+            <MaterialIcon name="sync" className="animate-spin" size={48} />
+            <p>טוען מוצרים מהמערכת...</p>
+          </div>
+        ) : displayProducts.length === 0 ? (
           <EmptyState
             icon="search_off"
             title={t('catalog.noProducts')}
-            message={
-              searchQuery
-                ? t('catalog.noProducts')
-                : t('catalog.noProducts')
+            message={searchQuery ? t('catalog.noProducts') : t('catalog.noProducts')}
+            action={
+              <button
+                onClick={fetchProducts}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: theme.colors.primary,
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <MaterialIcon name="refresh" size={18} />
+                רענן רשימה
+              </button>
             }
           />
         ) : (

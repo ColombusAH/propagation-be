@@ -1,13 +1,24 @@
-"""API endpoints for product verification (counterfeit prevention)."""
+import logging
+from typing import Optional, List
 
-from typing import Optional
-
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 
-from app.db.prisma import prisma_client
+from app.db.dependencies import get_db
+from prisma import Prisma
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+class ProductListResponse(BaseModel):
+    """Response for product listing."""
+    id: str
+    name: str
+    price: float
+    sku: Optional[str] = None
+    description: Optional[str] = None
 
 
 class ProductVerificationResponse(BaseModel):
@@ -23,8 +34,28 @@ class ProductVerificationResponse(BaseModel):
     message: str
 
 
+@router.get("/", response_model=List[ProductListResponse])
+async def list_all_products(db: Prisma = Depends(get_db)):
+    """List all available products."""
+    try:
+        products = await db.product.find_many(take=100)
+        return [
+            ProductListResponse(
+                id=p.id,
+                name=p.name,
+                price=p.price,
+                sku=p.sku,
+                description=p.description
+            )
+            for p in products
+        ]
+    except Exception as e:
+        logger.error(f"Error in list_all_products: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/verify/{tag_id}", response_model=ProductVerificationResponse)
-async def verify_product(tag_id: str) -> ProductVerificationResponse:
+async def verify_product(tag_id: str, db: Prisma = Depends(get_db)) -> ProductVerificationResponse:
     """
     Public API for verifying product authenticity.
 
@@ -34,54 +65,53 @@ async def verify_product(tag_id: str) -> ProductVerificationResponse:
         tag_id: The EPC or unique identifier of the RFID tag.
     """
     try:
-        async with prisma_client.client as db:
-            # Try to find by EPC
-            tag = await db.rfidtag.find_unique(where={"epc": tag_id})
+        # Try to find by EPC
+        tag = await db.rfidtag.find_unique(where={"epc": tag_id})
 
-            if not tag:
-                # Try by ID
-                tag = await db.rfidtag.find_unique(where={"id": tag_id})
+        if not tag:
+            # Try by ID
+            tag = await db.rfidtag.find_unique(where={"id": tag_id})
 
-            if not tag:
-                return ProductVerificationResponse(
-                    is_authentic=False,
-                    epc=tag_id,
-                    message="מוצר לא נמצא במערכת. ייתכן שהמוצר אינו מקורי.",
-                )
-
-            # Check tag status
-            if tag.status == "STOLEN" or tag.status == "DAMAGED":
-                return ProductVerificationResponse(
-                    is_authentic=False,
-                    epc=tag.epc,
-                    product_description=tag.productDescription,
-                    message="אזהרה: מוצר זה דווח כגנוב או פגום!",
-                )
-
-            # Product is authentic
+        if not tag:
             return ProductVerificationResponse(
-                is_authentic=True,
+                is_authentic=False,
+                epc=tag_id,
+                message="מוצר לא נמצא במערכת. ייתכן שהמוצר אינו מקורי.",
+            )
+
+        # Check tag status
+        if tag.status == "STOLEN" or tag.status == "DAMAGED":
+            return ProductVerificationResponse(
+                is_authentic=False,
                 epc=tag.epc,
                 product_description=tag.productDescription,
-                manufacturer=tag.manufacturer if hasattr(tag, "manufacturer") else None,
-                production_date=(
-                    tag.productionDate.isoformat()
-                    if hasattr(tag, "productionDate") and tag.productionDate
-                    else None
-                ),
-                kosher_info=tag.kosherInfo if hasattr(tag, "kosherInfo") else None,
-                originality_certificate=(
-                    tag.originalityCert if hasattr(tag, "originalityCert") else None
-                ),
-                message="מוצר מקורי ומאומת ✓",
+                message="אזהרה: מוצר זה דווח כגנוב או פגום!",
             )
+
+        # Product is authentic
+        return ProductVerificationResponse(
+            is_authentic=True,
+            epc=tag.epc,
+            product_description=tag.productDescription,
+            manufacturer=tag.manufacturer if hasattr(tag, "manufacturer") else None,
+            production_date=(
+                tag.productionDate.isoformat()
+                if hasattr(tag, "productionDate") and tag.productionDate
+                else None
+            ),
+            kosher_info=tag.kosherInfo if hasattr(tag, "kosherInfo") else None,
+            originality_certificate=(
+                tag.originalityCert if hasattr(tag, "originalityCert") else None
+            ),
+            message="מוצר מקורי ומאומת ✓",
+        )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/scan/{qr_code}")
-async def verify_by_qr(qr_code: str) -> ProductVerificationResponse:
+async def verify_by_qr(qr_code: str, db: Prisma = Depends(get_db)) -> ProductVerificationResponse:
     """
     Verify product by QR code (encrypted).
 
@@ -104,7 +134,7 @@ async def verify_by_qr(qr_code: str) -> ProductVerificationResponse:
             )
 
         # Look up by decrypted EPC
-        return await verify_product(decrypted)
+        return await verify_product(decrypted, db=db)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

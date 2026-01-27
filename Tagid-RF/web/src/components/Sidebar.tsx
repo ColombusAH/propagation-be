@@ -204,10 +204,12 @@ export function Sidebar() {
 
       <Section>
         <SectionTitle>{t('nav.settings')}</SectionTitle>
-        <NavItem to="/reader-settings">
-          <MaterialIcon name="router" />
-          {t('nav.readers')}
-        </NavItem>
+        {canManageStore && (
+          <NavItem to="/reader-settings">
+            <MaterialIcon name="router" />
+            {t('nav.readers')}
+          </NavItem>
+        )}
         <NavItem to="/settings">
           <MaterialIcon name="tune" />
           {t('nav.general')}

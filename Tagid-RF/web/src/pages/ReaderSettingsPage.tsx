@@ -163,6 +163,37 @@ const Button = styled.button<{ variant?: 'primary' | 'danger' | 'success' }>`
   }
 `;
 
+const TabContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow-x: auto;
+`;
+
+const TabButton = styled.button<{ $active: boolean }>`
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  background: ${props => props.$active ? colors.primary : 'transparent'};
+  color: ${props => props.$active ? 'white' : colors.slate};
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+
+  &:hover {
+    background: ${props => props.$active ? colors.primary : '#f1f5f9'};
+  }
+`;
+
 const ButtonGroup = styled.div`
   display: flex;
   gap: 0.75rem;
@@ -229,7 +260,32 @@ const InfoValue = styled.span`
   color: ${theme.colors.text};
 `;
 
-const MaterialIcon = ({ name, size = 20 }: { name: string; size?: number }) => (
+const RoleCard = styled.div<{ $active: boolean }>`
+  padding: 1rem;
+  border: 2px solid ${props => props.$active ? theme.colors.primary : theme.colors.border};
+  border-radius: ${theme.borderRadius.md};
+  background: ${props => props.$active ? `${theme.colors.primary}10` : 'white'};
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 500;
+
+  &:hover {
+    border-color: ${theme.colors.primary};
+  }
+
+  span:first-child {
+    font-size: 24px;
+    color: ${props => props.$active ? theme.colors.primary : theme.colors.textSecondary};
+  }
+`;
+
+const MaterialIcon = ({ name, size = 18 }: { name: string; size?: number }) => (
     <span className="material-symbols-outlined" style={{ fontSize: size }}>{name}</span>
 );
 
@@ -257,6 +313,9 @@ export default function ReaderSettingsPage() {
     // RSSI filter
     const [rssiAntenna, setRssiAntenna] = useState(1);
     const [rssiThreshold, setRssiThreshold] = useState(50);
+
+    const [activeTab, setActiveTab] = useState<'general' | 'rf' | 'hardware' | 'network'>('general');
+    const [readerType, setReaderType] = useState<'BATH' | 'GATE' | 'HANDHELD' | 'FIXED'>('FIXED');
 
     // Gate settings
     const [gateEnabled, setGateEnabled] = useState(true);
@@ -453,181 +512,239 @@ export default function ReaderSettingsPage() {
                     <Message type={message.type}>{message.text}</Message>
                 )}
 
+                <TabContainer>
+                    <TabButton $active={activeTab === 'general'} onClick={() => setActiveTab('general')}>
+                        <MaterialIcon name="info" /> כללי ותפקיד
+                    </TabButton>
+                    <TabButton $active={activeTab === 'rf'} onClick={() => setActiveTab('rf')}>
+                        <MaterialIcon name="bolt" /> הגדרות RF
+                    </TabButton>
+                    <TabButton $active={activeTab === 'hardware'} onClick={() => setActiveTab('hardware')}>
+                        <MaterialIcon name="settings_input_component" /> רכיבי חומרה
+                    </TabButton>
+                    <TabButton $active={activeTab === 'network'} onClick={() => setActiveTab('network')}>
+                        <MaterialIcon name="lan" /> רשת ואבטחה
+                    </TabButton>
+                </TabContainer>
+
                 <Grid>
-                    {/* Connection Card */}
-                    <Card>
-                        <CardTitle><MaterialIcon name="power" size={20} /> חיבור</CardTitle>
-                        {status && (
-                            <>
-                                <InfoRow>
-                                    <InfoLabel>כתובת IP</InfoLabel>
-                                    <InfoValue>{status.reader_ip}</InfoValue>
-                                </InfoRow>
-                                <InfoRow>
-                                    <InfoLabel>פורט</InfoLabel>
-                                    <InfoValue>{status.reader_port}</InfoValue>
-                                </InfoRow>
-                                <InfoRow>
-                                    <InfoLabel>סריקה</InfoLabel>
-                                    <InfoValue style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <MaterialIcon name={status.is_scanning ? 'sync' : 'pause'} size={16} />
-                                        {status.is_scanning ? 'פעיל' : 'מושהה'}
-                                    </InfoValue>
-                                </InfoRow>
-                            </>
-                        )}
-                        <ButtonGroup style={{ marginTop: '1rem' }}>
-                            <Button onClick={handleConnect} disabled={loading || status?.is_connected}>
-                                <MaterialIcon name="link" size={18} /> התחבר
-                            </Button>
-                            <Button variant="danger" onClick={handleDisconnect} disabled={loading || !status?.is_connected}>
-                                <MaterialIcon name="link_off" size={18} /> התנתק
-                            </Button>
-                            <Button onClick={handleInitialize} disabled={loading}>
-                                <MaterialIcon name="refresh" size={18} /> אתחל
-                            </Button>
-                        </ButtonGroup>
-                    </Card>
+                    {activeTab === 'general' && (
+                        <>
+                            {/* Connection Card */}
+                            <Card>
+                                <CardTitle><MaterialIcon name="power" size={20} /> מצב חיבור</CardTitle>
+                                {status && (
+                                    <>
+                                        <InfoRow>
+                                            <InfoLabel>כתובת IP</InfoLabel>
+                                            <InfoValue>{status.reader_ip}</InfoValue>
+                                        </InfoRow>
+                                        <InfoRow>
+                                            <InfoLabel>פורט</InfoLabel>
+                                            <InfoValue>{status.reader_port}</InfoValue>
+                                        </InfoRow>
+                                        <InfoRow>
+                                            <InfoLabel>סטטוס סריקה</InfoLabel>
+                                            <StatusBadge active={status.is_scanning}>
+                                                {status.is_scanning ? 'פעיל' : 'מושהה'}
+                                            </StatusBadge>
+                                        </InfoRow>
+                                    </>
+                                )}
+                                <ButtonGroup style={{ marginTop: '1.5rem' }}>
+                                    <Button onClick={handleConnect} disabled={loading || status?.is_connected}>
+                                        <MaterialIcon name="link" size={18} /> התחבר
+                                    </Button>
+                                    <Button variant="danger" onClick={handleDisconnect} disabled={loading || !status?.is_connected}>
+                                        <MaterialIcon name="link_off" size={18} /> התנתק
+                                    </Button>
+                                    <Button onClick={handleInitialize} disabled={loading}>
+                                        <MaterialIcon name="refresh" size={18} /> אתחל
+                                    </Button>
+                                </ButtonGroup>
+                            </Card>
 
-                    {/* Power Card */}
-                    <Card>
-                        <CardTitle><MaterialIcon name="bolt" size={20} /> עוצמת שידור RF</CardTitle>
-                        <FormGroup>
-                            <Label>עוצמה (dBm): <SliderValue>{power}</SliderValue></Label>
-                            <Slider
-                                type="range"
-                                min="0"
-                                max="30"
-                                value={power}
-                                onChange={(e) => setPower(Number(e.target.value))}
-                            />
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: theme.colors.textSecondary }}>
-                                <span>0 (חלש)</span>
-                                <span>30 (חזק)</span>
-                            </div>
-                        </FormGroup>
-                        <Button onClick={handleSetPower} disabled={loading}>
-                            <MaterialIcon name="save" size={18} /> שמור עוצמה
-                        </Button>
-                    </Card>
+                            {/* Role Card */}
+                            <Card>
+                                <CardTitle><MaterialIcon name="settings_accessibility" size={20} /> תפקיד הקורא במערכת</CardTitle>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '12px' }}>
+                                    <RoleCard
+                                        $active={readerType === 'BATH'}
+                                        onClick={() => setReaderType('BATH')}
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
+                                            <span className="material-symbols-outlined">shopping_basket</span>
+                                            <div style={{ textAlign: 'right' }}>
+                                                <div style={{ fontWeight: 700 }}>אמבט (צ'ק-אאוט אוטומטי)</div>
+                                                <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>זיהוי סלסלה מלאה ותשלום מהיר</div>
+                                            </div>
+                                        </div>
+                                    </RoleCard>
+                                    <RoleCard
+                                        $active={readerType === 'GATE'}
+                                        onClick={() => setReaderType('GATE')}
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
+                                            <span className="material-symbols-outlined">sensor_occupied</span>
+                                            <div style={{ textAlign: 'right' }}>
+                                                <div style={{ fontWeight: 700 }}>שער (בקרת יציאה)</div>
+                                                <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>זיהוי פריטים לא שולמו ומניעת גניבה</div>
+                                            </div>
+                                        </div>
+                                    </RoleCard>
+                                    <RoleCard
+                                        $active={readerType === 'HANDHELD'}
+                                        onClick={() => setReaderType('HANDHELD')}
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
+                                            <span className="material-symbols-outlined">inventory_2</span>
+                                            <div style={{ textAlign: 'right' }}>
+                                                <div style={{ fontWeight: 700 }}>סורק ידני (ספירת מלאי)</div>
+                                                <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>מעבר על מדפים ועדכון כמויות</div>
+                                            </div>
+                                        </div>
+                                    </RoleCard>
+                                </div>
+                            </Card>
+                        </>
+                    )}
 
-                    {/* Buzzer/Relay Card */}
-                    <Card>
-                        <CardTitle><MaterialIcon name="notifications" size={20} /> זמזם / ממסרים</CardTitle>
-                        <p style={{ fontSize: '0.85rem', color: theme.colors.textSecondary, marginBottom: '1rem' }}>
-                            הפעל ממסרים לשליטה בזמזם או התקנים חיצוניים
-                        </p>
-                        <ButtonGroup>
-                            <RelayButton
-                                active={relay1}
-                                onClick={() => handleRelay(1, !relay1)}
-                            >
-                                <MaterialIcon name={relay1 ? 'toggle_on' : 'toggle_off'} size={20} /> ממסר 1
-                            </RelayButton>
-                            <RelayButton
-                                active={relay2}
-                                onClick={() => handleRelay(2, !relay2)}
-                            >
-                                <MaterialIcon name={relay2 ? 'toggle_on' : 'toggle_off'} size={20} /> ממסר 2
-                            </RelayButton>
-                        </ButtonGroup>
-                    </Card>
+                    {activeTab === 'rf' && (
+                        <>
+                            {/* Power Card */}
+                            <Card>
+                                <CardTitle><MaterialIcon name="bolt" size={20} /> עוצמת שידור</CardTitle>
+                                <FormGroup>
+                                    <Label>עוצמה נוכחית: <SliderValue>{power} dBm</SliderValue></Label>
+                                    <Slider
+                                        type="range"
+                                        min="0"
+                                        max="30"
+                                        value={power}
+                                        onChange={(e) => setPower(Number(e.target.value))}
+                                    />
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: colors.slate }}>
+                                        <span>טווח קרוב (1-2 מ')</span>
+                                        <span>טווח רחוק (8-10 מ')</span>
+                                    </div>
+                                </FormGroup>
+                                <Button onClick={handleSetPower} disabled={loading} style={{ width: '100%' }}>
+                                    <MaterialIcon name="save" size={18} /> שמור עוצמה
+                                </Button>
+                            </Card>
 
-                    {/* RSSI Filter Card */}
-                    <Card>
-                        <CardTitle><MaterialIcon name="signal_cellular_alt" size={20} /> סינון RSSI</CardTitle>
-                        <FormGroup>
-                            <Label>אנטנה</Label>
-                            <Select value={rssiAntenna} onChange={(e) => setRssiAntenna(Number(e.target.value))}>
-                                <option value={1}>אנטנה 1</option>
-                                <option value={2}>אנטנה 2</option>
-                                <option value={3}>אנטנה 3</option>
-                                <option value={4}>אנטנה 4</option>
-                            </Select>
-                        </FormGroup>
-                        <FormGroup>
-                            <Label>סף RSSI: <SliderValue>{rssiThreshold}</SliderValue></Label>
-                            <Slider
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={rssiThreshold}
-                                onChange={(e) => setRssiThreshold(Number(e.target.value))}
-                            />
-                        </FormGroup>
-                        <Button onClick={handleSetRssi}>
-                            <MaterialIcon name="save" size={18} /> שמור
-                        </Button>
-                    </Card>
+                            {/* RSSI Filter Card */}
+                            <Card>
+                                <CardTitle><MaterialIcon name="signal_cellular_alt" size={20} /> סינון רעשים (RSSI)</CardTitle>
+                                <FormGroup>
+                                    <Label>בחירת אנטנה</Label>
+                                    <Select value={rssiAntenna} onChange={(e) => setRssiAntenna(Number(e.target.value))}>
+                                        {[1, 2, 3, 4].map(num => (
+                                            <option key={num} value={num}>אנטנה {num}</option>
+                                        ))}
+                                    </Select>
+                                </FormGroup>
+                                <FormGroup>
+                                    <Label>סף רגישות: <SliderValue>{rssiThreshold}</SliderValue></Label>
+                                    <Slider
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        value={rssiThreshold}
+                                        onChange={(e) => setRssiThreshold(Number(e.target.value))}
+                                    />
+                                </FormGroup>
+                                <Button onClick={handleSetRssi} style={{ width: '100%' }}>
+                                    <MaterialIcon name="filter_alt" size={18} /> עדכן סינון
+                                </Button>
+                            </Card>
+                        </>
+                    )}
 
-                    {/* Network Card */}
-                    <Card>
-                        <CardTitle><MaterialIcon name="language" size={20} /> הגדרות רשת</CardTitle>
-                        <FormGroup>
-                            <Label>כתובת IP</Label>
-                            <Input
-                                value={networkConfig.ip}
-                                onChange={(e) => setNetworkConfig({ ...networkConfig, ip: e.target.value })}
-                                placeholder="192.168.1.200"
-                            />
-                        </FormGroup>
-                        <FormGroup>
-                            <Label>Subnet Mask</Label>
-                            <Input
-                                value={networkConfig.subnet}
-                                onChange={(e) => setNetworkConfig({ ...networkConfig, subnet: e.target.value })}
-                                placeholder="255.255.255.0"
-                            />
-                        </FormGroup>
-                        <FormGroup>
-                            <Label>Gateway</Label>
-                            <Input
-                                value={networkConfig.gateway}
-                                onChange={(e) => setNetworkConfig({ ...networkConfig, gateway: e.target.value })}
-                                placeholder="192.168.1.1"
-                            />
-                        </FormGroup>
-                        <FormGroup>
-                            <Label>Port</Label>
-                            <Input
-                                type="number"
-                                value={networkConfig.port}
-                                onChange={(e) => setNetworkConfig({ ...networkConfig, port: Number(e.target.value) })}
-                            />
-                        </FormGroup>
-                        <Button onClick={handleSetNetwork} disabled={loading}>
-                            <MaterialIcon name="save" size={18} /> שמור הגדרות
-                        </Button>
-                    </Card>
+                    {activeTab === 'hardware' && (
+                        <>
+                            {/* Relay Card */}
+                            <Card>
+                                <CardTitle><MaterialIcon name="notifications" size={20} /> התקני התראה</CardTitle>
+                                <p style={{ fontSize: '0.85rem', color: colors.slate, marginBottom: '1.5rem' }}>
+                                    שליטה ידנית בממסרים המחוברים לזמזם או לנורות התראה
+                                </p>
+                                <ButtonGroup style={{ justifyContent: 'center' }}>
+                                    <RelayButton
+                                        active={relay1}
+                                        onClick={() => handleRelay(1, !relay1)}
+                                    >
+                                        <MaterialIcon name={relay1 ? 'notifications_active' : 'notifications'} size={24} />
+                                        זמזם פנימי
+                                    </RelayButton>
+                                    <RelayButton
+                                        active={relay2}
+                                        onClick={() => handleRelay(2, !relay2)}
+                                    >
+                                        <MaterialIcon name={relay2 ? 'lightbulb' : 'lightbulb_outline'} size={24} />
+                                        תאורת שער
+                                    </RelayButton>
+                                </ButtonGroup>
+                            </Card>
+                        </>
+                    )}
 
-                    {/* Gate Card */}
-                    <Card>
-                        <CardTitle><MaterialIcon name="meeting_room" size={20} /> מצב שער</CardTitle>
-                        <FormGroup>
-                            <Label>
-                                <input
-                                    type="checkbox"
-                                    checked={gateEnabled}
-                                    onChange={(e) => setGateEnabled(e.target.checked)}
-                                    style={{ marginLeft: '0.5rem' }}
-                                />
-                                הפעל זיהוי מעבר
-                            </Label>
-                        </FormGroup>
-                        <FormGroup>
-                            <Label>רגישות: <SliderValue>{gateSensitivity}</SliderValue></Label>
-                            <Slider
-                                type="range"
-                                min="0"
-                                max="255"
-                                value={gateSensitivity}
-                                onChange={(e) => setGateSensitivity(Number(e.target.value))}
-                            />
-                        </FormGroup>
-                        <Button onClick={handleSetGate}>
-                            <MaterialIcon name="save" size={18} /> שמור
-                        </Button>
-                    </Card>
+                    {activeTab === 'network' && (
+                        <>
+                            {/* Network Card */}
+                            <Card>
+                                <CardTitle><MaterialIcon name="lan" size={20} /> כתובת IP ופורט</CardTitle>
+                                <Grid style={{ gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <FormGroup>
+                                        <Label>IP Address</Label>
+                                        <Input
+                                            value={networkConfig.ip}
+                                            onChange={(e) => setNetworkConfig({ ...networkConfig, ip: e.target.value })}
+                                        />
+                                    </FormGroup>
+                                    <FormGroup>
+                                        <Label>Port</Label>
+                                        <Input
+                                            type="number"
+                                            value={networkConfig.port}
+                                            onChange={(e) => setNetworkConfig({ ...networkConfig, port: Number(e.target.value) })}
+                                        />
+                                    </FormGroup>
+                                </Grid>
+                                <Button onClick={handleSetNetwork} disabled={loading} style={{ width: '100%', marginTop: '1rem' }}>
+                                    <MaterialIcon name="dns" size={18} /> שמור הגדרות רשת
+                                </Button>
+                            </Card>
+
+                            {/* Gate Card */}
+                            <Card>
+                                <CardTitle><MaterialIcon name="meeting_room" size={20} /> בקרת שער</CardTitle>
+                                <FormGroup>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={gateEnabled}
+                                            onChange={(e) => setGateEnabled(e.target.checked)}
+                                        />
+                                        <span style={{ fontWeight: 600 }}>הפעל בקרת יציאה אוטומטית</span>
+                                    </label>
+                                </FormGroup>
+                                <FormGroup>
+                                    <Label>רגישות זיהוי: <SliderValue>{gateSensitivity}</SliderValue></Label>
+                                    <Slider
+                                        type="range"
+                                        min="0"
+                                        max="255"
+                                        value={gateSensitivity}
+                                        onChange={(e) => setGateSensitivity(Number(e.target.value))}
+                                    />
+                                </FormGroup>
+                                <Button onClick={handleSetGate} style={{ width: '100%' }}>
+                                    <MaterialIcon name="admin_panel_settings" size={18} /> עדכן הגדרות אבטחה
+                                </Button>
+                            </Card>
+                        </>
+                    )}
                 </Grid>
             </Container>
         </Layout>

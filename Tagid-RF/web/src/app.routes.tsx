@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './contexts/AuthContext';
 import { DashboardPage } from './pages/DashboardPage';
 import { TransactionsPage } from './pages/TransactionsPage';
 import { PaymentsPage } from './pages/PaymentsPage';
@@ -24,10 +25,25 @@ import { BathSetupPage } from './pages/BathSetupPage';
 import { CustomerCartPage } from './pages/CustomerCartPage';
 import { ExitGatePage } from './pages/ExitGatePage.tsx';
 
+/**
+ * Component to handle initial redirect based on user role
+ */
+function RootRedirect() {
+  const { userRole, isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) return <Navigate to="/scan" replace />; // Default for guests
+
+  if (userRole === 'CUSTOMER') {
+    return <Navigate to="/scan" replace />;
+  }
+
+  return <Navigate to="/dashboard" replace />;
+}
+
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<RootRedirect />} />
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/transactions" element={<TransactionsPage />} />
       <Route path="/payments" element={<PaymentsPage />} />
@@ -52,7 +68,7 @@ export function AppRoutes() {
       <Route path="/bath-setup" element={<BathSetupPage />} />
       <Route path="/customer-cart" element={<CustomerCartPage />} />
       <Route path="/exit-gate" element={<ExitGatePage />} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<RootRedirect />} />
     </Routes>
   );
 }

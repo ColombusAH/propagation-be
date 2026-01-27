@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     GOOGLE_CLIENT_ID: str
     GOOGLE_TOKEN_TIMEOUT: int = 300  # 5 minutes timeout for Google token verification
+    FACEBOOK_APP_ID: Optional[str] = None
+    FACEBOOK_APP_SECRET: Optional[str] = None
 
     # Security Headers
     SECURITY_HEADERS: bool = True  # Enable security headers by default
@@ -79,6 +81,14 @@ class Settings(BaseSettings):
         "NETWORK_MANAGER",
         "STORE_MANAGER",
     ]
+
+    # Email Settings (SMTP)
+    SMTP_HOST: Optional[str] = None
+    SMTP_PORT: int = 587
+    SMTP_USER: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    EMAILS_FROM_EMAIL: Optional[str] = None
+    RESEND_API_KEY: Optional[str] = None
 
     model_config = {"env_file": ".env", "case_sensitive": True, "extra": "ignore"}
 

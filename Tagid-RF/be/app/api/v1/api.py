@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     inventory,
     network,
     notifications,
+    orders,
     payment,
     reader_config,
     rfid_scan,
@@ -38,3 +39,4 @@ api_router.include_router(cart.router, prefix="/cart", tags=["cart"])
 api_router.include_router(tag_registration.router)
 api_router.include_router(reader_config.router)
 api_router.include_router(bath_cart.router)
+api_router.include_router(orders.router, prefix="/orders", tags=["orders"])

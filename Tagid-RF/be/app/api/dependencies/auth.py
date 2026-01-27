@@ -53,16 +53,20 @@ async def get_current_user(
 
     logger.debug(f"Token payload: {payload}")
 
-    # Extract user_id from payload
-    user_id = payload.get("user_id")
+    # Extract user_id from payload - try both 'user_id' and 'sub' for compatibility
+    user_id = payload.get("user_id") or payload.get("sub")
     if user_id is None:
-        logger.warning("'user_id' not found in token payload")
+        logger.warning("Neither 'user_id' nor 'sub' found in token payload")
         raise credentials_exception
 
     # Get user from database
-    logger.debug(f"Attempting to fetch user from DB with ID: {user_id}")
+    logger.debug(f"Attempting to fetch user from DB with identifier: {user_id}")
     try:
-        user = await get_user_by_id(db, user_id=user_id)
+        # If user_id is an email (contains @), try to find by email instead of ID
+        if isinstance(user_id, str) and "@" in user_id:
+             user = await db.user.find_unique(where={"email": user_id})
+        else:
+             user = await db.user.find_unique(where={"id": user_id})
     except Exception as db_err:
         logger.error(f"Error fetching user {user_id} from DB: {db_err}")
         raise HTTPException(

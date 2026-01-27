@@ -3,6 +3,9 @@
 import logging
 import uuid
 from typing import Any, Dict  # For type hints
+from datetime import datetime, timezone, timedelta
+import random
+import string
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from google.auth.transport import requests as google_requests  # Alias to avoid name clash
@@ -13,7 +16,7 @@ from prisma.errors import TableNotFoundError
 
 # Import User model for type hints
 from prisma.models import User
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 # Import auth dependency
 from app.api.dependencies.auth import get_current_user
@@ -48,6 +51,79 @@ class GoogleLoginRequest(BaseModel):
     """Request model for the Google login endpoint."""
 
     token: str
+    is_access_token: bool = False
+
+
+@router.post("/facebook", status_code=status.HTTP_200_OK)
+async def login_with_facebook(
+    request: Dict[str, Any], db: Prisma = Depends(get_db)
+) -> Dict[str, Any]:
+    """Handles login via Facebook after the user authenticates on the frontend."""
+    fb_token = request.get("token")
+    if not fb_token:
+        raise HTTPException(status_code=400, detail="Facebook token is missing")
+
+    try:
+        # 1. Verify token with Facebook Graph API
+        import httpx
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                f"https://graph.facebook.com/me?fields=id,name,email&access_token={fb_token}"
+            )
+            if resp.status_code != 200:
+                logger.error(f"Facebook verification failed: {resp.text}")
+                raise HTTPException(status_code=401, detail="Invalid Facebook token")
+            
+            fb_info = resp.json()
+            user_email = fb_info.get("email")
+            fb_id = fb_info.get("id")
+
+            if not user_email:
+                # Some FB users don't have email or didn't grant permission
+                user_email = f"{fb_id}@facebook.com"
+
+            # 2. Find or Create user
+            db_user = await get_user_by_email(db, user_email)
+            if not db_user:
+                logger.info(f"Creating new user from Facebook: {user_email}")
+                # Create default business if needed
+                default_biz = await db.business.find_first(where={"name": "Tagid Public Users"})
+                if not default_biz:
+                    default_biz = await db.business.create(data={"name": "Tagid Public Users", "slug": "public-users-fb"})
+                
+                temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+                db_user = await create_user(
+                    db=db,
+                    email=user_email,
+                    password=temp_password,
+                    name=fb_info.get("name", "Facebook User"),
+                    phone="000-000-0000",
+                    address="Facebook Account",
+                    business_id=default_biz.id,
+                    role="CUSTOMER",
+                    is_verified=True
+                )
+            
+            # 3. Generate JWT
+            jwt_payload = {
+                "sub": db_user.id,
+                "user_id": db_user.id,
+                "email": db_user.email,
+                "role": str(db_user.role),
+                "business_id": db_user.businessId,
+            }
+            access_token = create_access_token(data=jwt_payload)
+
+            return {
+                "message": "Login successful",
+                "user_id": db_user.id,
+                "role": db_user.role,
+                "token": access_token,
+            }
+
+    except Exception as e:
+        logger.error(f"Facebook login error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error during Facebook login")
 
 
 @router.get("/")
@@ -137,8 +213,9 @@ async def dev_login(request: DevLoginRequest, db: Prisma = Depends(get_db)):
 
     # Generate Token
     jwt_payload = {
-        "sub": user.email,
+        "sub": user.id,
         "user_id": user.id,
+        "email": user.email,
         "role": str(user.role),
         "business_id": user.businessId,
     }
@@ -197,19 +274,37 @@ async def login_with_google(
         )
 
     try:
-        # 1. Verify the Google token
-        request_session = google_requests.Request()
-        idinfo = id_token.verify_oauth2_token(
-            google_id_token,
-            request_session,
-            GOOGLE_CLIENT_ID,
-            clock_skew_in_seconds=settings.GOOGLE_TOKEN_TIMEOUT,  # Add clock skew tolerance
-        )
-        logger.info(f"Google token verified successfully for email: {idinfo.get('email')}")
+        user_email = None
+        google_sub_id = None
 
-        # Extract required user info
-        user_email = idinfo.get("email")
-        google_sub_id = idinfo.get("sub")  # 'sub' is the unique Google ID
+        # 1. Verify the Google token
+        if request.is_access_token:
+            logger.info("Verifying Google Access Token via userinfo endpoint")
+            import httpx
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(
+                    "https://www.googleapis.com/oauth2/v3/userinfo",
+                    headers={"Authorization": f"Bearer {google_id_token}"}
+                )
+                if resp.status_code != 200:
+                    logger.error(f"Failed to verify access token: {resp.text}")
+                    raise HTTPException(status_code=401, detail="Invalid Google access token")
+                idinfo = resp.json()
+                user_email = idinfo.get("email")
+                google_sub_id = idinfo.get("sub")
+                logger.info(f"Access token verified for email: {user_email}")
+        else:
+            logger.info("Verifying Google ID Token (JWT)")
+            request_session = google_requests.Request()
+            idinfo = id_token.verify_oauth2_token(
+                google_id_token,
+                request_session,
+                GOOGLE_CLIENT_ID,
+                clock_skew_in_seconds=settings.GOOGLE_TOKEN_TIMEOUT,
+            )
+            user_email = idinfo.get("email")
+            google_sub_id = idinfo.get("sub")
+            logger.info(f"ID token verified for email: {user_email}")
 
         if not user_email or not google_sub_id:
             logger.error("Email or Google ID (sub) not found in verified token.")
@@ -223,14 +318,30 @@ async def login_with_google(
         db_user = await get_user_by_email(db, user_email)
 
         if not db_user:
-            logger.warning(
-                f"Login attempt failed: User with email {user_email} not found in database."
+            logger.info(f"User {user_email} not found. Creating new user via Google registration.")
+            # Auto-register user if they don't exist
+            
+            # Find or create default public business
+            default_biz = await db.business.find_first(where={"name": "Tagid Public Users"})
+            if not default_biz:
+                logger.info("Creating default 'Tagid Public Users' business")
+                default_biz = await db.business.create(data={"name": "Tagid Public Users", "slug": "public-users"})
+            
+            # Generate a random password for OAuth users (they won't use it, but schema might require it)
+            temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+            
+            db_user = await create_user(
+                db=db,
+                email=user_email,
+                password=temp_password,
+                name=idinfo.get("name", user_email.split('@')[0]),
+                phone="000-000-0000", # Placeholder for Google users
+                address="Google Account",
+                business_id=default_biz.id,
+                role="CUSTOMER",
+                is_verified=True # Google users are pre-verified
             )
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,  # Use 401 as user is authenticated by Google but not authorized here
-                detail="User not found or not registered in the system. Please contact your administrator.",
-            )
-        logger.info(f"User found: {db_user.id} ({db_user.email})")
+            logger.info(f"New user created via Google: {db_user.id}")
 
         # 3. Update user's subId if necessary
         if db_user.subId != google_sub_id:
@@ -244,19 +355,15 @@ async def login_with_google(
                     f"Failed to update subId for user {db_user.id}: {db_update_error}",
                     exc_info=True,
                 )
-                # Decide if this is fatal; for now, we'll raise 500
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to update user information in database.",
-                )
+                # Not fatal if user is already verified by email/other
 
         # 4. Generate JWT
         jwt_payload = {
-            "sub": db_user.email,  # Standard subject claim
+            "sub": db_user.id,  # Standard subject claim (ID)
             "user_id": db_user.id,
-            "role": str(db_user.role),  # Ensure role is string (enum -> str)
+            "email": db_user.email,
+            "role": str(db_user.role),  # Ensure role is string
             "business_id": db_user.businessId,
-            # Add other relevant non-sensitive claims if needed (e.g., name)
         }
         access_token = create_access_token(data=jwt_payload)
         logger.info(f"JWT created for user {db_user.id}")
@@ -309,23 +416,74 @@ async def login_with_google(
         )
 
 
+
+class VerifyEmailRequest(BaseModel):
+    """Schema for email verification request."""
+    email: EmailStr
+    code: str
+
+
+@router.post("/verify-email", response_model=TokenResponse)
+async def verify_email(request: VerifyEmailRequest, db: Prisma = Depends(get_db)):
+    """
+    Verify user's email address with the code sent via email.
+    """
+    user = await get_user_by_email(db, request.email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if user.isVerified:
+         return TokenResponse(
+            message="Email already verified",
+            user_id=user.id,
+            role=str(user.role),
+            token=create_access_token(data={"sub": user.id, "user_id": user.id, "email": user.email, "role": str(user.role), "business_id": user.businessId}),
+        )
+
+    if not user.verificationCode or not user.verificationExpiresAt:
+        raise HTTPException(status_code=400, detail="Invalid verification request")
+
+    if user.verificationCode != request.code:
+        raise HTTPException(status_code=400, detail="Invalid verification code")
+
+    if datetime.now(timezone.utc) > user.verificationExpiresAt.replace(tzinfo=timezone.utc):
+        raise HTTPException(status_code=400, detail="Verification code expired")
+
+    # Activate user
+    await db.user.update(
+        where={"id": user.id},
+        data={
+            "isVerified": True,
+            "verificationCode": None,
+            "verificationExpiresAt": None,
+            "verifiedBy": "email"
+        }
+    )
+
+    # Generate Token
+    jwt_payload = {
+        "sub": user.email,
+        "user_id": user.id,
+        "role": str(user.role),
+        "business_id": user.businessId,
+    }
+    access_token = create_access_token(data=jwt_payload)
+
+    return TokenResponse(
+        message="Email verified successfully",
+        user_id=user.id,
+        role=str(user.role),
+        token=access_token,
+    )
+
+
 @router.post("/login", response_model=TokenResponse, status_code=status.HTTP_200_OK)
 async def login_with_email(credentials: UserLogin, db: Prisma = Depends(get_db)) -> TokenResponse:
     """
     Handles user login via email and password.
-
-    Args:
-        credentials: Email and password from request body.
-        db: Prisma database client dependency.
-
-    Returns:
-        TokenResponse with JWT token and user information.
-
-    Raises:
-        HTTPException: 401 if credentials are invalid.
+    Blocks unverified users.
     """
     logger.info(f"Email login attempt for: {credentials.email}")
-    logger.debug(f"Password length received: {len(credentials.password)}")
 
     try:
         # Authenticate user
@@ -337,11 +495,22 @@ async def login_with_email(credentials: UserLogin, db: Prisma = Depends(get_db))
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password",
             )
+            
+        # Check verification status
+        if not user.isVerified:
+             # Allow admin bypass for testing/emergency
+            if user.role not in ["SUPER_ADMIN", "NETWORK_MANAGER"]:
+                logger.warning(f"Login blocked for unverified user: {credentials.email}")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Email not verified. Please check your inbox for the verification code.",
+                )
 
         # Generate JWT
         jwt_payload = {
-            "sub": user.email,
+            "sub": user.id,
             "user_id": user.id,
+            "email": user.email,
             "role": str(user.role),
             "business_id": user.businessId,
         }
@@ -358,10 +527,7 @@ async def login_with_email(credentials: UserLogin, db: Prisma = Depends(get_db))
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(
-            f"Unexpected error during email login for {credentials.email}: {e}",
-            exc_info=True,
-        )
+        logger.error(f"Unexpected error during login: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred during login.",
@@ -371,33 +537,22 @@ async def login_with_email(credentials: UserLogin, db: Prisma = Depends(get_db))
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 async def register_user(user_data: UserRegister, db: Prisma = Depends(get_db)) -> TokenResponse:
     """
-    Registers a new user with email and password.
-
-    **Public Registration**: Only CUSTOMER role is allowed.
-    For admin roles, use POST /users/ endpoint with proper authorization.
-
-    Args:
-        user_data: User registration data.
-        db: Prisma database client dependency.
-
-    Returns:
-        TokenResponse with JWT token and user information.
-
-    Raises:
-        HTTPException: 400 if email already exists or invalid role.
+    Registers a new user and sends verification email.
+    Note: Does NOT return a valid auth token immediately.
     """
     logger.info(f"Registration attempt for: {user_data.email}")
+    
+    # Generate 6-digit code
+    verification_code = ''.join(random.choices(string.digits, k=6))
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
 
-    # SECURITY: Force role to CUSTOMER for public registration
     if user_data.role != "CUSTOMER":
-        logger.warning(f"Registration attempt with non-CUSTOMER role: {user_data.role}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Public registration only allows CUSTOMER role. Contact admin for other roles.",
+            detail="Public registration only allows CUSTOMER role.",
         )
 
     try:
-        # Check if user already exists
         existing_user = await get_user_by_email(db, user_data.email)
         if existing_user:
             logger.warning(f"Registration failed: email {user_data.email} already exists")
@@ -407,6 +562,18 @@ async def register_user(user_data: UserRegister, db: Prisma = Depends(get_db)) -
             )
 
         # Create new user with CUSTOMER role
+        business_id = user_data.businessId
+        if not business_id:
+            logger.info("No Business ID provided. Checking for default business...")
+            # Find default public business or create it
+            default_biz = await db.business.find_first(where={"name": "Tagid Public Users"})
+            if not default_biz:
+                logger.info("Creating default 'Tagid Public Users' business")
+                default_biz = await db.business.create(data={"name": "Tagid Public Users", "slug": "public-users"})
+            business_id = default_biz.id
+            logger.info(f"Using Business ID: {business_id}")
+
+        logger.info(f"Creating user {user_data.email} in DB...")
         new_user = await create_user(
             db=db,
             email=user_data.email,
@@ -414,35 +581,34 @@ async def register_user(user_data: UserRegister, db: Prisma = Depends(get_db)) -
             name=user_data.name,
             phone=user_data.phone,
             address=user_data.address,
-            business_id=user_data.businessId,
-            role="CUSTOMER",  # Force CUSTOMER role
+            business_id=business_id,
+            role="CUSTOMER",
+            verification_code=verification_code,
+            verification_expires_at=expires_at,
+            is_verified=False 
         )
 
-        # Generate JWT
-        jwt_payload = {
-            "sub": new_user.email,
-            "user_id": new_user.id,
-            "role": str(new_user.role),
-            "business_id": new_user.businessId,
-        }
-        access_token = create_access_token(data=jwt_payload)
-        logger.info(f"User {new_user.id} registered successfully")
+        # Send Email
+        from app.services.email_service import email_service
+        email_sent = email_service.send_verification_email(new_user.email, verification_code)
+        
+        if not email_sent:
+            logger.error("Failed to send verification email. User created but unverified.")
+            # We still return success but maybe warn? For now standard flow.
 
         return TokenResponse(
-            message="Registration successful",
+            message="Registration successful. Verification code sent to email.",
             user_id=new_user.id,
             role=str(new_user.role),
-            token=access_token,
+            token="", # No token until verified
         )
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(
-            f"Unexpected error during registration for {user_data.email}: {e}",
-            exc_info=True,
-        )
+        logger.error(f"Registration error: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred during registration.",
         )
+

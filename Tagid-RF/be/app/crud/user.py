@@ -1,5 +1,6 @@
 import logging
 from typing import Optional
+from datetime import datetime
 
 from prisma.models import User
 
@@ -72,6 +73,9 @@ async def create_user(
     address: str,
     business_id: str,
     role: str = "CUSTOMER",
+    verification_code: Optional[str] = None,
+    verification_expires_at: Optional[datetime] = None,
+    is_verified: bool = False,
 ) -> User:
     """Creates a new user with hashed password."""
     from app.core.security import get_password_hash
@@ -89,7 +93,10 @@ async def create_user(
                 "address": address,
                 "businessId": business_id,
                 "role": role,
-                "verifiedBy": "email",
+                "verifiedBy": "email" if is_verified else None,
+                "isVerified": is_verified,
+                "verificationCode": verification_code,
+                "verificationExpiresAt": verification_expires_at,
             }
         )
         logger.info(f"Successfully created user {new_user.id} with email {email}")

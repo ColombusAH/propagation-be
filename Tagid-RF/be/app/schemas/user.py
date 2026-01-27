@@ -1,6 +1,7 @@
 """Pydantic schemas for user-related API requests and responses."""
 
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
@@ -30,7 +31,7 @@ class UserRegister(BaseModel):
     name: str = Field(description="User's full name")
     phone: str = Field(description="Phone number (include country code)")
     address: str = Field(description="Physical address")
-    businessId: str = Field(description="Business/Tax ID number")
+    businessId: Optional[str] = Field(default=None, description="Business/Tax ID number (Optional for B2C)")
     role: str = Field(
         default="CUSTOMER",
         description="User role: CUSTOMER, CASHIER, MANAGER, or ADMIN",

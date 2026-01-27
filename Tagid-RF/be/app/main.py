@@ -2,11 +2,12 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
 
 from app.api.v1.api import api_router
 from app.core.config import get_settings
@@ -123,6 +124,16 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     lifespan=lifespan,
 )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = exc.errors()
+    logger.error(f"VALIDATION ERROR for {request.url}: {errors}")
+    return JSONResponse(
+        status_code=422,
+        content={"detail": errors, "body": exc.body},
+    )
+
 
 # Add security headers middleware
 app.add_middleware(SecurityHeadersMiddleware)

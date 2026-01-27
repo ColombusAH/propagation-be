@@ -72,9 +72,9 @@ const Sku = styled.span`
 `;
 
 const Button = styled.button`
-  background-color: ${theme.colors.gray[800]};
-  color: ${theme.colors.text};
-  border: 1px solid ${theme.colors.border};
+  background-color: ${theme.colors.primary};
+  color: ${theme.colors.textInverse};
+  border: none;
   border-radius: ${theme.borderRadius.md};
   padding: ${theme.spacing.sm} ${theme.spacing.md};
   font-weight: ${theme.typography.fontWeight.medium};
@@ -86,10 +86,11 @@ const Button = styled.button`
   align-items: center;
   justify-content: center;
   gap: ${theme.spacing.xs};
+  box-shadow: ${theme.shadows.sm};
 
   &:hover {
-    background-color: ${theme.colors.gray[700]};
-    border-color: ${theme.colors.borderDark};
+    background-color: ${theme.colors.primaryDark};
+    box-shadow: ${theme.shadows.md};
   }
 
   &:active {

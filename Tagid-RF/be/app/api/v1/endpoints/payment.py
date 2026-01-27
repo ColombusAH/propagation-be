@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.deps import get_current_user
 from app.core.permissions import requires_any_role
+from prisma import Json
 from app.db.prisma import prisma_client
 from app.schemas.payment import (
     CashPaymentRequest,
@@ -99,7 +100,7 @@ async def create_payment_intent(
                     detail=f"Payment creation failed: {result.error}",
                 )
             external_id = result.payment_id
-            client_secret = result.payment_id  # Or metadata?
+            client_secret = result.client_secret
 
         # Create payment record in database
         payment = await prisma_client.client.payment.create(
@@ -110,7 +111,7 @@ async def create_payment_intent(
                 "provider": request.payment_provider.value,
                 "externalId": external_id,
                 "status": "PENDING",
-                "metadata": request.metadata,
+                "metadata": Json(request.metadata or {}),
             }
         )
 
@@ -395,13 +396,23 @@ async def get_payment_status(payment_id: str, current_user=Depends(get_current_u
 async def mark_order_tags_as_paid(order_id: str, payment_id: str):
     """Mark all tags in an order as paid."""
     try:
-        # This assumes you have an Order model with tags
-        # Update based on your actual data model
-        await prisma_client.client.tagmapping.update_many(
-            where={"orderId": order_id},  # Adjust based on your schema
+        # Update tags in RfidTag table
+        # We search by paymentId if it was already pre-linked, 
+        # or we might need another way to identify which tags belong to this order_id
+        # For now, let's assume tags were associated with this order_id during scanning
+        # or we link them here if they are 'ACTIVE' and belong to this store
+        
+        # If order_id is a containerId, we mark tags in that container
+        await prisma_client.client.rfidtag.update_many(
+            where={
+                "OR": [
+                    {"containerId": order_id},
+                    {"paymentId": order_id} # Fallback if order_id was used as paymentId
+                ]
+            },
             data={"isPaid": True, "paidAt": datetime.now(), "paymentId": payment_id},
         )
-        logger.info(f"Marked tags for order {order_id} as paid")
+        logger.info(f"Marked tags for order/container {order_id} as paid with payment {payment_id}")
     except Exception as e:
         logger.error(f"Error marking tags as paid: {str(e)}")
 
@@ -409,8 +420,8 @@ async def mark_order_tags_as_paid(order_id: str, payment_id: str):
 async def unmark_order_tags_as_paid(order_id: str):
     """Unmark all tags in an order as paid (for refunds)."""
     try:
-        await prisma_client.client.tagmapping.update_many(
-            where={"orderId": order_id},  # Adjust based on your schema
+        await prisma_client.client.rfidtag.update_many(
+            where={"paymentId": order_id},
             data={"isPaid": False, "paidAt": None, "paymentId": None},
         )
         logger.info(f"Unmarked tags for order {order_id} as paid")

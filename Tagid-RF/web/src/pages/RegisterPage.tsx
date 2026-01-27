@@ -139,139 +139,194 @@ const LoginLink = styled.div`
 `;
 
 interface RegisterPageProps {
-    onBackToLogin: () => void;
-    onRegisterSuccess: () => void;
+  onBackToLogin: () => void;
+  onRegisterSuccess: (email: string) => void;
 }
 
 export function RegisterPage({ onBackToLogin, onRegisterSuccess }: RegisterPageProps) {
-    const [formData, setFormData] = useState({
-        email: '',
-        password: '',
-        name: '',
-        phone: '',
-        address: '',
-        businessId: '',
-    });
-    const [isLoading, setIsLoading] = useState(false);
-    const toast = useToast();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    name: '',
+    phone: '',
+    address: '',
+    businessId: '',
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const toast = useToast();
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
+  const validateForm = () => {
+    if (!formData.name.trim()) {
+      toast.error('נא להזין שם מלא');
+      return false;
+    }
 
-        try {
-            const response = await fetch('/api/v1/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...formData, role: 'CUSTOMER' }),
-            });
+    // Basic email regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error('נא להזין כתובת אימייל תקינה');
+      return false;
+    }
 
-            if (response.ok) {
-                toast.success('ההרשמה הצליחה! אנא התחבר.');
-                onRegisterSuccess();
-            } else {
-                const err = await response.json();
-                toast.error(err.detail || 'ההרשמה נכשלה');
-            }
-        } catch (err) {
-            toast.error('שגיאת תקשורת');
-            console.error(err);
-        } finally {
-            setIsLoading(false);
+    if (formData.password.length < 8) {
+      toast.error('הסיסמה חייבת להכיל לפחות 8 תווים');
+      return false;
+    }
+
+    // Phone validation: allows digits, spaces, dashes, plus sign. Min 9 chars.
+    const phoneRegex = /^[\d\+\-\s]{9,20}$/;
+    if (!phoneRegex.test(formData.phone)) {
+      toast.error('נא להזין מספר טלפון תקין (מינימום 9 ספרות)');
+      return false;
+    }
+
+    if (!formData.address.trim()) {
+      toast.error('נא להזין כתובת');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Prepare payload - convert empty strings to null/undefined where appropriate
+      const payload: any = {
+        ...formData,
+        role: 'CUSTOMER',
+      };
+
+      if (!formData.businessId) {
+        delete payload.businessId;
+      }
+
+      const response = await fetch('/api/v1/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        toast.success('הרשמה מוצלחת! נא לאמת את המייל.');
+        onRegisterSuccess(formData.email);
+      } else {
+        const err = await response.json();
+        console.error('Registration failed:', err);
+
+        const errorMessage = typeof err.detail === 'string' ? err.detail : 'ההרשמה נכשלה - בדוק את הנתונים';
+
+        if (errorMessage.includes("Email already registered")) {
+          toast.error('האימייל הזה כבר רשום במערכת');
+        } else {
+          toast.error(errorMessage);
         }
-    };
+      }
+    } catch (err) {
+      toast.error('שגיאת תקשורת');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    return (
-        <Container>
-            <RegisterCard>
-                <Logo><span className="material-symbols-outlined">person_add</span></Logo>
-                <Title>הרשמה למערכת</Title>
-                <Subtitle>צור חשבון חדש כדי להתחיל</Subtitle>
+  return (
+    <Container>
+      <RegisterCard>
+        <Logo><span className="material-symbols-outlined">person_add</span></Logo>
+        <Title>הרשמה למערכת - Tagid</Title>
+        <Subtitle>צור חשבון חדש כדי להתחיל</Subtitle>
 
-                <Form onSubmit={handleSubmit}>
-                    <InputGroup>
-                        <Label>שם מלא</Label>
-                        <Input
-                            name="name"
-                            placeholder="ישראל ישראלי"
-                            value={formData.name}
-                            onChange={handleInputChange}
-                            required
-                        />
-                    </InputGroup>
+        <Form onSubmit={handleSubmit}>
+          <InputGroup>
+            <Label>שם מלא</Label>
+            <Input
+              name="name"
+              placeholder="ישראל ישראלי"
+              value={formData.name}
+              onChange={handleInputChange}
+              required
+            />
+          </InputGroup>
 
-                    <InputGroup>
-                        <Label>אימייל</Label>
-                        <Input
-                            name="email"
-                            type="email"
-                            placeholder="name@example.com"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            required
-                        />
-                    </InputGroup>
+          <InputGroup>
+            <Label>אימייל</Label>
+            <Input
+              name="email"
+              type="email"
+              placeholder="name@example.com"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+            />
+          </InputGroup>
 
-                    <InputGroup>
-                        <Label>סיסמה (מינימום 8 תווים)</Label>
-                        <Input
-                            name="password"
-                            type="password"
-                            placeholder="••••••••"
-                            value={formData.password}
-                            onChange={handleInputChange}
-                            required
-                            minLength={8}
-                        />
-                    </InputGroup>
+          <InputGroup>
+            <Label>סיסמה (מינימום 8 תווים)</Label>
+            <Input
+              name="password"
+              type="password"
+              placeholder="••••••••"
+              value={formData.password}
+              onChange={handleInputChange}
+              required
+              minLength={8}
+            />
+            <small style={{
+              color: formData.password.length > 0 && formData.password.length < 8 ? '#ff4d4f' : '#666',
+              marginTop: '4px',
+              display: 'block',
+              fontWeight: formData.password.length > 0 && formData.password.length < 8 ? 'bold' : 'normal'
+            }}>
+              הסיסמה חייבת להכיל לפחות 8 תווים
+            </small>
+          </InputGroup>
 
-                    <InputGroup>
-                        <Label>טלפון</Label>
-                        <Input
-                            name="phone"
-                            placeholder="+972-50-1234567"
-                            value={formData.phone}
-                            onChange={handleInputChange}
-                            required
-                        />
-                    </InputGroup>
+          <InputGroup>
+            <Label>טלפון</Label>
+            <Input
+              name="phone"
+              dir="ltr"
+              style={{ textAlign: 'right' }}
+              placeholder="+972-50-1234567"
+              value={formData.phone}
+              onChange={handleInputChange}
+              required
+            />
+          </InputGroup>
 
-                    <InputGroup>
-                        <Label>ח.פ / ת.ז</Label>
-                        <Input
-                            name="businessId"
-                            placeholder="123456789"
-                            value={formData.businessId}
-                            onChange={handleInputChange}
-                            required
-                        />
-                    </InputGroup>
+          <InputGroup>
+            <Label>כתובת</Label>
+            <Input
+              name="address"
+              placeholder="רחוב הרצל 1, תל אביב"
+              value={formData.address}
+              onChange={handleInputChange}
+              required
+            />
+          </InputGroup>
 
-                    <InputGroup>
-                        <Label>כתובת</Label>
-                        <Input
-                            name="address"
-                            placeholder="רחוב הרצל 1, תל אביב"
-                            value={formData.address}
-                            onChange={handleInputChange}
-                            required
-                        />
-                    </InputGroup>
+          <RegisterButton type="submit" disabled={isLoading}>
+            {isLoading ? 'מבצע הרשמה...' : 'הירשם עכשיו'}
+          </RegisterButton>
+        </Form>
 
-                    <RegisterButton type="submit" disabled={isLoading}>
-                        {isLoading ? 'רשם...' : 'הירשם עכשיו'}
-                    </RegisterButton>
-                </Form>
-
-                <LoginLink>
-                    כבר יש לך חשבון? <button type="button" onClick={onBackToLogin}>התחבר כאן</button>
-                </LoginLink>
-            </RegisterCard>
-        </Container>
-    );
+        <LoginLink>
+          כבר יש לך חשבון? <button type="button" onClick={onBackToLogin}>התחבר כאן</button>
+        </LoginLink>
+      </RegisterCard>
+    </Container>
+  );
 }

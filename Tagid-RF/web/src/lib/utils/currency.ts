@@ -2,8 +2,8 @@ import { MoneyCents } from '@/store/types';
 
 export function formatCurrency(
   cents: MoneyCents,
-  locale = 'en-US',
-  currency = 'USD'
+  locale = 'he-IL',
+  currency = 'ILS'
 ): string {
   const amount = cents / 100;
   return new Intl.NumberFormat(locale, {
