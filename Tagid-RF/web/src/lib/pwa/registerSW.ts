@@ -4,8 +4,14 @@
 export function registerServiceWorker(): void {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      // Service worker registration can be added here if needed
-      // For now, this is a placeholder for future PWA enhancements
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((registration) => {
+          console.log('[SW] SW registered: ', registration);
+        })
+        .catch((registrationError) => {
+          console.log('[SW] SW registration failed: ', registrationError);
+        });
     });
   }
 }

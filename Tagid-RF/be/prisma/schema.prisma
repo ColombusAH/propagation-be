@@ -66,6 +66,7 @@ model Product {
   category     String?
   description  String?
   imageUrl     String?
+  minStock     Int          @default(0)  // Minimum stock level for alerts
   isActive     Boolean      @default(true)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt

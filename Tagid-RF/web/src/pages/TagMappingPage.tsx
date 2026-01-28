@@ -1,776 +1,801 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { QRCodeSVG } from 'qrcode.react';
 import { Layout } from '@/components/Layout';
-import { theme } from '@/styles/theme';
-import { useWebSocket } from '@/hooks/useWebSocket';
 import { useAuth } from '@/contexts/AuthContext';
+import { Link } from 'react-router-dom';
 
-// Types
-interface TagMapping {
+// --- Types ---
+
+interface InventoryProduct {
+    id: string;
+    name: string;
+    sku: string;
+    minStock: number;
+    count: number;
+    status: 'OK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
+    price: number; // Added for Print
+    category: string; // Added for Print
+}
+
+interface UnlinkedTag {
     id: string;
     epc: string;
-    encrypted_qr: string;
-    epc_hash: string | null;
-    product_id: string | null;
-    container_id: string | null;
-    is_active: boolean;
+    scannedAt: Date;
 }
 
-interface ScannedTag {
-    tag_id: number;
-    epc: string;
-    rssi: number;
-    antenna_port: number;
-    timestamp: string;
-    is_mapped: boolean;
-    target_qr: string | null;
+interface LinkedTag {
+    tag: UnlinkedTag;
+    product: InventoryProduct;
+    qrCode: string; // The encrypted QR string
 }
 
-// API base URL
-const API_BASE = '/api/v1/tag-mapping';
+// --- API ---
 
-// Styled Components
+const INVENTORY_API = '/api/v1/inventory';
+const TAGS_API = '/api/v1/tags';
+
+// --- Components ---
+
 const Container = styled.div`
-  padding: 1.5rem;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
+  padding: 1.5rem;
+  background-color: #f8fafc;
+  min-height: 100vh;
 `;
 
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+const PageHeader = styled.div`
+  position: relative;
+  background: linear-gradient(120deg, #2563eb 0%, #1e40af 100%);
+  padding: 3rem 2rem;
+  border-radius: 24px;
+  color: white;
   margin-bottom: 2rem;
-  flex-wrap: wrap;
-  gap: 1rem;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+    transform: translate(30%, -30%);
+    border-radius: 50%;
+  }
 `;
 
-const Title = styled.h1`
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: ${theme.colors.text};
-  margin: 0;
+const StatsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+`;
+
+const StatCard = styled.div<{ $type?: 'warning' | 'default' }>`
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+  border: 1px solid ${props => props.$type === 'warning' ? '#fef3c7' : '#f3f4f6'};
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  h3 {
+    color: ${props => props.$type === 'warning' ? '#d97706' : '#6b7280'};
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  p {
+    color: ${props => props.$type === 'warning' ? '#b45309' : '#111827'};
+    font-size: 2rem;
+    font-weight: 700;
+  }
+`;
+
+const StyledTable = styled.table`
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  
+  th {
+    background: #f9fafb;
+    padding: 1rem;
+    text-align: right;
+    font-weight: 600;
+    color: #4b5563;
+    border-bottom: 1px solid #e5e7eb;
+    &:first-child { border-radius: 0 12px 0 0; }
+    &:last-child { border-radius: 12px 0 0 0; }
+  }
+
+  td {
+    padding: 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    background: white;
+    transition: background 0.15s;
+    vertical-align: middle;
+  }
+
+  tr:hover td {
+    background: #f8fafc;
+  }
+  
+  tr:last-child td {
+    border-bottom: none;
+    &:first-child { border-radius: 0 0 12px 0; }
+    &:last-child { border-radius: 0 0 0 12px; }
+  }
+`;
+
+const MinStockInput = styled.input`
+  width: 80px;
+  padding: 0.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 500;
+  transition: all 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+`;
+
+const StatusBadge = styled.span<{ type: string }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  
+  ${({ type }) => {
+        switch (type) {
+            case 'OK': return `background: #dcfce7; color: #166534;`;
+            case 'LOW_STOCK': return `background: #ffedd5; color: #9a3412;`;
+            case 'OUT_OF_STOCK': return `background: #fee2e2; color: #991b1b;`;
+            default: return `background: #f3f4f6; color: #4b5563;`;
+        }
+    }}
 `;
 
 const Card = styled.div`
-  background: ${theme.colors.surface};
-  border-radius: 16px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-`;
-
-const CardTitle = styled.h2`
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: ${theme.colors.text};
-  margin: 0 0 1rem 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-`;
-
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-`;
-
-const InputGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-`;
-
-const Label = styled.label`
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: ${theme.colors.textSecondary};
-`;
-
-const Input = styled.input`
-  padding: 0.875rem 1rem;
-  border: 2px solid ${theme.colors.border};
-  border-radius: 12px;
-  font-size: 1rem;
-  background: ${theme.colors.background};
-  color: ${theme.colors.text};
-  transition: all 0.2s ease;
-  
-  &:focus {
-    outline: none;
-    border-color: ${theme.colors.primary};
-    box-shadow: 0 0 0 3px ${theme.colors.primary}20;
-  }
-  
-  &::placeholder {
-    color: ${theme.colors.textSecondary};
-  }
-`;
-
-const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' }>`
-  padding: 0.875rem 1.5rem;
-  border: none;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  
-  ${({ variant = 'primary' }) => {
-        switch (variant) {
-            case 'secondary':
-                return `
-          background: ${theme.colors.surface};
-          color: ${theme.colors.text};
-          border: 2px solid ${theme.colors.border};
-          &:hover { background: ${theme.colors.background}; }
-        `;
-            case 'danger':
-                return `
-          background: ${theme.colors.error};
-          color: white;
-          &:hover { opacity: 0.9; }
-        `;
-            default:
-                return `
-          background: ${theme.colors.primary};
-          color: white;
-          &:hover { opacity: 0.9; transform: translateY(-1px); }
-        `;
-        }
-    }}
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-const Grid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1rem;
-`;
-
-const MappingCard = styled.div`
-  background: ${theme.colors.background};
-  border-radius: 12px;
-  padding: 1rem;
-  border: 1px solid ${theme.colors.border};
-  
-  &:hover {
-    border-color: ${theme.colors.primary};
-  }
-`;
-
-const EpcCode = styled.code`
-  font-family: 'Courier New', monospace;
-  font-size: 0.85rem;
-  background: ${theme.colors.surface};
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  color: ${theme.colors.primary};
-  word-break: break-all;
-`;
-
-const QrContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  padding: 1rem;
   background: white;
-  border-radius: 8px;
-  margin: 1rem 0;
-`;
-
-const ActionButtons = styled.div`
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
-`;
-
-const SmallButton = styled.button`
-  padding: 0.5rem 0.75rem;
-  font-size: 0.85rem;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &.copy {
-    background: ${theme.colors.gray[700]};
-    color: ${theme.colors.text};
-  }
-  &.delete {
-    background: ${theme.colors.error}20;
-    color: ${theme.colors.error};
-  }
-  
-  &:hover {
-    opacity: 0.8;
-  }
-`;
-
-const StatusBadge = styled.span<{ active: boolean }>`
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 20px;
-  background: ${({ active }) => active ? theme.colors.success + '20' : theme.colors.error + '20'};
-  color: ${({ active }) => active ? theme.colors.success : theme.colors.error};
-  display: inline-flex;
-  flex-direction: row-reverse;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  line-height: 1;
-`;
-
-const Message = styled.div<{ type: 'success' | 'error' }>`
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  background: ${({ type }) => type === 'success' ? theme.colors.success + '20' : theme.colors.error + '20'};
-  color: ${({ type }) => type === 'success' ? theme.colors.success : theme.colors.error};
-`;
-
-const EmptyState = styled.div`
-  text-align: center;
-  padding: 3rem;
-  color: ${theme.colors.textSecondary};
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+  margin-bottom: 1.5rem;
+  border: 1px solid #f3f4f6;
 `;
 
 const MaterialIcon = ({ name, size = 20 }: { name: string; size?: number }) => (
-  <span className="material-symbols-outlined" style={{ fontSize: size }}>{name}</span>
+    <span className="material-symbols-outlined" style={{ fontSize: size }}>{name}</span>
 );
 
-const VerifySection = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const VerifyResult = styled.div<{ match: boolean }>`
-  padding: 1rem;
-  border-radius: 8px;
-  text-align: center;
-  font-weight: 600;
-  background: ${({ match }) => match ? theme.colors.success + '20' : theme.colors.error + '20'};
-  color: ${({ match }) => match ? theme.colors.success : theme.colors.error};
-`;
-
-const LiveParams = styled.div`
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding: 1rem;
-  background: ${theme.colors.background};
-  border-radius: 12px;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
 `;
 
-const LiveTagRow = styled.div<{ newItem: boolean }>`
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
-  padding: 0.75rem;
-  border-bottom: 1px solid ${theme.colors.border};
-  align-items: center;
-  animation: ${({ newItem }) => newItem ? 'highlight 1s ease-out' : 'none'};
-  transition: background-color 0.5s;
+const ModalContent = styled.div`
+  background: white;
+  padding: 2rem;
+  border-radius: 24px;
+  width: 90%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  animation: slideUp 0.3s ease-out;
 
-  @keyframes highlight {
-    0% { background-color: ${theme.colors.primary}40; }
-    100% { background-color: transparent; }
-  }
-  
-  &:last-child {
-    border-bottom: none;
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
   }
 `;
+
+// --- Main Component ---
 
 export function TagMappingPage() {
     const { token } = useAuth();
-    const [mappings, setMappings] = useState<TagMapping[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Live Scan State
-    const [liveTags, setLiveTags] = useState<ScannedTag[]>([]);
-    const [isScanning, setIsScanning] = useState(false);
-    const [isWsConnected, setIsWsConnected] = useState(false);
-    const [scanDuration, setScanDuration] = useState(0);
+    // Inventory State
+    const [inventory, setInventory] = useState<InventoryProduct[]>([]);
+    const [loadingInv, setLoadingInv] = useState(false);
 
-    // Timer effect
-    useEffect(() => {
-        let interval: NodeJS.Timeout;
-        if (isScanning) {
-            interval = setInterval(() => {
-                setScanDuration(prev => prev + 1);
-            }, 1000);
-        } else {
-            setScanDuration(0);
-        }
-        return () => clearInterval(interval);
-    }, [isScanning]);
-
-    // Format time helper
-    const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    // Create form state
-    const [newEpc, setNewEpc] = useState('');
-    const [productId, setProductId] = useState('');
+    // Add Product State
+    const [isAddMode, setIsAddMode] = useState(false);
+    const [loadMode, setLoadMode] = useState<'template' | 'manual'>('manual');
+    const [dragOver, setDragOver] = useState(false);
     const [creating, setCreating] = useState(false);
 
-    // Verify form state
-    const [verifyEpc, setVerifyEpc] = useState('');
-    const [verifyQr, setVerifyQr] = useState('');
-    const [verifyResult, setVerifyResult] = useState<{ match: boolean; message: string } | null>(null);
-    const [verifying, setVerifying] = useState(false);
+    const [newProductName, setNewProductName] = useState('');
+    const [newProductPrice, setNewProductPrice] = useState('');
+    const [newProductCategory, setNewProductCategory] = useState('');
+    const [newProductSku, setNewProductSku] = useState('');
+    const [newProductMinStock, setNewProductMinStock] = useState('');
 
-    // WebSocket
-    const { status } = useWebSocket({
-        url: '/ws/rfid',
-        autoConnect: true,
-        onMessage: (msg) => {
-            if (msg.type === 'tag_scanned') {
-                handleTagScanned(msg.data);
+    // Linking State
+    const [linkingProduct, setLinkingProduct] = useState<InventoryProduct | null>(null);
+    const [availableTags, setAvailableTags] = useState<UnlinkedTag[]>([]);
+    const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+    const [linkedResults, setLinkedResults] = useState<LinkedTag[]>([]);
+    const [linking, setLinking] = useState(false);
+
+    const CATEGORIES = [
+        'ביגוד', 'הנעלה', 'אלקטרוניקה', 'אביזרים', 'קוסמטיקה', 'מזון', 'משקאות', 'אחר'
+    ];
+
+    // Stats
+    const totalItems = inventory.reduce((acc, curr) => acc + curr.count, 0);
+    const lowStockItems = inventory.filter(i => i.status !== 'OK').length;
+    const totalProducts = inventory.length;
+
+    // --- Inventory Actions ---
+
+    const fetchInventory = async () => {
+        setLoadingInv(true);
+        try {
+            const res = await fetch(`${INVENTORY_API}/stock`);
+            if (res.ok) {
+                const data = await res.json();
+                setInventory(data.products || []);
             }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoadingInv(false);
         }
-    });
+    };
+
+    const updateMinStock = async (id: string, newVal: number) => {
+        try {
+            await fetch(`${INVENTORY_API}/product/${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ minStock: newVal })
+            });
+            setInventory(prev => prev.map(p => p.id === id ? { ...p, minStock: newVal } : p));
+        } catch (e) { console.error(e); }
+    };
 
     useEffect(() => {
-        setIsWsConnected(status === 'connected');
-    }, [status]);
-
-    useEffect(() => {
-        loadMappings();
+        fetchInventory();
     }, []);
 
-    const handleTagScanned = async (tag: ScannedTag) => {
-        setLiveTags(prev => {
-            // Keep last 10 tags, update if exists, push if new
-            const exists = prev.find(t => t.epc === tag.epc);
-            if (exists) {
-                const filtered = prev.filter(t => t.epc !== tag.epc);
-                return [tag, ...filtered].slice(0, 10);
-            }
-            return [tag, ...prev].slice(0, 10);
+    // --- Product Creation Actions ---
+
+    const createProductAPI = async (prod: any) => {
+        const payload = {
+            name: prod.name,
+            price: prod.price || 0,
+            sku: prod.sku || undefined,
+            category: prod.category || 'General',
+            description: '',
+            store_id: 'store-default',
+            minStock: prod.minStock || 0
+        };
+        const res = await fetch(`${TAGS_API}/products`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         });
-
-        // Auto Generate Logic
-        if (isScanning && !tag.is_mapped) {
-            // Check if we are already creating this one to avoid race conditions
-            // Simple approach: trigger creation
-            await createMappingForTag(tag.epc);
-        }
+        if (!res.ok) throw new Error('Failed to create product');
+        return await res.json();
     };
 
-    const createMappingForTag = async (epc: string) => {
-        if (!token) {
-            console.warn("No auth token, skipping auto-create");
-            return;
-        }
-
+    const handleAddProduct = async () => {
+        if (!newProductName.trim()) return;
+        setCreating(true);
         try {
-            console.log('Auto-generating mapping for:', epc);
-            const response = await fetch(`${API_BASE}/create`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    epc: epc,
-                    product_id: 'auto-gen-' + Date.now()
-                })
+            await createProductAPI({
+                name: newProductName.trim(),
+                price: parseFloat(newProductPrice) || 0,
+                category: newProductCategory,
+                sku: newProductSku.trim(),
+                minStock: parseInt(newProductMinStock) || 0
             });
 
-            if (response.ok) {
-                const newMapping = await response.json();
-                setMappings(prev => [newMapping, ...prev]);
-                // Update live tag status manually in list
-                setLiveTags(prev => prev.map(t =>
-                    t.epc === epc
-                        ? { ...t, is_mapped: true, target_qr: newMapping.encrypted_qr }
-                        : t
-                ));
-            } else if (response.status === 400) {
-                // Already Mapped!
-                console.log("Tag already mapped:", epc);
-                // We should try to fetch the mapping to show the QR, 
-                // but for now just mark it green so it stops trying.
-                setLiveTags(prev => prev.map(t =>
-                    t.epc === epc
-                        ? { ...t, is_mapped: true }
-                        : t
-                ));
-            }
-        } catch (error) {
-            console.error('Auto-generation failed', error);
-        }
-    };
+            setNewProductName('');
+            setNewProductPrice('');
+            setNewProductCategory('');
+            setNewProductSku('');
+            setNewProductMinStock('');
 
-    const loadMappings = async () => {
-        try {
-            setLoading(true);
-            const response = await fetch(`${API_BASE}/list`);
-            if (response.ok) {
-                const data = await response.json();
-                setMappings(data);
-            }
-        } catch (error) {
-            console.error('Failed to load mappings:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleCreate = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newEpc.trim()) return;
-
-        if (!token) {
-            setMessage({ type: 'error', text: 'אנא התחבר מחדש (חסר טוקן)' });
-            return;
-        }
-
-        try {
-            setCreating(true);
-            const response = await fetch(`${API_BASE}/create`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    epc: newEpc.trim(),
-                    product_id: productId.trim() || null
-                })
-            });
-
-            if (response.ok) {
-                const newMapping = await response.json();
-                setMappings(prev => [newMapping, ...prev]);
-                setNewEpc('');
-                setProductId('');
-                setMessage({ type: 'success', text: '🔐 מיפוי מוצפן נוצר בהצלחה!' });
-            } else {
-                const error = await response.json();
-                setMessage({ type: 'error', text: error.detail || 'שגיאה ביצירת מיפוי' });
-            }
-        } catch (error) {
-            setMessage({ type: 'error', text: 'שגיאת רשת' });
+            fetchInventory();
+            setIsAddMode(false);
+        } catch (e) {
+            console.error(e);
+            alert('שגיאה ביצירת מוצר');
         } finally {
             setCreating(false);
-            setTimeout(() => setMessage(null), 3000);
         }
     };
 
-    const handleVerify = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!verifyEpc.trim() || !verifyQr.trim()) return;
-
-        try {
-            setVerifying(true);
-            const response = await fetch(`${API_BASE}/verify`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    epc: verifyEpc.trim(),
-                    qr_code: verifyQr.trim()
-                })
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                setVerifyResult({ match: result.match, message: result.message });
-            }
-        } catch (error) {
-            setVerifyResult({ match: false, message: 'שגיאת רשת' });
-        } finally {
-            setVerifying(false);
-        }
-    };
-
-    const handleDelete = async (mappingId: string) => {
-        if (!confirm('האם למחוק את המיפוי?')) return;
-        if (!token) return;
-
-        try {
-            const response = await fetch(`${API_BASE}/${mappingId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
+    const handleFileUpload = (file: File) => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            setCreating(true);
+            try {
+                const content = e.target?.result as string;
+                let parsedProducts: any[] = [];
+                if (file.name.endsWith('.json')) {
+                    parsedProducts = JSON.parse(content);
+                } else if (file.name.endsWith('.csv')) {
+                    const lines = content.split('\n').filter(l => l.trim());
+                    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+                    parsedProducts = lines.slice(1).map((line) => {
+                        const values = line.split(',').map(v => v.trim());
+                        return {
+                            name: values[headers.indexOf('name')] || values[0] || '',
+                            price: parseFloat(values[headers.indexOf('price')] || values[1]) || 0,
+                            category: values[headers.indexOf('category')] || values[2] || '',
+                            sku: values[headers.indexOf('sku')] || values[3] || '',
+                        };
+                    }).filter(p => p.name);
                 }
-            });
-
-            if (response.ok) {
-                setMappings(prev => prev.filter(m => m.id !== mappingId));
-                setMessage({ type: 'success', text: 'מיפוי נמחק' });
+                for (const p of parsedProducts) {
+                    await createProductAPI(p).catch(console.error);
+                }
+                fetchInventory();
+                setIsAddMode(false);
+            } catch (err) {
+                console.error(err);
+                alert('שגיאה בטעינת הקובץ');
+            } finally {
+                setCreating(false);
             }
-        } catch (error) {
-            setMessage({ type: 'error', text: 'שגיאה במחיקה' });
-        }
-        setTimeout(() => setMessage(null), 3000);
+        };
+        reader.readAsText(file);
     };
 
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text);
-        setMessage({ type: 'success', text: 'הועתק!' });
-        setTimeout(() => setMessage(null), 2000);
+    const handleDownloadTemplate = () => {
+        const csvContent = "\uFEFFname,price,category,sku\nחולצה לדוגמה,99.90,ביגוד,SKU-EXAMPLE";
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'products_template.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
+
+    // --- Linking Actions ---
+
+    const openLinkingModal = (product: InventoryProduct) => {
+        setLinkingProduct(product);
+        setAvailableTags([]);
+        setSelectedTags(new Set());
+        setLinkedResults([]);
+    };
+
+    const simulateTags = () => {
+        const newTags: UnlinkedTag[] = Array.from({ length: 5 }, (_, i) => ({
+            id: `tag-${Date.now()}-${i}`,
+            epc: `E200${Math.random().toString(16).substring(2, 14).toUpperCase()}`,
+            scannedAt: new Date(),
+        }));
+        setAvailableTags(prev => [...prev, ...newTags]);
+    };
+
+    const handleToggleTag = (tagId: string) => {
+        setSelectedTags(prev => {
+            const next = new Set(prev);
+            if (next.has(tagId)) next.delete(tagId);
+            else next.add(tagId);
+            return next;
+        });
+    };
+
+    const registerTagAPI = async (epc: string) => {
+        const res = await fetch(`${TAGS_API}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ epc, store_id: 'store-default' })
+        });
+        if (!res.ok) throw new Error('Failed to register tag');
+        return res.json();
+    };
+
+    const linkTagAPI = async (tagId: string, productId: string) => {
+        const res = await fetch(`${TAGS_API}/${tagId}/link-product`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ product_id: productId })
+        });
+        if (!res.ok) throw new Error('Failed to link tag');
+        return res.json();
+    };
+
+    const handleLinkTags = async () => {
+        if (!linkingProduct || selectedTags.size === 0) return;
+        setLinking(true);
+        const newLinkedTags: LinkedTag[] = [];
+
+        try {
+            for (const tagId of selectedTags) {
+                const tag = availableTags.find(t => t.id === tagId);
+                if (tag) {
+                    try {
+                        const registered = await registerTagAPI(tag.epc);
+                        const linked = await linkTagAPI(registered.id, linkingProduct.id);
+                        newLinkedTags.push({
+                            tag: { ...tag, id: linked.id },
+                            product: linkingProduct,
+                            qrCode: linked.qr_code || JSON.stringify({ epc: linked.epc, productId: linkingProduct.id })
+                        });
+                    } catch (e) {
+                        console.error(`Failed to link tag ${tag.epc}`, e);
+                    }
+                }
+            }
+            setLinkedResults(prev => [...prev, ...newLinkedTags]);
+            // Remove from available
+            setAvailableTags(prev => prev.filter(t => !selectedTags.has(t.id)));
+            setSelectedTags(new Set());
+            // Refresh Inventory to show updated count
+            fetchInventory();
+        } finally {
+            setLinking(false);
+        }
+    };
+
+    const handlePrint = () => {
+        if (linkedResults.length === 0) return;
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) return;
+
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html dir="rtl" lang="he">
+          <head>
+            <title>תגי QR - ${linkingProduct?.name || 'מוצרים'}</title>
+            <style>
+              body { font-family: 'Heebo', sans-serif; margin: 0; padding: 20px; }
+              .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+              .qr-item { border: 1px solid #ddd; padding: 15px; text-align: center; border-radius: 8px; page-break-inside: avoid; }
+              .qr-item img { width: 120px; height: 120px; }
+              .product-name { font-weight: bold; margin-top: 10px; color: #2563EB; }
+              .epc { font-family: monospace; font-size: 10px; color: #666; margin-top: 5px; word-break: break-all; }
+              @media print { .qr-item { break-inside: avoid; } }
+            </style>
+          </head>
+          <body>
+            <div class="grid">
+              ${linkedResults.map(lr => `
+                <div class="qr-item">
+                  <div id="qr-${lr.tag.id}"></div>
+                  <div class="product-name">${lr.product.name}</div>
+                  <div class="epc">${lr.tag.epc}</div>
+                </div>
+              `).join('')}
+            </div>
+            <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+            <script>
+              const data = ${JSON.stringify(linkedResults.map(lr => ({ id: lr.tag.id, qr: lr.qrCode })))};
+              Promise.all(data.map(item => 
+                QRCode.toDataURL(item.qr, { width: 120 }).then(url => {
+                  const container = document.getElementById('qr-' + item.id);
+                  const img = document.createElement('img');
+                  img.src = url;
+                  container.appendChild(img);
+                })
+              )).then(() => setTimeout(() => window.print(), 500));
+            </script>
+          </body>
+          </html>
+        `);
+        printWindow.document.close();
+    };
+
 
     return (
         <Layout>
             <Container>
-                <Header>
-                    <Title style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <MaterialIcon name="qr_code_2" size={28} />
-                        סנכרון QR ↔ UHF Tags
-                    </Title>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ fontSize: '0.85rem', color: '#888' }}>WebSocket:</span>
-                        <StatusBadge active={isWsConnected}>
-                            {isWsConnected ? 'פעיל' : 'מנותק'}
-                            <MaterialIcon name={isWsConnected ? 'check_circle' : 'cancel'} size={14} />
-                        </StatusBadge>
+                <PageHeader>
+                    <div className="relative z-10 flex flex-wrap justify-between items-end gap-4">
+                        <div>
+                            <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
+                                <MaterialIcon name="inventory_2" size={40} />
+                                ניהול מלאי
+                            </h1>
+                            <p className="text-blue-100/90 text-lg">מעקב מלאי, הוספת מוצרים וצימוד תגים במסך אחד</p>
+                        </div>
+                        <button
+                            onClick={() => setIsAddMode(!isAddMode)}
+                            className="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition-colors shadow-lg flex items-center gap-2"
+                        >
+                            <MaterialIcon name={isAddMode ? "close" : "add"} />
+                            {isAddMode ? 'סגור הוספה' : 'הוסף מוצר חדש'}
+                        </button>
                     </div>
-                </Header>
+                </PageHeader>
 
-                {message && (
-                    <Message type={message.type}>{message.text}</Message>
-                )}
-
-                {/* Live Scan & Auto Generate */}
-                <Card>
-                    <CardTitle><MaterialIcon name="sensors" size={20} /> סריקה חיה ושמירה אוטומטית</CardTitle>
-                    <LiveParams>
-                        <div style={{ flex: 1 }}>
-                            <strong>מצב סריקה אוטומטית:</strong>
-                            <div style={{ fontSize: '0.85rem', color: theme.colors.textSecondary }}>
-                                כשהמצב פעיל, כל תג חדש שנסרק יישמר אוטומטית ב-DB.
+                <StatsGrid>
+                    <StatCard>
+                        <div className="flex justify-between items-start">
+                            <div><h3>סה"כ פריטים במלאי</h3><p>{totalItems}</p></div>
+                            <div className="p-3 bg-blue-50 text-blue-600 rounded-lg"><MaterialIcon name="layers" size={24} /></div>
+                        </div>
+                    </StatCard>
+                    <StatCard>
+                        <div className="flex justify-between items-start">
+                            <div><h3>סוגי מוצרים</h3><p>{totalProducts}</p></div>
+                            <div className="p-3 bg-purple-50 text-purple-600 rounded-lg"><MaterialIcon name="category" size={24} /></div>
+                        </div>
+                    </StatCard>
+                    <StatCard $type={lowStockItems > 0 ? 'warning' : 'default'}>
+                        <div className="flex justify-between items-start">
+                            <div><h3>דורשים טיפול / מלאי נמוך</h3><p>{lowStockItems}</p></div>
+                            <div className={`p-3 rounded-lg ${lowStockItems > 0 ? 'bg-orange-100 text-orange-600' : 'bg-green-50 text-green-600'}`}>
+                                <MaterialIcon name={lowStockItems > 0 ? "warning" : "check_circle"} size={24} />
                             </div>
                         </div>
-                        <Button
-                            variant={isScanning ? 'danger' : 'primary'}
-                            onClick={async () => {
-                                if (!token) {
-                                    setMessage({ type: 'error', text: 'נא להתחבר מחדש' });
-                                    return;
-                                }
-                                try {
-                                    const endpoint = isScanning ? '/api/v1/rfid-scan/stop' : '/api/v1/rfid-scan/start';
-                                    const response = await fetch(endpoint, {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'Authorization': `Bearer ${token}`
-                                        }
-                                    });
-                                    if (response.ok) {
-                                        setIsScanning(!isScanning);
-                                        setMessage({
-                                            type: 'success',
-                                            text: isScanning ? 'סריקה הופסקה' : 'סריקה החלה'
-                                        });
-                                        setTimeout(() => setMessage(null), 2000);
-                                    } else {
-                                        const err = await response.json();
-                                        setMessage({ type: 'error', text: err.detail || 'שגיאה בסריקה' });
-                                    }
-                                } catch (e) {
-                                    setMessage({ type: 'error', text: 'שגיאת חיבור לקורא' });
-                                }
-                            }}
-                        >
-                            {isScanning ? 'עצור סריקה' : 'התחל סריקה'}{' '}
-                            <MaterialIcon name={isScanning ? 'stop' : 'play_arrow'} size={18} />
-                        </Button>
-                        {isScanning && (
-                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: theme.colors.primary, minWidth: '80px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <MaterialIcon name="timer" size={18} /> {formatTime(scanDuration)}
+                    </StatCard>
+                </StatsGrid>
+
+                {isAddMode && (
+                    <Card style={{ padding: '2rem', border: '2px solid #2563eb', marginBottom: '2rem' }}>
+                        <h2 className="text-xl font-bold mb-6 text-blue-800 flex items-center gap-2">
+                            <MaterialIcon name="add_box" />
+                            הוספת מוצרים למלאי
+                        </h2>
+
+                        <div className="flex gap-4 mb-6">
+                            <button
+                                onClick={() => setLoadMode('manual')}
+                                className={`flex-1 p-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${loadMode === 'manual' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    }`}
+                            >
+                                <MaterialIcon name="edit" /> הזנה ידנית
+                            </button>
+                            <button
+                                onClick={() => setLoadMode('template')}
+                                className={`flex-1 p-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${loadMode === 'template' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    }`}
+                            >
+                                <MaterialIcon name="upload_file" /> טעינה מקובץ
+                            </button>
+                        </div>
+
+                        {loadMode === 'manual' ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                                <div><label className="block text-sm font-bold mb-1">שם המוצר *</label>
+                                    <input className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={newProductName} onChange={e => setNewProductName(e.target.value)} placeholder="לדוגמה: חולצה כחולה" /></div>
+                                <div><label className="block text-sm font-bold mb-1">מחיר</label>
+                                    <input type="number" className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={newProductPrice} onChange={e => setNewProductPrice(e.target.value)} placeholder="0.00" /></div>
+                                <div><label className="block text-sm font-bold mb-1">קטגוריה</label>
+                                    <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white" value={newProductCategory} onChange={e => setNewProductCategory(e.target.value)}>
+                                        <option value="">בחר קטגוריה</option>{CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select></div>
+                                <div><label className="block text-sm font-bold mb-1">מק"ט</label>
+                                    <input className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={newProductSku} onChange={e => setNewProductSku(e.target.value)} placeholder="SKU-123" /></div>
+                                <div><label className="block text-sm font-bold mb-1">מלאי מינימום</label>
+                                    <input type="number" className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={newProductMinStock} onChange={e => setNewProductMinStock(e.target.value)} placeholder="10" /></div>
+                                <div className="md:col-span-2 mt-4">
+                                    <button onClick={handleAddProduct} disabled={creating || !newProductName} className="w-full py-4 bg-green-600 text-white rounded-xl font-bold text-lg hover:bg-green-700 shadow-md flex justify-center items-center gap-2">
+                                        {creating ? 'יוצר...' : <><MaterialIcon name="add" /> הוסף מוצר למערכת</>}
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                <div className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-colors ${dragOver ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
+                                    onDragOver={e => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={(e) => { e.preventDefault(); setDragOver(false); if (e.dataTransfer.files[0]) handleFileUpload(e.dataTransfer.files[0]) }} onClick={() => fileInputRef.current?.click()}>
+                                    <MaterialIcon name="cloud_upload" size={64} />
+                                    <p className="text-xl mt-4 font-medium text-gray-600">גרור לכאן קובץ CSV או JSON</p>
+                                    <input ref={fileInputRef} type="file" accept=".csv,.json" className="hidden" onChange={e => e.target.files?.[0] && handleFileUpload(e.target.files[0])} />
+                                </div>
+                                <div className="text-center">
+                                    <button
+                                        onClick={handleDownloadTemplate}
+                                        className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center justify-center gap-2 mx-auto"
+                                    >
+                                        <MaterialIcon name="download" size={18} />
+                                        הורד תבנית CSV לדוגמה
+                                    </button>
+                                </div>
                             </div>
                         )}
-                    </LiveParams>
+                    </Card>
+                )}
 
-                    {liveTags.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '1rem', color: theme.colors.textSecondary }}>
-                            ממתין לסריקת תגים...
-                        </div>
-                    ) : (
+                <Card>
+                    <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-white">
                         <div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', padding: '0.5rem', fontWeight: 'bold' }}>
-                                <div>EPC</div>
-                                <div>RSSI</div>
-                                <div>Status</div>
-                                <div>QR</div>
-                            </div>
-                            {liveTags.map((tag) => (
-                                <LiveTagRow key={tag.epc} newItem={true}>
-                                    <EpcCode>{tag.epc}</EpcCode>
-                                    <div>{tag.rssi} dBm</div>
-                                    <div>
-                                        <StatusBadge active={tag.is_mapped}>
-                                            {tag.is_mapped ? 'Mapped' : 'New'}
-                                        </StatusBadge>
-                                    </div>
-                                    <div>
-                                        {tag.target_qr && (
-                                            <span
-                                                style={{ cursor: 'pointer' }}
-                                                onClick={() => copyToClipboard(tag.target_qr!)}
-                                                title="Click to copy QR string"
-                                            >
-                                                <MaterialIcon name="lock" size={20} />
-                                            </span>
-                                        )}
-                                    </div>
-                                </LiveTagRow>
-                            ))}
+                            <h2 className="text-lg font-bold">פירוט מלאי לפי מוצר</h2>
+                            <p className="text-sm text-gray-500">לחץ על כפתור הצימוד כדי להוסיף מלאי</p>
+                        </div>
+                        <div className="flex gap-2">
+                            <Link to="/notification-settings" className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-blue-600 flex items-center gap-2 font-medium">
+                                <MaterialIcon name="settings" size={18} /> הגדרות ערוצי התראה
+                            </Link>
+                            <button onClick={fetchInventory} className="p-2 rounded-lg text-gray-500 hover:bg-gray-100"><MaterialIcon name="refresh" /></button>
+                        </div>
+                    </div>
+                    {loadingInv ? <div className="p-20 text-center text-gray-400">טוען...</div> : (
+                        <div className="overflow-x-auto">
+                            <StyledTable>
+                                <thead>
+                                    <tr>
+                                        <th>שם מוצר</th>
+                                        <th>מק"ט (SKU)</th>
+                                        <th>מלאי בפועל</th>
+                                        <th>התראה (מספר)</th>
+                                        <th>סטטוס</th>
+                                        <th>פעולות</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {inventory.map(prod => (
+                                        <tr key={prod.id}>
+                                            <td className="font-medium text-gray-900">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400"><MaterialIcon name="shopping_bag" /></div>
+                                                    {prod.name}
+                                                </div>
+                                            </td>
+                                            <td className="text-gray-500 font-mono text-sm">{prod.sku || '-'}</td>
+                                            <td><span className="font-bold text-lg text-gray-800">{prod.count}</span><span className="text-xs text-gray-400 mr-1">יח'</span></td>
+                                            <td><MinStockInput type="number" defaultValue={prod.minStock} onBlur={(e) => updateMinStock(prod.id, parseInt(e.target.value))} /></td>
+                                            <td><StatusBadge type={prod.status}>{prod.status}</StatusBadge></td>
+                                            <td>
+                                                <button
+                                                    onClick={() => openLinkingModal(prod)}
+                                                    className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center gap-2"
+                                                >
+                                                    <MaterialIcon name="link" size={18} />
+                                                    צימוד
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </StyledTable>
                         </div>
                     )}
                 </Card>
 
-                {/* Create New Mapping */}
-                <Card>
-                    <CardTitle><MaterialIcon name="add_circle" size={20} /> יצירת מיפוי חדש (ידני)</CardTitle>
-                    <Form onSubmit={handleCreate}>
-                        <InputGroup>
-                            <Label>EPC של תג UHF</Label>
-                            <Input
-                                type="text"
-                                placeholder="E2806810000000001234"
-                                value={newEpc}
-                                onChange={(e) => setNewEpc(e.target.value)}
-                                required
-                            />
-                        </InputGroup>
-                        <InputGroup>
-                            <Label>מזהה מוצר (אופציונלי)</Label>
-                            <Input
-                                type="text"
-                                placeholder="product-123"
-                                value={productId}
-                                onChange={(e) => setProductId(e.target.value)}
-                            />
-                        </InputGroup>
-                        <Button type="submit" disabled={creating || !newEpc.trim()}>
-                            <MaterialIcon name={creating ? 'hourglass_empty' : 'lock'} size={18} />
-                            {' '}{creating ? 'יוצר...' : 'צור QR מוצפן'}
-                        </Button>
-                    </Form>
-                </Card>
-
-                {/* Verify Match */}
-                <Card>
-                    <CardTitle><MaterialIcon name="verified" size={20} /> אימות התאמה</CardTitle>
-                    <Form onSubmit={handleVerify}>
-                        <VerifySection>
-                            <InputGroup>
-                                <Label>EPC</Label>
-                                <Input
-                                    type="text"
-                                    placeholder="EPC מהתג"
-                                    value={verifyEpc}
-                                    onChange={(e) => setVerifyEpc(e.target.value)}
-                                />
-                            </InputGroup>
-                            <InputGroup>
-                                <Label>QR Code</Label>
-                                <Input
-                                    type="text"
-                                    placeholder="מחרוזת ה-QR"
-                                    value={verifyQr}
-                                    onChange={(e) => setVerifyQr(e.target.value)}
-                                />
-                            </InputGroup>
-                        </VerifySection>
-                        <Button type="submit" variant="secondary" disabled={verifying}>
-                            <MaterialIcon name={verifying ? 'hourglass_empty' : 'search'} size={18} />
-                            {' '}{verifying ? 'בודק...' : 'בדוק התאמה'}
-                        </Button>
-                    </Form>
-
-                    {verifyResult && (
-                        <VerifyResult match={verifyResult.match}>
-                            <MaterialIcon name={verifyResult.match ? 'check_circle' : 'cancel'} size={20} />
-                            {' '}{verifyResult.message}
-                        </VerifyResult>
-                    )}
-                </Card>
-
-                {/* Existing Mappings */}
-                <Card>
-                    <CardTitle><MaterialIcon name="list_alt" size={20} /> מיפויים קיימים ({mappings.length})</CardTitle>
-
-                    {loading ? (
-                        <EmptyState>
-                            <MaterialIcon name="hourglass_empty" size={32} />
-                            <div>טוען...</div>
-                        </EmptyState>
-                    ) : mappings.length === 0 ? (
-                        <EmptyState>
-                            <div style={{ marginBottom: '1rem' }}><MaterialIcon name="link" size={48} /></div>
-                            <div>אין מיפויים עדיין</div>
-                            <div style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                                צור את המיפוי הראשון למעלה
+                {/* Linking Modal */}
+                {linkingProduct && (
+                    <ModalOverlay onClick={() => setLinkingProduct(null)}>
+                        <ModalContent onClick={e => e.stopPropagation()}>
+                            <div className="flex justify-between items-center mb-6 border-b pb-4">
+                                <div>
+                                    <h2 className="text-2xl font-bold flex items-center gap-2">
+                                        <MaterialIcon name="link" size={32} />
+                                        צימוד תגים למוצר
+                                    </h2>
+                                    <p className="text-gray-500 mt-1">
+                                        מוצר: <span className="font-bold text-blue-600">{linkingProduct.name}</span>
+                                        <span className="mx-2">|</span>
+                                        מק"ט: {linkingProduct.sku || 'ללא'}
+                                    </p>
+                                </div>
+                                <button onClick={() => setLinkingProduct(null)} className="p-2 hover:bg-gray-100 rounded-full">
+                                    <MaterialIcon name="close" />
+                                </button>
                             </div>
-                        </EmptyState>
-                    ) : (
-                        <Grid>
-                            {mappings.map((mapping) => (
-                                <MappingCard key={mapping.id}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <strong>EPC:</strong>
-                                        <StatusBadge active={mapping.is_active}>
-                                            {mapping.is_active ? 'פעיל' : 'לא פעיל'}
-                                        </StatusBadge>
-                                    </div>
-                                    <EpcCode>{mapping.epc}</EpcCode>
 
-                                    <QrContainer>
-                                        <QRCodeSVG
-                                            value={mapping.encrypted_qr}
-                                            size={120}
-                                            level="M"
-                                        />
-                                    </QrContainer>
-
-                                    <div style={{ fontSize: '0.75rem', color: theme.colors.textSecondary }}>
-                                        QR (מוצפן): {mapping.encrypted_qr.substring(0, 30)}...
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                {/* Left Side: Tag Scanning */}
+                                <div>
+                                    <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 text-center mb-6">
+                                        <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <MaterialIcon name="sensors" size={40} />
+                                        </div>
+                                        <h3 className="text-lg font-bold mb-2">סריקת תגים</h3>
+                                        <p className="text-gray-500 text-sm mb-4">קרב את התגים לקורא ה-RFID או בצע סימולציה</p>
+                                        <button
+                                            onClick={simulateTags}
+                                            className="w-full py-3 bg-white border-2 border-blue-600 text-blue-600 rounded-xl font-bold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            <MaterialIcon name="waves" />
+                                            סמלץ סריקה
+                                        </button>
                                     </div>
 
-                                    <ActionButtons>
-                                        <SmallButton
-                                            className="copy"
-                                            onClick={() => copyToClipboard(mapping.encrypted_qr)}
-                                        >
-                                            <MaterialIcon name="content_copy" size={16} /> העתק QR
-                                        </SmallButton>
-                                        <SmallButton
-                                            className="delete"
-                                            onClick={() => handleDelete(mapping.id)}
-                                        >
-                                            <MaterialIcon name="delete" size={16} /> מחק
-                                        </SmallButton>
-                                    </ActionButtons>
-                                </MappingCard>
-                            ))}
-                        </Grid>
-                    )}
-                </Card>
+                                    {availableTags.length > 0 && (
+                                        <div className="border border-gray-200 rounded-xl overflow-hidden">
+                                            <div className="bg-gray-50 p-3 border-b border-gray-200 font-bold flex justify-between">
+                                                <span>תגים שנסרקו ({availableTags.length})</span>
+                                                <button
+                                                    className="text-sm text-blue-600"
+                                                    onClick={() => setSelectedTags(new Set(availableTags.map(t => t.id)))}
+                                                >
+                                                    בחר הכל
+                                                </button>
+                                            </div>
+                                            <div className="max-h-60 overflow-y-auto p-2">
+                                                {availableTags.map(tag => (
+                                                    <div
+                                                        key={tag.id}
+                                                        onClick={() => handleToggleTag(tag.id)}
+                                                        className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${selectedTags.has(tag.id) ? 'bg-blue-50 border border-blue-200' : 'hover:bg-gray-50 border border-transparent'}`}
+                                                    >
+                                                        <div className={`w-5 h-5 rounded border flex items-center justify-center ${selectedTags.has(tag.id) ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300'}`}>
+                                                            {selectedTags.has(tag.id) && <MaterialIcon name="check" size={14} />}
+                                                        </div>
+                                                        <span className="font-mono text-sm">{tag.epc}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <button
+                                        onClick={handleLinkTags}
+                                        disabled={selectedTags.size === 0 || linking}
+                                        className="w-full py-4 mt-6 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-700 shadow-lg disabled:opacity-50 flex justify-center items-center gap-2"
+                                    >
+                                        {linking ? 'מבצע צימוד...' : `צמד ${selectedTags.size} תגים נבחרים`}
+                                    </button>
+                                </div>
+
+                                {/* Right Side: Results */}
+                                <div className="border-r border-gray-200 pr-8">
+                                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                                        <MaterialIcon name="qr_code_2" />
+                                        תגים שצומדו בהצלחה ({linkedResults.length})
+                                    </h3>
+
+                                    {linkedResults.length > 0 ? (
+                                        <>
+                                            <div className="max-h-96 overflow-y-auto mb-4 grid grid-cols-2 gap-4">
+                                                {linkedResults.map((lr, i) => (
+                                                    <div key={i} className="border p-3 rounded-lg text-center bg-gray-50">
+                                                        <QRCodeSVG value={lr.qrCode} size={80} className="mx-auto mb-2" />
+                                                        <div className="text-xs font-mono text-gray-500 truncate">{lr.tag.epc}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <button
+                                                onClick={handlePrint}
+                                                className="w-full py-3 bg-gray-800 text-white rounded-xl font-bold hover:bg-gray-900 flex justify-center items-center gap-2"
+                                            >
+                                                <MaterialIcon name="print" />
+                                                הדפס מדבקות QR
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <div className="text-center py-12 text-gray-400 bg-gray-50 rounded-xl">
+                                            <MaterialIcon name="qr_code_scanner" size={48} />
+                                            <p className="mt-2">כאן יופיעו התגים לאחר הצימוד</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </ModalContent>
+                    </ModalOverlay>
+                )}
             </Container>
         </Layout>
     );

@@ -16,7 +16,7 @@ export const en = {
         transactions: 'Transactions',
         qrGenerator: 'QR Generator',
         containers: 'Containers',
-        tagMapping: 'Tag Sync',
+        tagMapping: 'Inventory Management',
         admin: 'Admin',
         // New Sidebar Items
         dashboard: 'Dashboard',

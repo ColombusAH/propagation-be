@@ -171,14 +171,15 @@ export function Sidebar() {
       {canManageStore && (
         <Section>
           <SectionTitle>{t('nav.tagManagement')}</SectionTitle>
+          <NavItem to="/tag-mapping">
+            <MaterialIcon name="inventory_2" />
+            {t('nav.tagMapping')}
+          </NavItem>
           <NavItem to="/tag-scanner">
             <MaterialIcon name="contactless" />
             {t('nav.tagScanner')}
           </NavItem>
-          <NavItem to="/tag-linking">
-            <MaterialIcon name="link" />
-            {t('nav.tagLinking')}
-          </NavItem>
+
         </Section>
       )}
 
@@ -213,6 +214,10 @@ export function Sidebar() {
         <NavItem to="/settings">
           <MaterialIcon name="tune" />
           {t('nav.general')}
+        </NavItem>
+        <NavItem to="/notification-settings">
+          <MaterialIcon name="notifications_active" />
+          {t('nav.notifications')}
         </NavItem>
         {isAdmin && (
           <NavItem to="/users">

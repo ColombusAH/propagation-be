@@ -72,6 +72,7 @@ class ProductCreateRequest(BaseModel):
     category: Optional[str] = None
     description: Optional[str] = None
     store_id: str
+    minStock: Optional[int] = 0
 
 
 class ProductResponse(BaseModel):
@@ -82,6 +83,7 @@ class ProductResponse(BaseModel):
     price: float
     sku: Optional[str] = None
     category: Optional[str] = None
+    minStock: Optional[int] = 0
 
 
 # === Helper Functions ===
@@ -192,6 +194,7 @@ async def create_product(request: ProductCreateRequest, db: Prisma = Depends(get
             "category": request.category,
             "description": request.description,
             "storeId": request.store_id,
+            "minStock": request.minStock,
         }
     )
 
@@ -201,6 +204,7 @@ async def create_product(request: ProductCreateRequest, db: Prisma = Depends(get
         price=product.price,
         sku=product.sku,
         category=product.category,
+        minStock=getattr(product, "minStock", 0),
     )
 
 

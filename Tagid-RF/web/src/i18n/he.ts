@@ -18,7 +18,7 @@ export const he: TranslationKeys = {
         transactions: 'טרנזקציות',
         qrGenerator: 'יצירת QR',
         containers: 'מיכלים',
-        tagMapping: 'סנכרון תגיות',
+        tagMapping: 'ניהול מלאי',
         admin: 'ניהול',
         // New Sidebar Items
         dashboard: 'סקירה כללית',

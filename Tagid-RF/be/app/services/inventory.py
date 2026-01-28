@@ -123,36 +123,97 @@ async def get_inventory_history(reader_id: str, limit: int = 10) -> List[dict]:
 async def get_current_stock(store_id: Optional[str] = None) -> dict:
     """
     Get current stock levels based on the latest snapshots from all readers.
+    Returns aggregation by product.
     """
     try:
         async with prisma_client.client as db:
-            # Get all readers (optionally filtered by store)
+            # 1. Get all readers (optionally filtered by store)
             where_clause = {"storeId": store_id} if store_id else {}
             readers = await db.rfidreader.find_many(where=where_clause)
 
             total_items = 0
             reader_summaries = []
+            epc_seen = set() # To avoid double counting if multiple readers see same tag (optional, but good practice)
+            
+            # This map will hold product_id -> count
+            product_counts = {}
 
+            # 2. Get latest snapshot from each reader
             for reader in readers:
-                latest = await get_latest_snapshot(reader.id)
+                latest = await db.inventorysnapshot.find_first(
+                    where={"readerId": reader.id},
+                    order={"timestamp": "desc"},
+                    include={"items": {"include": {"tag": {"include": {"product": True}}}}},
+                )
+                
                 if latest:
-                    total_items += latest["itemCount"]
+                    # Count distinct items specific to this reader query logic
+                    # ideally we reconcile overlapping readers, but for now simple sum
+                    snapshot_count = latest.itemCount
+                    total_items += snapshot_count
+                    
                     reader_summaries.append(
                         {
                             "readerId": reader.id,
                             "readerName": reader.name,
                             "location": reader.location,
-                            "itemCount": latest["itemCount"],
-                            "lastScan": latest["timestamp"],
+                            "itemCount": snapshot_count,
+                            "lastScan": latest.timestamp.isoformat(),
                         }
                     )
+                    
+                    # Aggregate per product
+                    for item in latest.items:
+                        # item.tag is the RfidTag relation
+                        if item.tag and item.tag.product:
+                            p_id = item.tag.product.id
+                            p_name = item.tag.product.name
+                            p_sku = item.tag.product.sku
+                            p_min = getattr(item.tag.product, "minStock", 0) # Use getattr for safety during migration
+                            
+                            if p_id not in product_counts:
+                                product_counts[p_id] = {
+                                    "id": p_id,
+                                    "name": p_name,
+                                    "sku": p_sku,
+                                    "minStock": p_min,
+                                    "count": 0,
+                                    "status": "OK"
+                                }
+                            
+                            # Simple logic: assume latest snapshot is truth. 
+                            # If we want to handle overlaps, we need to track unique EPCs globally.
+                            # taking simple approach:
+                            product_counts[p_id]["count"] += 1
 
+            # 3. Also include products with 0 stock (that exist in DB but weren't scanned)
+            all_products = await db.product.find_many()
+            for p in all_products:
+                if p.id not in product_counts:
+                     product_counts[p.id] = {
+                        "id": p.id,
+                        "name": p.name,
+                        "sku": p.sku,
+                        "minStock": getattr(p, "minStock", 0),
+                        "count": 0,
+                        "status": "LOW_STOCK" if getattr(p, "minStock", 0) > 0 else "OK"
+                    }
+            
+            # Calculate status
+            products_list = list(product_counts.values())
+            for p in products_list:
+                if p["count"] < p["minStock"]:
+                    p["status"] = "LOW_STOCK"
+                elif p["count"] == 0 and p["minStock"] > 0:
+                     p["status"] = "OUT_OF_STOCK"
+            
             return {
                 "totalItems": total_items,
                 "readerCount": len(readers),
                 "readers": reader_summaries,
+                "products": products_list
             }
 
     except Exception as e:
         logger.error(f"Failed to get stock: {e}", exc_info=True)
-        return {"totalItems": 0, "readerCount": 0, "readers": []}
+        return {"totalItems": 0, "readerCount": 0, "readers": [], "products": []}

@@ -145,17 +145,24 @@ async def test_push_notification(
 ):
     """
     Send a test push notification to the current user.
+    This broadcasts via SSE to all connected clients.
     """
-    from app.services.push_notification_service import PushNotificationService
+    from datetime import datetime
+    from app.api.v1.endpoints.sse import broadcast_event
+    
+    # Simulate a theft alert payload
+    test_alert_data = {
+        "alert_id": "test-alert-" + str(int(datetime.now().timestamp())),
+        "tag_epc": "E1234567890ABCDEF",
+        "product": "מוצר בדיקה - Test Product",
+        "recipients_notified": 1,
+        "timestamp": datetime.now().isoformat(),
+        "location": "Testing Zone",
+    }
+    
+    # Broadcast via SSE
+    await broadcast_event("theft_alert", test_alert_data)
+    
+    return {"message": "Test push notification triggered", "result": test_alert_data}
 
-    service = PushNotificationService(db)
 
-    # Trigger a simulated theft alert for this user
-    # Note: we pass actual user data to make it real
-    result = await service.send_theft_alert(
-        tag_id="test-tag-123",
-        epc="E1234567890ABCDEF",
-        location="Testing Zone",
-    )
-
-    return {"message": "Test push notification triggered", "result": result}

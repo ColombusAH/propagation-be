@@ -14,6 +14,7 @@ from app.api.v1.endpoints import (
     rfid_scan,
     schedules,
     shifts,
+    sse,
     tag_mapping,
     tag_registration,
     users,
@@ -40,3 +41,4 @@ api_router.include_router(tag_registration.router)
 api_router.include_router(reader_config.router)
 api_router.include_router(bath_cart.router)
 api_router.include_router(orders.router, prefix="/orders", tags=["orders"])
+api_router.include_router(sse.router, prefix="/sse", tags=["sse"])

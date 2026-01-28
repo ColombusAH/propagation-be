@@ -14,22 +14,50 @@ const Container = styled.div`
 `;
 
 const Header = styled.div`
+  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: ${theme.spacing.xl};
   flex-wrap: wrap;
   gap: ${theme.spacing.md};
-  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
-  padding: ${theme.spacing.lg} ${theme.spacing.xl};
+  background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%);
+  padding: ${theme.spacing.xl};
   border-radius: ${theme.borderRadius.xl};
-  box-shadow: ${theme.shadows.lg};
-  border-right: 10px solid #1E3A8A;
+  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4), 0 8px 10px -6px rgba(37, 99, 235, 0.1);
   color: white;
+  overflow: hidden;
   animation: ${theme.animations.slideUp};
+
+  /* Decorative background elements */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -50%;
+    left: -10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
 
   h1, p {
     color: white;
+    position: relative;
+    z-index: 10;
   }
 `;
 
@@ -365,15 +393,15 @@ const AccessDenied = styled.div`
 `;
 
 interface User {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    role: 'ADMIN' | 'MANAGER' | 'SELLER';
-    storeId: string | null;
-    storeName: string | null;
-    isActive: boolean;
-    createdAt: string;
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: 'ADMIN' | 'MANAGER' | 'SELLER';
+  storeId: string | null;
+  storeName: string | null;
+  isActive: boolean;
+  createdAt: string;
 }
 
 const EmptyState = styled.div`
@@ -407,9 +435,9 @@ const MaterialIcon = ({ name, size = 20 }: { name: string; size?: number }) => (
 );
 
 const roleLabels: Record<string, string> = {
-    ADMIN: 'מנהל רשת',
-    MANAGER: 'מנהל חנות',
-    SELLER: 'מוכר',
+  ADMIN: 'מנהל רשת',
+  MANAGER: 'מנהל חנות',
+  SELLER: 'מוכר',
 };
 
 /**
@@ -418,262 +446,273 @@ const roleLabels: Record<string, string> = {
  * - STORE_MANAGER: Can manage sellers in their store
  */
 export function UserManagementPage() {
-    const { userRole } = useAuth();
-    const [users, setUsers] = useState<User[]>([]);
-    const [stores] = useState<{ id: string; name: string }[]>([]);
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [filterRole, setFilterRole] = useState<string>('all');
-    const [filterStore, setFilterStore] = useState<string>('all');
-    const [newUser, setNewUser] = useState({
-        name: '',
-        email: '',
-        phone: '',
-        role: 'SELLER' as 'MANAGER' | 'SELLER',
-        storeId: '',
-    });
+  const { userRole } = useAuth();
+  const [users, setUsers] = useState<User[]>([]);
+  const [stores] = useState<{ id: string; name: string }[]>([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [filterRole, setFilterRole] = useState<string>('all');
+  const [filterStore, setFilterStore] = useState<string>('all');
+  const [newUser, setNewUser] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    role: 'SELLER' as 'MANAGER' | 'SELLER',
+    storeId: '',
+  });
 
-    const isSuperAdmin = userRole === 'SUPER_ADMIN';
-    const isNetworkAdmin = userRole === 'NETWORK_ADMIN';
-    const isStoreManager = userRole === 'STORE_MANAGER';
-    const canManageUsers = isSuperAdmin || isNetworkAdmin || isStoreManager;
+  const isSuperAdmin = userRole === 'SUPER_ADMIN';
+  const isNetworkAdmin = userRole === 'NETWORK_ADMIN';
+  const isStoreManager = userRole === 'STORE_MANAGER';
+  const canManageUsers = isSuperAdmin || isNetworkAdmin || isStoreManager;
 
-    if (!canManageUsers) {
-        return (
-            <Layout>
-                <Container>
-                    <AccessDenied>
-                        <Title>אין גישה</Title>
-                        <Subtitle>עמוד זה זמין רק למנהלים</Subtitle>
-                    </AccessDenied>
-                </Container>
-            </Layout>
-        );
+  if (!canManageUsers) {
+    return (
+      <Layout>
+        <Container>
+          <AccessDenied>
+            <Title>אין גישה</Title>
+            <Subtitle>עמוד זה זמין רק למנהלים</Subtitle>
+          </AccessDenied>
+        </Container>
+      </Layout>
+    );
+  }
+
+  // Filter users based on role and store
+  const filteredUsers = users.filter(user => {
+    // Store managers can only see sellers in their store
+    if (isStoreManager && !isSuperAdmin && !isNetworkAdmin) {
+      if (user.role !== 'SELLER') return false;
     }
 
-    // Filter users based on role and store
-    const filteredUsers = users.filter(user => {
-        // Store managers can only see sellers in their store
-        if (isStoreManager && !isSuperAdmin && !isNetworkAdmin) {
-            if (user.role !== 'SELLER') return false;
-        }
+    if (filterRole !== 'all' && user.role !== filterRole) return false;
+    if (filterStore !== 'all' && user.storeId !== filterStore) return false;
+    return true;
+  });
 
-        if (filterRole !== 'all' && user.role !== filterRole) return false;
-        if (filterStore !== 'all' && user.storeId !== filterStore) return false;
-        return true;
-    });
+  const handleCreateUser = () => {
+    if (!newUser.name || !newUser.email || !newUser.storeId) return;
 
-    const handleCreateUser = () => {
-        if (!newUser.name || !newUser.email || !newUser.storeId) return;
-
-        const store = stores.find(s => s.id === newUser.storeId);
-        const user: User = {
-            id: Date.now().toString(),
-            name: newUser.name,
-            email: newUser.email,
-            phone: newUser.phone,
-            role: newUser.role,
-            storeId: newUser.storeId,
-            storeName: store?.name || null,
-            isActive: true,
-            createdAt: new Date().toISOString().split('T')[0],
-        };
-
-        setUsers([...users, user]);
-        setNewUser({ name: '', email: '', phone: '', role: 'SELLER', storeId: '' });
-        setShowCreateModal(false);
+    const store = stores.find(s => s.id === newUser.storeId);
+    const user: User = {
+      id: Date.now().toString(),
+      name: newUser.name,
+      email: newUser.email,
+      phone: newUser.phone,
+      role: newUser.role,
+      storeId: newUser.storeId,
+      storeName: store?.name || null,
+      isActive: true,
+      createdAt: new Date().toISOString().split('T')[0],
     };
 
-    const toggleUserStatus = (userId: string) => {
-        setUsers(users.map(user => {
-            if (user.id === userId) {
-                return { ...user, isActive: !user.isActive };
-            }
-            return user;
-        }));
-    };
+    setUsers([...users, user]);
+    setNewUser({ name: '', email: '', phone: '', role: 'SELLER', storeId: '' });
+    setShowCreateModal(false);
+  };
 
-    const getInitials = (name: string) => {
-        return name.split(' ').map(n => n[0]).join('').slice(0, 2);
-    };
+  const toggleUserStatus = (userId: string) => {
+    setUsers(users.map(user => {
+      if (user.id === userId) {
+        return { ...user, isActive: !user.isActive };
+      }
+      return user;
+    }));
+  };
 
-    return (
-        <Layout>
-            <Container>
-                <Header>
-                    <div>
-                        <Title>
-                            <MaterialIcon name="group" size={32} />
-                            ניהול משתמשים
-                        </Title>
-                        <Subtitle>
-                            {(isSuperAdmin || isNetworkAdmin) ? 'נהל מנהלים ומוכרים בכל החנויות' : 'נהל מוכרים בחנות שלך'}
-                        </Subtitle>
-                    </div>
-                    <Button onClick={() => setShowCreateModal(true)}>
-                        <MaterialIcon name="person_add" size={20} />
-                        משתמש חדש
-                    </Button>
-                </Header>
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').slice(0, 2);
+  };
 
-                <Filters>
-                    {(isSuperAdmin || isNetworkAdmin) && (
-                        <Select value={filterRole} onChange={e => setFilterRole(e.target.value)}>
-                            <option value="all">כל התפקידים</option>
-                            <option value="MANAGER">מנהלי חנות</option>
-                            <option value="SELLER">מוכרים</option>
-                        </Select>
-                    )}
-                    <Select value={filterStore} onChange={e => setFilterStore(e.target.value)}>
-                        <option value="all">כל החנויות</option>
-                        {stores.map(store => (
-                            <option key={store.id} value={store.id}>{store.name}</option>
-                        ))}
-                    </Select>
-                </Filters>
+  return (
+    <Layout>
+      <Container>
+        <Header>
+          <div>
+            <Title>
+              <MaterialIcon name="group" size={32} />
+              ניהול משתמשים
+            </Title>
+            <Subtitle>
+              {(isSuperAdmin || isNetworkAdmin) ? 'נהל מנהלים ומוכרים בכל החנויות' : 'נהל מוכרים בחנות שלך'}
+            </Subtitle>
+          </div>
+          <Button
+            onClick={() => setShowCreateModal(true)}
+            style={{
+              background: 'white',
+              color: '#2563EB',
+              border: 'none',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+              zIndex: 10,
+              padding: '12px 24px',
+              fontSize: '1rem'
+            }}
+          >
+            <MaterialIcon name="person_add" size={24} />
+            משתמש חדש
+          </Button>
+        </Header>
 
-                {filteredUsers.length > 0 ? (
-                    <Table>
-                        <thead>
-                            <tr>
-                                <Th>משתמש</Th>
-                                <Th>תפקיד</Th>
-                                <Th>חנות</Th>
-                                <Th>טלפון</Th>
-                                <Th>סטטוס</Th>
-                                <Th style={{ textAlign: 'center' }}>פעולות</Th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredUsers.map(user => (
-                                <tr key={user.id}>
-                                    <Td>
-                                        <UserInfo>
-                                            <Avatar>{getInitials(user.name)}</Avatar>
-                                            <UserDetails>
-                                                <UserName>{user.name}</UserName>
-                                                <UserEmail>{user.email}</UserEmail>
-                                            </UserDetails>
-                                        </UserInfo>
-                                    </Td>
-                                    <Td>
-                                        <RoleBadge $role={user.role}>
-                                            {roleLabels[user.role]}
-                                        </RoleBadge>
-                                    </Td>
-                                    <Td>{user.storeName || '-'}</Td>
-                                    <Td style={{ direction: 'ltr', textAlign: 'right' }}>{user.phone}</Td>
-                                    <Td>
-                                        <StatusBadge $active={user.isActive}>
-                                            {user.isActive ? 'פעיל' : 'לא פעיל'}
-                                        </StatusBadge>
-                                    </Td>
-                                    <Td>
-                                        <Actions style={{ justifyContent: 'center' }}>
-                                            <ActionButton title="ערוך">
-                                                <MaterialIcon name="edit" size={18} />
-                                            </ActionButton>
-                                            <ActionButton 
-                                                onClick={() => toggleUserStatus(user.id)}
-                                                title={user.isActive ? 'חסום' : 'שחרר חסימה'}
-                                                style={{ color: user.isActive ? theme.colors.error : theme.colors.success }}
-                                            >
-                                                <MaterialIcon name={user.isActive ? 'block' : 'check_circle'} size={18} />
-                                            </ActionButton>
-                                        </Actions>
-                                    </Td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </Table>
-                ) : (
-                    <EmptyState>
-                        <EmptyIcon>
-                            <MaterialIcon name="group_off" />
-                        </EmptyIcon>
-                        <Title style={{ fontSize: '1.5rem', justifyContent: 'center', marginBottom: '0.5rem' }}>
-                            אין משתמשים במערכת
-                        </Title>
-                        <Subtitle style={{ textAlign: 'center' }}>הוסף משתמש חדש כדי להתחיל לנהל את הצוות שלך</Subtitle>
-                    </EmptyState>
-                )}
+        <Filters>
+          {(isSuperAdmin || isNetworkAdmin) && (
+            <Select value={filterRole} onChange={e => setFilterRole(e.target.value)}>
+              <option value="all">כל התפקידים</option>
+              <option value="MANAGER">מנהלי חנות</option>
+              <option value="SELLER">מוכרים</option>
+            </Select>
+          )}
+          <Select value={filterStore} onChange={e => setFilterStore(e.target.value)}>
+            <option value="all">כל החנויות</option>
+            {stores.map(store => (
+              <option key={store.id} value={store.id}>{store.name}</option>
+            ))}
+          </Select>
+        </Filters>
 
-                {/* Create User Modal */}
-                {showCreateModal && (
-                    <Modal onClick={() => setShowCreateModal(false)}>
-                        <ModalContent onClick={e => e.stopPropagation()}>
-                            <ModalTitle>יצירת משתמש חדש</ModalTitle>
+        {filteredUsers.length > 0 ? (
+          <Table>
+            <thead>
+              <tr>
+                <Th>משתמש</Th>
+                <Th>תפקיד</Th>
+                <Th>חנות</Th>
+                <Th>טלפון</Th>
+                <Th>סטטוס</Th>
+                <Th style={{ textAlign: 'center' }}>פעולות</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUsers.map(user => (
+                <tr key={user.id}>
+                  <Td>
+                    <UserInfo>
+                      <Avatar>{getInitials(user.name)}</Avatar>
+                      <UserDetails>
+                        <UserName>{user.name}</UserName>
+                        <UserEmail>{user.email}</UserEmail>
+                      </UserDetails>
+                    </UserInfo>
+                  </Td>
+                  <Td>
+                    <RoleBadge $role={user.role}>
+                      {roleLabels[user.role]}
+                    </RoleBadge>
+                  </Td>
+                  <Td>{user.storeName || '-'}</Td>
+                  <Td style={{ direction: 'ltr', textAlign: 'right' }}>{user.phone}</Td>
+                  <Td>
+                    <StatusBadge $active={user.isActive}>
+                      {user.isActive ? 'פעיל' : 'לא פעיל'}
+                    </StatusBadge>
+                  </Td>
+                  <Td>
+                    <Actions style={{ justifyContent: 'center' }}>
+                      <ActionButton title="ערוך">
+                        <MaterialIcon name="edit" size={18} />
+                      </ActionButton>
+                      <ActionButton
+                        onClick={() => toggleUserStatus(user.id)}
+                        title={user.isActive ? 'חסום' : 'שחרר חסימה'}
+                        style={{ color: user.isActive ? theme.colors.error : theme.colors.success }}
+                      >
+                        <MaterialIcon name={user.isActive ? 'block' : 'check_circle'} size={18} />
+                      </ActionButton>
+                    </Actions>
+                  </Td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        ) : (
+          <EmptyState>
+            <EmptyIcon>
+              <MaterialIcon name="group_off" />
+            </EmptyIcon>
+            <Title style={{ fontSize: '1.5rem', justifyContent: 'center', marginBottom: '0.5rem' }}>
+              אין משתמשים במערכת
+            </Title>
+            <Subtitle style={{ textAlign: 'center' }}>הוסף משתמש חדש כדי להתחיל לנהל את הצוות שלך</Subtitle>
+          </EmptyState>
+        )}
 
-                            <FormGroup>
-                                <Label>שם מלא *</Label>
-                                <Input
-                                    type="text"
-                                    value={newUser.name}
-                                    onChange={e => setNewUser({ ...newUser, name: e.target.value })}
-                                    placeholder="ישראל ישראלי"
-                                />
-                            </FormGroup>
+        {/* Create User Modal */}
+        {showCreateModal && (
+          <Modal onClick={() => setShowCreateModal(false)}>
+            <ModalContent onClick={e => e.stopPropagation()}>
+              <ModalTitle>יצירת משתמש חדש</ModalTitle>
 
-                            <FormGroup>
-                                <Label>אימייל *</Label>
-                                <Input
-                                    type="email"
-                                    value={newUser.email}
-                                    onChange={e => setNewUser({ ...newUser, email: e.target.value })}
-                                    placeholder="israel@store.com"
-                                />
-                            </FormGroup>
+              <FormGroup>
+                <Label>שם מלא *</Label>
+                <Input
+                  type="text"
+                  value={newUser.name}
+                  onChange={e => setNewUser({ ...newUser, name: e.target.value })}
+                  placeholder="ישראל ישראלי"
+                />
+              </FormGroup>
 
-                            <FormGroup>
-                                <Label>טלפון</Label>
-                                <Input
-                                    type="tel"
-                                    value={newUser.phone}
-                                    onChange={e => setNewUser({ ...newUser, phone: e.target.value })}
-                                    placeholder="054-1234567"
-                                />
-                            </FormGroup>
+              <FormGroup>
+                <Label>אימייל *</Label>
+                <Input
+                  type="email"
+                  value={newUser.email}
+                  onChange={e => setNewUser({ ...newUser, email: e.target.value })}
+                  placeholder="israel@store.com"
+                />
+              </FormGroup>
 
-                            {(isSuperAdmin || isNetworkAdmin) && (
-                                <FormGroup>
-                                    <Label>תפקיד *</Label>
-                                    <FormSelect
-                                        value={newUser.role}
-                                        onChange={e => setNewUser({ ...newUser, role: e.target.value as 'MANAGER' | 'SELLER' })}
-                                    >
-                                        <option value="SELLER">מוכר</option>
-                                        <option value="MANAGER">מנהל חנות</option>
-                                    </FormSelect>
-                                </FormGroup>
-                            )}
+              <FormGroup>
+                <Label>טלפון</Label>
+                <Input
+                  type="tel"
+                  value={newUser.phone}
+                  onChange={e => setNewUser({ ...newUser, phone: e.target.value })}
+                  placeholder="054-1234567"
+                />
+              </FormGroup>
 
-                            <FormGroup>
-                                <Label>חנות *</Label>
-                                <FormSelect
-                                    value={newUser.storeId}
-                                    onChange={e => setNewUser({ ...newUser, storeId: e.target.value })}
-                                >
-                                    <option value="">בחר חנות...</option>
-                                    {stores.map(store => (
-                                        <option key={store.id} value={store.id}>{store.name}</option>
-                                    ))}
-                                </FormSelect>
-                            </FormGroup>
+              {(isSuperAdmin || isNetworkAdmin) && (
+                <FormGroup>
+                  <Label>תפקיד *</Label>
+                  <FormSelect
+                    value={newUser.role}
+                    onChange={e => setNewUser({ ...newUser, role: e.target.value as 'MANAGER' | 'SELLER' })}
+                  >
+                    <option value="SELLER">מוכר</option>
+                    <option value="MANAGER">מנהל חנות</option>
+                  </FormSelect>
+                </FormGroup>
+              )}
 
-                            <ModalActions>
-                                <Button $variant="secondary" onClick={() => setShowCreateModal(false)}>
-                                    ביטול
-                                </Button>
-                                <Button
-                                    onClick={handleCreateUser}
-                                    disabled={!newUser.name || !newUser.email || !newUser.storeId}
-                                >
-                                    צור משתמש
-                                </Button>
-                            </ModalActions>
-                        </ModalContent>
-                    </Modal>
-                )}
-            </Container>
-        </Layout>
-    );
+              <FormGroup>
+                <Label>חנות *</Label>
+                <FormSelect
+                  value={newUser.storeId}
+                  onChange={e => setNewUser({ ...newUser, storeId: e.target.value })}
+                >
+                  <option value="">בחר חנות...</option>
+                  {stores.map(store => (
+                    <option key={store.id} value={store.id}>{store.name}</option>
+                  ))}
+                </FormSelect>
+              </FormGroup>
+
+              <ModalActions>
+                <Button $variant="secondary" onClick={() => setShowCreateModal(false)}>
+                  ביטול
+                </Button>
+                <Button
+                  onClick={handleCreateUser}
+                  disabled={!newUser.name || !newUser.email || !newUser.storeId}
+                >
+                  צור משתמש
+                </Button>
+              </ModalActions>
+            </ModalContent>
+          </Modal>
+        )}
+      </Container>
+    </Layout>
+  );
 }

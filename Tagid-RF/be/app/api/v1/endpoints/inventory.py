@@ -38,6 +38,7 @@ class StockSummary(BaseModel):
     totalItems: int
     readerCount: int
     readers: List[dict]
+    products: List[dict] = []
 
 
 @router.post("/snapshot", response_model=SnapshotResponse)
@@ -105,3 +106,26 @@ async def get_inventory_history(
         reader_id=reader_id,
         limit=limit,
     )
+
+
+class ProductUpdate(BaseModel):
+    minStock: int
+
+
+@router.patch("/product/{product_id}")
+async def update_product_settings(
+    product_id: str,
+    update_data: ProductUpdate,
+    current_user: Any = Depends(deps.get_current_active_user),
+):
+    """Update product inventory settings (minStock)."""
+    try:
+        from app.db.prisma import prisma_client
+        async with prisma_client.client as db:
+            updated = await db.product.update(
+                where={"id": product_id},
+                data={"minStock": update_data.minStock}
+            )
+            return updated
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
