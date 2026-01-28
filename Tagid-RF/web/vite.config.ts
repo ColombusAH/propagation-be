@@ -20,16 +20,16 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    host: true,
-    allowedHosts: true,
+    host: '0.0.0.0',
+    allowedHosts: ['.serveousercontent.com', '.loca.lt', '.serveo.net', '.pinggy.io', 'tagid-test.loca.lt', 'localhost', '127.0.0.1'],
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
         secure: false,
       },
       '/ws': {
-        target: 'http://localhost:8000',
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
         ws: true,
         secure: false,
