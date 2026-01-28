@@ -9,6 +9,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastContainer } from './components/Toast/ToastContainer';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LoginPage } from './pages/LoginPage';
+import { PushNotificationButton } from './components/PushNotificationButton';
 
 function AppContent() {
   const locale = useStore((state) => state.locale);
@@ -33,6 +34,7 @@ function AppContent() {
         <GlobalStyles />
         <BrowserRouter>
           <AppRoutes />
+          <PushNotificationButton />
         </BrowserRouter>
         <ToastContainer />
       </ThemeProvider>

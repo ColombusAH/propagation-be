@@ -5,7 +5,7 @@ from typing import AsyncGenerator
 from fastapi import FastAPI
 from prisma.errors import PrismaError, TableNotFoundError
 
-from prisma import Prisma
+from prisma import Prisma, register
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +32,7 @@ class PrismaClient:
             if not self.client.is_connected():
                 logger.info("Attempting to connect Prisma client...")
                 await self.client.connect()
+                register(self.client)
                 logger.info("Successfully connected to the database")
             else:
                 logger.info("Prisma client already connected")

@@ -12,7 +12,7 @@ from app.api.v1.api import api_router
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.db.prisma import init_db, shutdown_db
-from app.routers import cart, exit_scan, inventory, products, stores, tags, users, websocket
+from app.routers import cart, exit_scan, inventory, products, stores, tags, users, websocket, web_push
 from app.services.database import init_db as init_rfid_db
 from app.services.rfid_reader import rfid_reader_service
 from app.services.tag_listener_service import tag_listener_service
@@ -172,6 +172,7 @@ app.include_router(inventory.router, prefix=f"{settings.API_V1_STR}/inventory", 
 
 app.include_router(products.router, prefix=f"{settings.API_V1_STR}/products", tags=["Products"])
 app.include_router(cart.router, prefix=f"{settings.API_V1_STR}/cart", tags=["Cart"])
+app.include_router(web_push.router, prefix=f"{settings.API_V1_STR}/push", tags=["Web Push"])
 
 
 async def health_check():
