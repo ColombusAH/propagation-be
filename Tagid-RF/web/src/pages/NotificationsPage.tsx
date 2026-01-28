@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { Layout } from '@/components/Layout';
@@ -85,19 +85,42 @@ export function NotificationsPage() {
     url: '/ws/rfid',
     onMessage: (msg) => {
       if (msg.type === 'theft_alert') {
-        setItems(prev => [{
+        const newNotification = {
           id: Date.now().toString(),
           type: 'error',
           title: '🚨 התרעת גניבה!',
           message: `מוצר: ${msg.data.product} זוהה ביציאה ללא תשלום`,
           time: new Date().toLocaleTimeString('he-IL'),
           badge: msg.data.location || 'שער ראשי'
-        }, ...prev]);
+        };
+
+        setItems(prev => [newNotification, ...prev]);
+
+        // Show native browser notification
+        if (Notification.permission === 'granted') {
+          new Notification(newNotification.title, {
+            body: newNotification.message,
+            icon: '/icons/theft-alert.png', // Fallback to a default if missing
+            tag: 'theft-alert'
+          });
+        }
       }
     }
   });
 
+  useEffect(() => {
+    // Request notification permission on mount
+    if (Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
   const triggerTest = async () => {
+    // Re-request if denied or default
+    if (Notification.permission !== 'granted') {
+      await Notification.requestPermission();
+    }
+
     try {
       await fetch('/api/v1/notifications/test-push', {
         method: 'POST',

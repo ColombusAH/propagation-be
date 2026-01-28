@@ -37,3 +37,15 @@
 - [x] **Payment Verification**: Validated payment creation, confirmation, and refund logic via integration tests.
 - [x] **RBAC Flow**: Verified hierarchical permissions (Super Admin -> Store Manager -> Employee) and API protection.
 - [ ] **Push Notifications**: Connect to real push service (Firebase/FCM) for theft alerts.
+
+## Phase 7: Mock Catalog & Demo Environment (Immediate)
+
+- [ ] **Demo Seed Script**: Create a script to populate the DB with a "Demo Store" (electronics/clothing).
+- [ ] **Tag-Product Mapping**: Pre-assign specific RFID EPCs to demo products for consistent testing.
+- [ ] **Virtual Inventory**: Setup mock inventory levels to demonstrate real-time stock updates during scans.
+
+## Phase 8: Payment Gateway Expansions (Future)
+
+- [ ] **Nayax Integration**: Implement terminal-based payment support for physical checkout kiosks.
+- [ ] **Tranzila Support**: Add the Israeli payment gateway for local credit card processing.
+- [ ] **Unified Payment Layer**: Refactor `payment_service` to allow seamless switching between Stripe, Nayax, and Tranzila.

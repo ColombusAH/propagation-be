@@ -54,6 +54,15 @@ export const he: TranslationKeys = {
         containerEmptyMessage: 'המיכל לא מכיל מוצרים',
         productFound: 'מוצר נוסף',
         product: 'מוצר',
+        manualInput: 'הזנה ידנית',
+        manualPlaceholder: 'הזן EPC, ברקוד או קוד QR ידנית...',
+        rfidReader: 'קורא RFID',
+        connected: 'מחובר',
+        connecting: 'מנסה להתחבר...',
+        waitingForTags: 'ממתין לתגים...',
+        rfidTagScanned: 'תג RFID נסרק',
+        rfidTagUnknown: 'תג RFID לא מוכר',
+        rfidTagNotLinked: 'EPC: {epc} - לא משויך למוצר',
     },
 
     // Catalog Page

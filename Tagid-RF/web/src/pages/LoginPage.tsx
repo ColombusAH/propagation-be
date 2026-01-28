@@ -5,6 +5,7 @@ import { slideInUp, fadeIn } from '@/styles/animations';
 import { UserRole } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/useToast';
 import { useGoogleLogin } from '@react-oauth/google';
+import { API_BASE_URL } from '@/api/config';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -368,7 +369,7 @@ export function LoginPage({ onLogin, onToggleRegister }: LoginPageProps) {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch('/api/v1/auth/google', {
+        const response = await fetch(`${API_BASE_URL}/auth/google`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -455,7 +456,7 @@ export function LoginPage({ onLogin, onToggleRegister }: LoginPageProps) {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/v1/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -482,7 +483,7 @@ export function LoginPage({ onLogin, onToggleRegister }: LoginPageProps) {
     if (selectedRole) {
       setIsLoading(true);
       try {
-        const response = await fetch('/api/v1/auth/dev-login', {
+        const response = await fetch(`${API_BASE_URL}/auth/dev-login`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

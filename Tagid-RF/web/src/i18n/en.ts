@@ -52,6 +52,15 @@ export const en = {
         containerEmptyMessage: 'This container has no products',
         productFound: 'Product Added',
         product: 'Product',
+        manualInput: 'Manual Entry',
+        manualPlaceholder: 'Enter EPC, Barcode or QR manually...',
+        rfidReader: 'RFID Reader',
+        connected: 'Connected',
+        connecting: 'Connecting...',
+        waitingForTags: 'Waiting for tags...',
+        rfidTagScanned: 'RFID Tag Scanned',
+        rfidTagUnknown: 'Unknown RFID Tag',
+        rfidTagNotLinked: 'EPC: {epc} - Not linked to a product',
     },
 
     // Catalog Page

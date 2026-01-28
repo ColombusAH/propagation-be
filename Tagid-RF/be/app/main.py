@@ -35,7 +35,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
             response.headers["Cache-Control"] = "no-store"
             response.headers["Permissions-Policy"] = (
-                "accelerometer=(), camera=(), geolocation=(), microphone=()"
+                "accelerometer=(), camera=(self), geolocation=(), microphone=(self)"
             )
         return response
 

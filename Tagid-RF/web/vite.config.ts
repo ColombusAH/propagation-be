@@ -24,12 +24,12 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'https://b4a8ceba2136680b-31-168-173-90.serveousercontent.com',
         changeOrigin: true,
         secure: false,
       },
       '/ws': {
-        target: 'ws://localhost:8000',
+        target: 'https://b4a8ceba2136680b-31-168-173-90.serveousercontent.com',
         changeOrigin: true,
         ws: true,
         secure: false,

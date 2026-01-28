@@ -8,7 +8,6 @@ import { useStore } from '@/store';
 import { theme } from '@/styles/theme';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWebSocket } from '@/hooks/useWebSocket';
-import { useEffect } from 'react';
 
 const Container = styled.div`
   max-width: 800px;
@@ -285,7 +284,7 @@ export function ScanPage() {
     onMessage: (message) => {
       if (message.type === 'tag_scanned') {
         const tag = message.data;
-        handleScan(tag.epc, 'rfid', tag);
+        handleScan(tag.epc, 'rfid');
 
         // Add to recent tags list
         setRecentTags(prev => {
@@ -303,7 +302,7 @@ export function ScanPage() {
     }, 4000);
   };
 
-  const handleScan = (code: string, method: 'barcode' | 'rfid' = 'barcode', extraData?: any) => {
+  const handleScan = (code: string, method: 'barcode' | 'rfid' = 'barcode') => {
     const isRfid = method === 'rfid';
 
     if (isContainer(code)) {
@@ -342,14 +341,14 @@ export function ScanPage() {
       const product = getProductByBarcode(code);
       showScanResult({
         type: 'product',
-        title: isRfid ? 'תג RFID סרוק' : t('scan.productFound'),
+        title: isRfid ? t('scan.rfidTagScanned') : t('scan.productFound'),
         message: product?.name || (isRfid ? `EPC: ${code}` : t('scan.product'))
       });
     } else {
       showScanResult({
         type: 'product',
-        title: isRfid ? 'תג RFID לא מוכר' : t('scan.productNotFound'),
-        message: isRfid ? `EPC: ${code} - לא משויך למוצר` : t('scan.barcodeNotRecognized')
+        title: isRfid ? t('scan.rfidTagUnknown') : t('scan.productNotFound'),
+        message: isRfid ? t('scan.rfidTagNotLinked', { epc: code }) : t('scan.barcodeNotRecognized')
       });
     }
   };
@@ -378,7 +377,7 @@ export function ScanPage() {
       <Container>
         <TitleRow>
           <MaterialIcon name="qr_code_scanner" size={24} />
-          <Title>סריקת ברקוד או QR</Title>
+          <Title>{t('scan.title')}</Title>
         </TitleRow>
 
         {cameraError ? (
@@ -397,13 +396,13 @@ export function ScanPage() {
 
         <FallbackSection>
           <FallbackTitle>
-            <MaterialIcon name="keyboard" /> הזנה ידנית
+            <MaterialIcon name="keyboard" /> {t('scan.manualInput')}
           </FallbackTitle>
           <form onSubmit={handleManualSubmit}>
             <InputGroup>
               <Input
                 type="text"
-                placeholder="הזןEPC ,ברקוד או QR באופן ידני..."
+                placeholder={t('scan.manualPlaceholder')}
                 value={manualBarcode}
                 onChange={(e) => setManualBarcode(e.target.value)}
               />
@@ -417,16 +416,16 @@ export function ScanPage() {
         <RFIDSection>
           <SectionHeader>
             <FallbackTitle>
-              <MaterialIcon name="sensors" /> קורא RFID
+              <MaterialIcon name="sensors" /> {t('scan.rfidReader')}
             </FallbackTitle>
             <StatusIndicator $connected={wsStatus === 'connected'}>
-              {wsStatus === 'connected' ? 'מחובר' : 'מנסה להתחבר...'}
+              {wsStatus === 'connected' ? t('scan.connected') : t('scan.connecting')}
             </StatusIndicator>
           </SectionHeader>
 
           {recentTags.length === 0 ? (
             <div style={{ textAlign: 'center', opacity: 0.5, padding: '20px' }}>
-              ממתין לתגים...
+              {t('scan.waitingForTags')}
             </div>
           ) : (
             <TagList>

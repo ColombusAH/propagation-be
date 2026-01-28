@@ -191,6 +191,7 @@ async def dev_login(request: DevLoginRequest, db: Prisma = Depends(get_db)):
             logger.info(f"Creating new dev user: {email}")
             try:
                 # Create new dev user
+                is_staff = prisma_role in ["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE"]
                 user = await create_user(
                     db=db,
                     email=email,
@@ -201,6 +202,14 @@ async def dev_login(request: DevLoginRequest, db: Prisma = Depends(get_db)):
                     business_id=business.id,
                     role=prisma_role,
                 )
+                
+                # Enable alerts for staff
+                if is_staff:
+                    await db.user.update(
+                        where={"id": user.id}, 
+                        data={"receiveTheftAlerts": True}
+                    )
+                
                 logger.info(f"User created: {user.id}")
             except Exception as user_err:
                 logger.error(f"User creation failed: {user_err}")

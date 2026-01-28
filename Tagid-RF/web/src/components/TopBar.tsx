@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
+import { Link } from 'react-router-dom';
 import { LanguageSwitch } from './LanguageSwitch';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useWebSocket } from '@/hooks/useWebSocket';
 
 const Header = styled.header`
   background: ${props => props.theme.colors.surface};
@@ -161,8 +163,9 @@ const NotificationBadge = styled.span`
   border-radius: 50%;
 `;
 
-import { Link } from 'react-router-dom';
-import { useWebSocket } from '@/hooks/useWebSocket';
+const MaterialIcon = ({ name, size = 18 }: { name: string; size?: number }) => (
+  <span className="material-symbols-outlined" style={{ fontSize: size }}>{name}</span>
+);
 
 export function TopBar() {
   const { userRole, logout, login } = useAuth();

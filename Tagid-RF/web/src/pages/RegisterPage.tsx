@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { theme } from '@/styles/theme';
 import { slideInUp, fadeIn } from '@/styles/animations';
 import { useToast } from '@/hooks/useToast';
+import { API_BASE_URL } from '@/api/config';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -213,7 +214,7 @@ export function RegisterPage({ onBackToLogin, onRegisterSuccess }: RegisterPageP
         delete payload.businessId;
       }
 
-      const response = await fetch('/api/v1/auth/register', {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

@@ -4,23 +4,19 @@ from prisma import Prisma
 
 async def main():
     db = Prisma()
-    try:
-        await db.connect()
-        print("Connected to DB successfully.")
+    await db.connect()
+    
+    product_count = await db.product.count()
+    print(f"Product count: {product_count}")
+    
+    if product_count > 0:
+        products = await db.product.find_many(take=5)
+        for p in products:
+            print(f"Product: {p.name}, SKU: {p.sku}, Price: {p.price}")
+    else:
+        print("No products in database.")
         
-        users = await db.user.find_many()
-        print(f"Found {len(users)} users:")
-        for user in users:
-            print(f" - {user.email} (Verified: {user.isVerified})")
-            
-        businesses = await db.business.find_many()
-        print(f"Found {len(businesses)} businesses:")
-        for bus in businesses:
-            print(f" - {bus.name} ({bus.id})")
-            
-        await db.disconnect()
-    except Exception as e:
-        print(f"Error connecting to DB: {e}")
+    await db.disconnect()
 
 if __name__ == "__main__":
     asyncio.run(main())

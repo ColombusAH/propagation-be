@@ -12,6 +12,7 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { GlobalAlerts } from './components/GlobalAlerts';
 import { VerificationPage } from './pages/VerificationPage';
+import { API_BASE_URL } from './api/config';
 
 function AppContent() {
   const locale = useStore((state) => state.locale);
@@ -27,7 +28,7 @@ function AppContent() {
     if (isAuthenticated) {
       const fetchProducts = async () => {
         try {
-          const response = await fetch('/api/v1/products/?t=' + new Date().getTime());
+          const response = await fetch(`${API_BASE_URL}/products/?t=` + new Date().getTime());
           if (response.ok) {
             const data = await response.json();
             const mappedProducts = data.map((p: any) => ({
