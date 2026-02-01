@@ -563,7 +563,7 @@ class RFIDReaderService:
 
                 # Use Prisma to check for mapping
                 try:
-                    mapping = await prisma_client.client.tagmapping.find_unique(where={"epc": epc})
+                    mapping = await prisma_client.client.rfidtag.find_unique(where={"epc": epc})
 
                     if mapping:
                         encryption_status = {

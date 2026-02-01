@@ -176,7 +176,7 @@ const roles: { id: UserRole; name: string; icon: string; description: string }[]
 ];
 
 interface LoginPageProps {
-  onLogin: (role: UserRole, token?: string) => void;
+  onLogin: (role: UserRole, token?: string, userId?: string) => void;
 }
 
 /**
@@ -200,7 +200,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
         if (response.ok) {
           const data = await response.json();
-          onLogin(selectedRole, data.token);
+          onLogin(selectedRole, data.token, data.user_id);
         } else {
           // Fallback to demo login if API fails (useful for UI only testing)
           console.error('API login failed, falling back to demo mode');

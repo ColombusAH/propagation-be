@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
@@ -40,12 +41,24 @@ export const pushService = {
         }
     },
 
-    async subscribeUser(registration: ServiceWorkerRegistration) {
+    async subscribeUser(registration: ServiceWorkerRegistration, userId?: string) {
         try {
             const publicKey = await this.getPublicKey();
             const convertedVapidKey = urlBase64ToUint8Array(publicKey);
 
-            const subscription = await registration.pushManager.subscribe({
+            // Check if subscription exists first
+            let subscription = await registration.pushManager.getSubscription();
+
+            if (subscription) {
+                // Check if key changed (optional, but good practice) - or just unsubscribe and resubscribe to be safe
+                // For now, we trust the existing one matches the new key if it hasn't expired.
+                // But to be 100% sure we are in sync with the current VAPID key:
+                // If keys differed, we would need to unsubscribe.
+                // Simpler: Just try to subscribe.
+            }
+
+            // This will return the existing subscription if options match, or create new
+            subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: convertedVapidKey
             });
@@ -55,6 +68,7 @@ export const pushService = {
             // Send subscription to backend
             await axios.post(`${API_URL}/push/subscribe`, {
                 endpoint: subscription.endpoint,
+                userId: userId,
                 keys: {
                     p256dh: subscription.toJSON().keys?.p256dh,
                     auth: subscription.toJSON().keys?.auth
@@ -65,6 +79,16 @@ export const pushService = {
         } catch (error) {
             console.error('Failed to subscribe the user: ', error);
             throw error;
+        }
+    },
+
+    async unsubscribeUser() {
+        if ('serviceWorker' in navigator) {
+            const registration = await navigator.serviceWorker.ready;
+            const subscription = await registration.pushManager.getSubscription();
+            if (subscription) {
+                await subscription.unsubscribe();
+            }
         }
     }
 };

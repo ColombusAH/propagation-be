@@ -40,6 +40,7 @@ async def subscribe(subscription: SubscriptionSchema):
         if existing:
             # Update user if changed
             if subscription.userId and existing.userId != subscription.userId:
+                logger.info(f"Updating subscription {existing.id} user: {existing.userId} -> {subscription.userId}")
                 await PushSubscription.prisma().update(
                     where={"id": existing.id},
                     data={"userId": subscription.userId}
@@ -47,7 +48,9 @@ async def subscribe(subscription: SubscriptionSchema):
             return {"message": "Subscription updated"}
 
         # Create new subscription
-        await PushSubscription.prisma().create(
+        # Create new subscription
+        logger.info(f"Creating new subscription for endpoint: {subscription.endpoint[:20]}...")
+        new_sub = await PushSubscription.prisma().create(
             data={
                 "endpoint": subscription.endpoint,
                 "p256dh": subscription.keys.get("p256dh"),
@@ -55,6 +58,7 @@ async def subscribe(subscription: SubscriptionSchema):
                 "userId": subscription.userId
             }
         )
+        logger.info(f"Subscription created: {new_sub.id}")
         return {"message": "Subscribed successfully"}
     except Exception as e:
         logger.error(f"Error subscribing: {e}")
