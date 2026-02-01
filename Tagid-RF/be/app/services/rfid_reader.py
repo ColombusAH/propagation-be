@@ -251,7 +251,18 @@ class RFIDReaderService:
                 data_len = response[4]
 
                 # Calculate remaining bytes: DATA + CRC(2)
-                remaining = data_len + 2
+                # Note: data_len includes STATUS byte (byte 5) which is already in 'response' (header_size=6)
+                # So we need to read (data_len - 1) data bytes + 2 CRC bytes
+                remaining = (data_len - 1) + 2
+                
+                # Safety check for invalid length
+                if remaining < 0:
+                     # If data_len is 0, this would be -1, but LEN includes status so min is 1?
+                     # Per manual LEN includes STATUS so min should be 1.
+                     # If data_len is somehow 0, we might have issues. 
+                     # But for now assume protocol obedience.
+                     remaining = 2 # Just read CRC if logic is weird, or raise error?
+                     
                 while remaining > 0:
                     chunk = self._socket.recv(remaining)
                     if not chunk:

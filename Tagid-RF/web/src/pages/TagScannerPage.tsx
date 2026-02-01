@@ -1,8 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { QRCodeSVG } from 'qrcode.react';
 import { Layout } from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWebSocket } from '@/hooks/useWebSocket';
 import { theme } from '@/styles/theme';
 
 const Container = styled.div`
@@ -283,83 +284,163 @@ const NoSelection = styled.div`
 `;
 
 interface ScannedTag {
-    id: string;
-    epc: string;
-    scannedAt: Date;
-    isPaid: boolean;
-    productName?: string;
+  id: string;
+  epc: string;
+  scannedAt: Date;
+  isPaid: boolean;
+  productName?: string;
 }
 
 export function TagScannerPage() {
-    const { userRole } = useAuth();
-    const [scannedTags, setScannedTags] = useState<ScannedTag[]>([]);
-    const [selectedTag, setSelectedTag] = useState<ScannedTag | null>(null);
-    const [isScanning, setIsScanning] = useState(false);
-    const [manualEpc, setManualEpc] = useState('');
-    const printRef = useRef<HTMLDivElement>(null);
+  const { userRole, token } = useAuth();
+  const [scannedTags, setScannedTags] = useState<ScannedTag[]>([]);
+  const [selectedTag, setSelectedTag] = useState<ScannedTag | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [manualEpc, setManualEpc] = useState('');
+  const [wsConnected, setWsConnected] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
 
-    const isManager = userRole && ['SUPER_ADMIN', 'NETWORK_ADMIN', 'STORE_MANAGER'].includes(userRole);
+  // WebSocket for real-time tag updates
+  const { status } = useWebSocket({
+    url: '/ws/rfid',
+    autoConnect: true,
+    onMessage: (msg) => {
+      if (msg.type === 'tag_scanned') {
+        const tagData = msg.data;
+        // Add tag if not already present
+        setScannedTags(prev => {
+          if (prev.find(t => t.epc === tagData.epc)) {
+            return prev;
+          }
+          const newTag: ScannedTag = {
+            id: crypto.randomUUID(),
+            epc: tagData.epc,
+            scannedAt: new Date(),
+            isPaid: false // Default new tags to unpaid/unmapped
+          };
+          return [newTag, ...prev];
+        });
+      }
+    }
+  });
 
-    if (!isManager) {
-        return (
-            <Layout>
-                <Container>
-                    <Card>
-                        <CardTitle>אין גישה</CardTitle>
-                        <p>עמוד זה זמין רק למנהלים</p>
-                    </Card>
-                </Container>
-            </Layout>
-        );
+  useEffect(() => {
+    setWsConnected(status === 'connected');
+  }, [status]);
+
+  // Clean up scanning on unmount
+  useEffect(() => {
+    return () => {
+      if (isScanning) {
+        stopScanning();
+      }
+    };
+  }, [isScanning]);
+
+  const isManager = userRole && ['SUPER_ADMIN', 'NETWORK_ADMIN', 'STORE_MANAGER'].includes(userRole);
+
+  if (!isManager) {
+    return (
+      <Layout>
+        <Container>
+          <Card>
+            <CardTitle>אין גישה</CardTitle>
+            <p>עמוד זה זמין רק למנהלים</p>
+          </Card>
+        </Container>
+      </Layout>
+    );
+  }
+
+  const generateEncryptedQR = (epc: string): string => {
+    const timestamp = Date.now();
+    const encoded = btoa(`${epc}:${timestamp}`);
+    return `TAGID-${encoded}`;
+  };
+
+  const startScanning = async () => {
+    if (!token) return;
+    try {
+      const response = await fetch('/api/v1/rfid-scan/start', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (response.ok) {
+        setIsScanning(true);
+      } else {
+        console.error('Failed to start scanning');
+        alert('שגיאה בהפעלת הסורק');
+      }
+    } catch (error) {
+      console.error('Error starting scan:', error);
+      alert('שגיאת תקשורת עם הסורק');
+    }
+  };
+
+  const stopScanning = async () => {
+    if (!token) return;
+    try {
+      const response = await fetch('/api/v1/rfid-scan/stop', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (response.ok) {
+        setIsScanning(false);
+      } else {
+        console.error('Failed to stop scanning');
+      }
+    } catch (error) {
+      console.error('Error stopping scan:', error);
+    }
+  };
+
+  const toggleScan = () => {
+    if (isScanning) {
+      stopScanning();
+    } else {
+      startScanning();
+    }
+  };
+
+  const addTag = (epc: string) => {
+    const upperEpc = epc.toUpperCase();
+    if (scannedTags.find(t => t.epc === upperEpc)) {
+      return;
     }
 
-    const generateEncryptedQR = (epc: string): string => {
-        const timestamp = Date.now();
-        const encoded = btoa(`${epc}:${timestamp}`);
-        return `TAGID-${encoded}`;
+    const newTag: ScannedTag = {
+      id: crypto.randomUUID(),
+      epc: upperEpc,
+      scannedAt: new Date(),
+      isPaid: false,
     };
 
-    const simulateScan = () => {
-        setIsScanning(true);
-        setTimeout(() => {
-            const newEpc = `E2${Math.random().toString(16).substring(2, 10).toUpperCase()}${Math.random().toString(16).substring(2, 10).toUpperCase()}`;
-            addTag(newEpc);
-            setIsScanning(false);
-        }, 1500);
-    };
+    setScannedTags(prev => [newTag, ...prev]);
+    setSelectedTag(newTag);
+  };
 
-    const addTag = (epc: string) => {
-        if (scannedTags.find(t => t.epc === epc)) {
-            return;
-        }
+  const handleManualAdd = () => {
+    if (manualEpc.trim()) {
+      addTag(manualEpc.trim());
+      setManualEpc('');
+    }
+  };
 
-        const newTag: ScannedTag = {
-            id: crypto.randomUUID(),
-            epc: epc.toUpperCase(),
-            scannedAt: new Date(),
-            isPaid: false,
-        };
+  const handlePrint = () => {
+    if (!selectedTag) return;
 
-        setScannedTags(prev => [newTag, ...prev]);
-        setSelectedTag(newTag);
-    };
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
 
-    const handleManualAdd = () => {
-        if (manualEpc.trim()) {
-            addTag(manualEpc.trim());
-            setManualEpc('');
-        }
-    };
+    const qrValue = generateEncryptedQR(selectedTag.epc);
 
-    const handlePrint = () => {
-        if (!selectedTag) return;
-
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) return;
-
-        const qrValue = generateEncryptedQR(selectedTag.epc);
-
-        printWindow.document.write(`
+    printWindow.document.write(`
       <!DOCTYPE html>
       <html dir="rtl" lang="he">
       <head>
@@ -410,118 +491,194 @@ export function TagScannerPage() {
       </body>
       </html>
     `);
-        printWindow.document.close();
-    };
+    printWindow.document.close();
+  };
 
-    return (
-        <Layout>
-            <Container>
-                <Header>
-                    <Title>סריקת תגים והפקת QR</Title>
-                    <Subtitle>סרוק תגי RFID חדשים והפק קודי QR להדבקה על המוצרים</Subtitle>
-                </Header>
+  return (
+    <Layout>
+      <Container>
+        <Header>
+          <Title>סריקת תגים והפקת QR</Title>
+          <Subtitle>סרוק תגי RFID חדשים והפק קודי QR להדבקה על המוצרים</Subtitle>
+        </Header>
 
-                <Grid>
-                    <Card>
-                        <CardTitle>
-                            <span className="material-symbols-outlined">contactless</span>
-                            סריקת תגים
-                        </CardTitle>
+        <Grid>
+          <Card>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.md }}>
+              <CardTitle style={{ margin: 0 }}>
+                <span className="material-symbols-outlined">contactless</span>
+                סריקת תגים
+                <span style={{
+                  fontSize: '0.8rem',
+                  marginRight: '12px',
+                  color: wsConnected ? theme.colors.success : theme.colors.error,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
+                    {wsConnected ? 'wifi' : 'wifi_off'}
+                  </span>
+                  {wsConnected ? 'מחובר' : 'מנותק'}
+                </span>
+              </CardTitle>
 
-                        <ScanButton onClick={simulateScan} disabled={isScanning}>
-                            <span className="material-symbols-outlined">
-                                {isScanning ? 'autorenew' : 'sensors'}
-                            </span>
-                            {isScanning ? 'סורק...' : 'התחל סריקה'}
-                        </ScanButton>
+              {scannedTags.length > 0 && (
+                <button
+                  onClick={() => {
+                    if (window.confirm('האם אתה בטוח שברצונך לנקות את כל התגים?')) {
+                      setScannedTags([]);
+                      setSelectedTag(null);
+                    }
+                  }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: theme.colors.error,
+                    cursor: 'pointer',
+                    fontSize: theme.typography.fontSize.sm,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '4px 8px',
+                    borderRadius: theme.borderRadius.md,
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = theme.colors.error + '10'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>delete_sweep</span>
+                  נקה הכל
+                </button>
+              )}
+            </div>
 
-                        <ManualInput>
-                            <p style={{ margin: `0 0 ${theme.spacing.md} 0`, color: theme.colors.textSecondary, fontSize: theme.typography.fontSize.sm }}>
-                                או הזן קוד EPC ידנית:
-                            </p>
-                            <InputGroup>
-                                <Input
-                                    type="text"
-                                    placeholder="E200001234567890"
-                                    value={manualEpc}
-                                    onChange={(e) => setManualEpc(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleManualAdd()}
-                                />
-                                <AddButton onClick={handleManualAdd}>
-                                    <span className="material-symbols-outlined">add</span>
-                                    הוסף
-                                </AddButton>
-                            </InputGroup>
-                        </ManualInput>
+            <ScanButton onClick={toggleScan} disabled={!wsConnected && !isScanning}>
+              <span className="material-symbols-outlined">
+                {isScanning ? 'stop_circle' : 'sensors'}
+              </span>
+              {isScanning ? 'עצור סריקה' : 'התחל סריקה'}
+            </ScanButton>
 
-                        <TagsList>
-                            {scannedTags.length === 0 ? (
-                                <EmptyState>
-                                    <span className="material-symbols-outlined">nfc</span>
-                                    <p>לא נסרקו תגים עדיין</p>
-                                    <p style={{ fontSize: theme.typography.fontSize.sm }}>לחץ על "התחל סריקה" או הזן EPC ידנית</p>
-                                </EmptyState>
-                            ) : (
-                                scannedTags.map(tag => (
-                                    <TagItem
-                                        key={tag.id}
-                                        $selected={selectedTag?.id === tag.id}
-                                        onClick={() => setSelectedTag(tag)}
-                                    >
-                                        <TagInfo>
-                                            <TagEpc>{tag.epc}</TagEpc>
-                                            <TagMeta>
-                                                נסרק: {tag.scannedAt.toLocaleTimeString('he-IL')}
-                                                {tag.productName && ` | ${tag.productName}`}
-                                            </TagMeta>
-                                        </TagInfo>
-                                        <TagStatus $paid={tag.isPaid}>
-                                            {tag.isPaid ? 'שולם' : 'לא משויך'}
-                                        </TagStatus>
-                                    </TagItem>
-                                ))
-                            )}
-                        </TagsList>
-                    </Card>
+            <ManualInput>
+              <p style={{ margin: `0 0 ${theme.spacing.md} 0`, color: theme.colors.textSecondary, fontSize: theme.typography.fontSize.sm }}>
+                או הזן קוד EPC ידנית:
+              </p>
+              <InputGroup>
+                <Input
+                  type="text"
+                  placeholder="E200001234567890"
+                  value={manualEpc}
+                  onChange={(e) => setManualEpc(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleManualAdd()}
+                />
+                <AddButton onClick={handleManualAdd}>
+                  <span className="material-symbols-outlined">add</span>
+                  הוסף
+                </AddButton>
+              </InputGroup>
+            </ManualInput>
 
-                    <Card>
-                        <CardTitle>
-                            <span className="material-symbols-outlined">qr_code_2</span>
-                            קוד QR להדפסה
-                        </CardTitle>
+            <TagsList>
+              {scannedTags.length === 0 ? (
+                <EmptyState>
+                  <span className="material-symbols-outlined">nfc</span>
+                  <p>לא נסרקו תגים עדיין</p>
+                  <p style={{ fontSize: theme.typography.fontSize.sm }}>לחץ על "התחל סריקה" או הזן EPC ידנית</p>
+                </EmptyState>
+              ) : (
+                scannedTags.map(tag => (
+                  <TagItem
+                    key={tag.id}
+                    $selected={selectedTag?.id === tag.id}
+                    onClick={() => setSelectedTag(tag)}
+                  >
+                    <TagInfo>
+                      <TagEpc>{tag.epc}</TagEpc>
+                      <TagMeta>
+                        נסרק: {tag.scannedAt.toLocaleTimeString('he-IL')}
+                        {tag.productName && ` | ${tag.productName}`}
+                      </TagMeta>
+                    </TagInfo>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <TagStatus $paid={tag.isPaid}>
+                        {tag.isPaid ? 'שולם' : 'לא משויך'}
+                      </TagStatus>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setScannedTags(prev => prev.filter(t => t.id !== tag.id));
+                          if (selectedTag?.id === tag.id) {
+                            setSelectedTag(null);
+                          }
+                        }}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: theme.colors.textMuted,
+                          cursor: 'pointer',
+                          padding: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          borderRadius: '50%',
+                          transition: 'all 0.2s',
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.color = theme.colors.error;
+                          e.currentTarget.style.backgroundColor = theme.colors.error + '10';
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.color = theme.colors.textMuted;
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                        title="מחק תג"
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>delete</span>
+                      </button>
+                    </div>
+                  </TagItem>
+                ))
+              )}
+            </TagsList>
+          </Card>
 
-                        {selectedTag ? (
-                            <QRSection ref={printRef}>
-                                <QRContainer>
-                                    <QRCodeSVG
-                                        value={generateEncryptedQR(selectedTag.epc)}
-                                        size={200}
-                                        level="H"
-                                        includeMargin
-                                        fgColor="#1E3A8A"
-                                    />
-                                    <QRLabel>{selectedTag.epc}</QRLabel>
-                                </QRContainer>
+          <Card>
+            <CardTitle>
+              <span className="material-symbols-outlined">qr_code_2</span>
+              קוד QR להדפסה
+            </CardTitle>
 
-                                <PrintButton onClick={handlePrint}>
-                                    <span className="material-symbols-outlined">print</span>
-                                    הדפס QR
-                                </PrintButton>
+            {selectedTag ? (
+              <QRSection ref={printRef}>
+                <QRContainer>
+                  <QRCodeSVG
+                    value={generateEncryptedQR(selectedTag.epc)}
+                    size={200}
+                    level="H"
+                    includeMargin
+                    fgColor="#1E3A8A"
+                  />
+                  <QRLabel>{selectedTag.epc}</QRLabel>
+                </QRContainer>
 
-                                <p style={{ textAlign: 'center', fontSize: theme.typography.fontSize.sm, color: theme.colors.textMuted }}>
-                                    הדבק את קוד ה-QR על התג או על המוצר
-                                </p>
-                            </QRSection>
-                        ) : (
-                            <NoSelection>
-                                <span className="material-symbols-outlined">qr_code_scanner</span>
-                                <p style={{ fontSize: theme.typography.fontSize.lg, fontWeight: 500 }}>בחר תג מהרשימה</p>
-                                <p>לאחר בחירת תג, קוד ה-QR יוצג כאן להדפסה</p>
-                            </NoSelection>
-                        )}
-                    </Card>
-                </Grid>
-            </Container>
-        </Layout>
-    );
+                <PrintButton onClick={handlePrint}>
+                  <span className="material-symbols-outlined">print</span>
+                  הדפס QR
+                </PrintButton>
+
+                <p style={{ textAlign: 'center', fontSize: theme.typography.fontSize.sm, color: theme.colors.textMuted }}>
+                  הדבק את קוד ה-QR על התג או על המוצר
+                </p>
+              </QRSection>
+            ) : (
+              <NoSelection>
+                <span className="material-symbols-outlined">qr_code_scanner</span>
+                <p style={{ fontSize: theme.typography.fontSize.lg, fontWeight: 500 }}>בחר תג מהרשימה</p>
+                <p>לאחר בחירת תג, קוד ה-QR יוצג כאן להדפסה</p>
+              </NoSelection>
+            )}
+          </Card>
+        </Grid>
+      </Container>
+    </Layout>
+  );
 }
