@@ -202,13 +202,12 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           const data = await response.json();
           onLogin(selectedRole, data.token, data.user_id);
         } else {
-          // Fallback to demo login if API fails (useful for UI only testing)
-          console.error('API login failed, falling back to demo mode');
-          onLogin(selectedRole);
+          console.error('Login failed');
+          alert('שגיאת התחברות: פרטי התחברות שגויים');
         }
       } catch (error) {
         console.error('Connection error during login:', error);
-        onLogin(selectedRole);
+        alert('שגיאת התחברות: לא ניתן להתחבר לשרת');
       }
     }
   };

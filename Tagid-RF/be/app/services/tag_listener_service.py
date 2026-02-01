@@ -53,9 +53,10 @@ class TagListenerService:
     Service for managing the RFID tag listener and providing data to FastAPI.
     """
 
-    def __init__(self, port: int = 4001):
+    def __init__(self, port: int = 2022):
         self.port = port
         self._running = False
+        self.is_scanning = False
         self._thread: Optional[threading.Thread] = None
         self._callbacks: List[Callable] = []
         self._loop = None
@@ -63,12 +64,22 @@ class TagListenerService:
     def start_scan(self) -> bool:
         """Send Start Inventory command to connected reader."""
         logger.info("Sending Start Inventory command (Answer Mode)...")
-        return start_inventory()
+        success = start_inventory()
+        if success:
+            self.is_scanning = True
+        return success
 
     def stop_scan(self) -> bool:
         """Send Stop Inventory command to connected reader."""
         logger.info("Sending Stop Inventory command...")
-        return stop_inventory()
+        success = False
+        try:
+            success = stop_inventory()
+        except Exception as e:
+            logger.error(f"Error sending Stop Inventory command: {e}")
+        finally:
+            self.is_scanning = False  # Always set to False even if command fails
+        return success
 
     def start(self):
         """Start the tag listener in a background thread."""

@@ -305,6 +305,9 @@ export function TagScannerPage() {
     url: '/ws/rfid',
     autoConnect: true,
     onMessage: (msg) => {
+      // Only process tags if we are actively scanning
+      if (!isScanning) return;
+
       if (msg.type === 'tag_scanned') {
         const tagData = msg.data;
         // Add tag if not already present
@@ -328,6 +331,28 @@ export function TagScannerPage() {
     setWsConnected(status === 'connected');
   }, [status]);
 
+  // Sync state with backend on mount
+  useEffect(() => {
+    const fetchStatus = async () => {
+      if (!token) return;
+      try {
+        const response = await fetch('/api/v1/rfid-scan/status', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setIsScanning(data.is_scanning);
+        }
+      } catch (error) {
+        console.error('Error fetching scanner status:', error);
+      }
+    };
+
+    fetchStatus();
+  }, [token]);
+
   // Clean up scanning on unmount
   useEffect(() => {
     return () => {
@@ -337,7 +362,7 @@ export function TagScannerPage() {
     };
   }, [isScanning]);
 
-  const isManager = userRole && ['SUPER_ADMIN', 'NETWORK_ADMIN', 'STORE_MANAGER'].includes(userRole);
+  const isManager = userRole && ['SUPER_ADMIN', 'NETWORK_MANAGER', 'NETWORK_ADMIN', 'STORE_MANAGER'].includes(userRole);
 
   if (!isManager) {
     return (

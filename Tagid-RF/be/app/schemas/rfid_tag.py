@@ -60,15 +60,15 @@ class RFIDTagBase(BaseModel):
         "Range: typically -30 (very close) to -80 (far away). "
         "Lower (more negative) = weaker signal = farther away.",
         examples=[-45, -52.5, -68],
-        ge=-100,
+        ge=-300,
         le=0,
     )
 
     antenna_port: Optional[int] = Field(
         None,
-        ge=1,
-        le=4,
-        description="Reader antenna port number that detected the tag (1-4). "
+        ge=0,
+        le=255,
+        description="Reader antenna port number that detected the tag (typically 1-4). "
         "Useful for determining tag location based on antenna placement. "
         "Most readers have 1-4 antenna ports.",
         examples=[1, 2, 3, 4],

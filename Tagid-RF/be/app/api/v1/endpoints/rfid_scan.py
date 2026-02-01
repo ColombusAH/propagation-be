@@ -55,14 +55,68 @@ class InventoryResponse(BaseModel):
 
 
 @router.get("/status", response_model=ScanStatusResponse)
-async def get_scan_status():
+async def get_scan_status(
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+):
     """Get current RFID scanner status."""
     return ScanStatusResponse(
         is_connected=rfid_reader_service.is_connected,
-        is_scanning=rfid_reader_service.is_scanning,
+        is_scanning=rfid_reader_service.is_scanning or tag_listener_service.is_scanning,
         reader_ip=rfid_reader_service.reader_ip,
         reader_port=rfid_reader_service.reader_port,
     )
+
+
+@router.get("/available")
+async def get_available_tags(
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+):
+    """
+    Get recent tags that are NOT linked to any product (productId is NULL).
+    """
+    # 1. Get recent raw scans from listener memory
+    recent_scans = tag_listener_service.get_recent_tags(count=100)
+    logger.info(f"get_available_tags: Found {len(recent_scans)} recent scans")
+    
+    if not recent_scans:
+        return []
+
+    # 2. Extract EPCs
+    epcs = [t['epc'] for t in recent_scans if t.get('epc')]
+    
+    # 3. Find which of these EPCs are already linked in DB
+    # We want to filter OUT tags that have a productId
+    db_tags = await prisma_client.client.rfidtag.find_many(
+        where={
+            "epc": {"in": epcs},
+            "productId": {"not": None}
+        }
+    )
+    
+    linked_epcs = {t.epc for t in db_tags}
+    logger.info(f"get_available_tags: Found {len(linked_epcs)} linked tags")
+
+    # 4. Filter and Format
+    available = []
+    seen_epcs = set()
+    
+    for scan in recent_scans:
+        epc = scan.get('epc')
+        if epc and epc not in linked_epcs and epc not in seen_epcs:
+            # Check if tag exists in DB at all (optional, but good for consistent ID)
+            # For now, we use EPC as ID for unlinked tags in the UI
+            available.append({
+                "id": epc, 
+                "epc": epc,
+                "rssi": scan.get('rssi'),
+                "scannedAt": scan.get('timestamp')
+            })
+            seen_epcs.add(epc)
+            
+    logger.info(f"get_available_tags: Returning {len(available)} available tags")
+    return available
 
 
 @router.post("/connect")
@@ -104,13 +158,19 @@ async def start_scanning(
     if tag_listener_service._running:
         logger.info("Passive listener running - sending Start Inventory command")
         success = tag_listener_service.start_scan()
-        msg = (
-            "Started continuous scanning (Answer Mode)"
-            if success
-            else "Passive listener active (Command failed or no reader connected)"
-        )
+        
+        if not success:
+            logger.warning("Passive listener active but no reader connected")
+            raise HTTPException(
+                status_code=503, 
+                detail="Reader not connected to listener service. Please check device connection."
+            )
 
-        return {"status": "scanning", "mode": "passive_active_control", "message": msg}
+        return {
+            "status": "scanning", 
+            "mode": "passive_active_control", 
+            "message": "Started continuous scanning (Answer Mode)"
+        }
 
     # Fall back to active mode
     if not rfid_reader_service.is_connected:
@@ -134,10 +194,17 @@ async def stop_scanning(
 ):
     """Stop continuous RFID scanning."""
     # Try stopping passive listener command too
-    if tag_listener_service._running:
-        tag_listener_service.stop_scan()
+    try:
+        if tag_listener_service._running:
+            tag_listener_service.stop_scan()
+    except Exception as e:
+        logger.error(f"Error stopping tag listener service: {e}")
 
-    await rfid_reader_service.stop_scanning()
+    try:
+        await rfid_reader_service.stop_scanning()
+    except Exception as e:
+        logger.error(f"Error stopping RFID reader service: {e}")
+        
     return {"status": "stopped", "message": "Stopped scanning"}
 
 
