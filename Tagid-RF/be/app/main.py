@@ -175,6 +175,7 @@ app.include_router(cart.router, prefix=f"{settings.API_V1_STR}/cart", tags=["Car
 app.include_router(web_push.router, prefix=f"{settings.API_V1_STR}/push", tags=["Web Push"])
 
 
+@app.get("/health")
 async def health_check():
     """Root health check endpoint for Railway."""
     return {"status": "healthy"}
