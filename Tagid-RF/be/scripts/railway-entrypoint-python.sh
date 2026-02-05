@@ -22,11 +22,18 @@ echo "---"
 # Ensure the app directory structure is correct
 mkdir -p /app/logs
 
+echo "Generating Prisma client..."
+if [ -f "prisma/schema.prisma" ]; then
+  python -m prisma generate --schema=prisma/schema.prisma || echo "Prisma generation failed"
+elif [ -f "app/prisma/schema.prisma" ]; then
+  python -m prisma generate --schema=app/prisma/schema.prisma || echo "Prisma generation failed"
+else
+  # Fallback
+  python -m prisma generate || echo "Prisma generation failed"
+fi
+
 # Skip blocking DB checks for now to verify app startup
-# if [ -n "$DATABASE_URL" ]; then
-#   echo "Waiting for database..."
-#   ... (skipping complex logic) ...
-# fi
+# if [ -n "$DATABASE_URL" ]; then...
 
 echo "Starting application immediately for debugging..."
 
