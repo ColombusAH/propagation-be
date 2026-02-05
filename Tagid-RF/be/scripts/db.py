@@ -44,7 +44,7 @@ def setup_prisma_environment():
     # Check if DATABASE_URL is set, if not, use default for local development
     if "DATABASE_URL" not in env:
         # Default for local development
-        env["DATABASE_URL"] = "postgresql://postgres:postgres@localhost:5432/shifty"
+        env["DATABASE_URL"] = "postgresql://postgres:postgres@localhost:5432/propagation"
         print(f"Using default DATABASE_URL: {env['DATABASE_URL']}")
 
     return env

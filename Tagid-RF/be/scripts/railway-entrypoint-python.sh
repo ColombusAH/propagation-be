@@ -72,5 +72,5 @@ fi
 
 # Start the application
 echo "Starting application on port $PORT..."
-# Bind to 0.0.0.0 explicitly
-exec uvicorn app.main:app --host 0.0.0.0 --port $PORT 
+# Bind to 0.0.0.0 explicitly, use python -m for safety, allow proxy headers
+exec python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips='*' 

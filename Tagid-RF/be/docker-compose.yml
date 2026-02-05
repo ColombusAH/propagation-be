@@ -16,7 +16,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - shifty-network
+      - propogation-network
 
   pgadmin:
     image: dpage/pgadmin4
@@ -29,7 +29,7 @@ services:
     depends_on:
       - db
     networks:
-      - shifty-network
+      - propogation-network
   # App runs locally with uvicorn, not in Docker
   # Uncomment below to run app in Docker instead
   # app:
@@ -53,12 +53,12 @@ services:
   #     db:
   #       condition: service_healthy
   #   networks:
-  #     - shifty-network
+  #     - propogation-network
 
 volumes:
   postgres_data:
 
 
 networks:
-  shifty-network:
-    name: shifty-network
+  propogation-network:
+    name: propogation-network

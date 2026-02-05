@@ -79,16 +79,24 @@ async def lifespan(app: FastAPI):
     # except Exception as e:
     #     logger.error(f"Error connecting to RFID reader: {e}")
 
-    # Auto-connect to RFID reader on startup
-    try:
-        connected = await rfid_reader_service.connect()
-        if connected:
-            logger.info("RFID reader initialized successfully")
-            await rfid_reader_service.start_scanning()
-        else:
-            logger.warning("Failed to initialize RFID reader")
-    except Exception as e:
-        logger.error(f"Error initializing RFID reader: {e}")
+    # Auto-connect to RFID reader on startup (Non-blocking)
+    # We use a background task so we don't block the server startup / health check
+    import asyncio
+    async def connect_rfid_background():
+        try:
+            # Short initial delay to let server start
+            await asyncio.sleep(2) 
+            connected = await rfid_reader_service.connect()
+            if connected:
+                logger.info("RFID reader initialized successfully")
+                await rfid_reader_service.start_scanning()
+            else:
+                logger.warning("Failed to initialize RFID reader (Background task)")
+        except Exception as e:
+            logger.error(f"Error initializing RFID reader in background: {e}")
+
+    # Fire and forget the connection attempt
+    asyncio.create_task(connect_rfid_background())
 
     # Start tag listener service
     try:
