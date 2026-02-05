@@ -48,10 +48,6 @@ ENV RAILWAY_PRIVATE_NETWORK=true
 # Tell Railway which health check path to use (can be overridden)
 ENV RAILWAY_HEALTHCHECK_PATH=/
 
-# Add healthcheck instructions for Docker
-HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:8002/ || exit 1
-
 # Railway will set DATABASE_URL and PORT automatically
 ENTRYPOINT ["/app/scripts/railway-entrypoint-python.sh"]
 
