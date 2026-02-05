@@ -53,13 +53,22 @@ async def lifespan(app: FastAPI):
     setup_logging()
     logger.info("Starting up application...")
 
-    # Initialize Prisma Client
-    # Initialize Prisma Client
+    # Initialize Prisma Client (Non-blocking / Background)
+    # This prevents the app from hanging if DB is unreachable during startup
+    async def init_db_background():
+        try:
+            await init_db(app)
+        except Exception as e:
+            logger.error(f"WARNING: Prisma DB initialization failed in background: {e}. Running without main DB.")
+            
+    asyncio.create_task(init_db_background())
+
+    # Initialize RFID database tables (SQLAlchemy)
     try:
-        await init_db(app)
+        logger.info("Initializing RFID database...")
+        init_rfid_db()
     except Exception as e:
-        logger.error(f"WARNING: Prisma DB initialization failed: {e}. Running without main DB.")
-        # Proceed without DB - some features may fail
+        logger.error(f"WARNING: RFID DB initialization failed: {e}. Running without RFID DB.")
 
     # Initialize RFID database tables (SQLAlchemy)
     try:

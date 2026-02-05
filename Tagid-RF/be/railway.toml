@@ -5,7 +5,7 @@ dockerfilePath = "Dockerfile"
 
 [deploy]
 # Health check path
-healthcheckPath = "/health"
+healthcheckPath = "/"
 # Health check timeout in seconds
 healthcheckTimeout = 60
 # Max deployment startup time in seconds
