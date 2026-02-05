@@ -1,7 +1,7 @@
 [build]
 # Use the Dockerfile in the fe directory
 builder = "DOCKERFILE"
-dockerfilePath = "be/Dockerfile"
+dockerfilePath = "Dockerfile"
 
 [deploy]
 # Health check path
