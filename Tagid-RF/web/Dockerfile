@@ -28,11 +28,11 @@ RUN rm -rf /usr/share/nginx/html/*
 # Copy built artifacts from builder stage (Vite builds to /dist by default)
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy custom nginx configuration template
+COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 
-# Expose port 80 (Railway will map the external port to this)
+# Expose port (Railway will set PORT env variable)
 EXPOSE 80
 
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start Nginx with PORT substitution
+CMD sh -c "envsubst '\$PORT' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
