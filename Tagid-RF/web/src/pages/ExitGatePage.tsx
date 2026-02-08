@@ -319,242 +319,297 @@ const StatLabel = styled.div`
 `;
 
 interface GateScan {
-    id: string;
-    epc: string;
-    productName?: string;
-    isPaid: boolean;
-    scannedAt: Date;
+  id: string;
+  epc: string;
+  productName?: string;
+  isPaid: boolean;
+  scannedAt: Date;
 }
 
 interface TheftAlert {
-    id: string;
-    epc: string;
-    productName: string;
-    productPrice: number;
-    detectedAt: Date;
-    isActive: boolean;
+  id: string;
+  epc: string;
+  productName: string;
+  productPrice: number;
+  detectedAt: Date;
+  isActive: boolean;
+  status: 'active' | 'resolved' | 'dismissed';
 }
 
 export function ExitGatePage() {
-    const { userRole } = useAuth();
-    const [isMonitoring] = useState(true);
-    const [scans, setScans] = useState < GateScan[] > ([]);
-    const [alerts, setAlerts] = useState < TheftAlert[] > ([]);
+  const { userRole } = useAuth();
+  const [isMonitoring] = useState(true);
+  const [scans, setScans] = useState<GateScan[]>([]);
+  const [alerts, setAlerts] = useState<TheftAlert[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
 
-    const isManager = userRole && ['SUPER_ADMIN', 'NETWORK_ADMIN', 'STORE_MANAGER'].includes(userRole);
+  const isManager = userRole && ['SUPER_ADMIN', 'NETWORK_ADMIN', 'STORE_MANAGER'].includes(userRole);
 
-    if (!isManager) {
-        return (
-            <Layout>
-                <Container>
-                    <Card>
-                        <CardTitle>אין גישה</CardTitle>
-                        <p>עמוד זה זמין רק למנהלים</p>
-                    </Card>
-                </Container>
-            </Layout>
-        );
-    }
-
-    const simulateUnpaidExit = () => {
-        const products = [
-            { name: 'חולצת טי כחולה', price: 89.90 },
-            { name: 'מכנסי ג\'ינס', price: 199.90 },
-            { name: 'נעלי ספורט', price: 349.90 },
-        ];
-
-        const randomProduct = products[Math.floor(Math.random() * products.length)];
-        const newEpc = `E2${Math.random().toString(16).substring(2, 18).toUpperCase()}`;
-
-        const newScan: GateScan = {
-            id: crypto.randomUUID(),
-            epc: newEpc,
-            productName: randomProduct.name,
-            isPaid: false,
-            scannedAt: new Date(),
-        };
-
-        const newAlert: TheftAlert = {
-            id: crypto.randomUUID(),
-            epc: newEpc,
-            productName: randomProduct.name,
-            productPrice: randomProduct.price,
-            detectedAt: new Date(),
-            isActive: true,
-        };
-
-        setScans(prev => [newScan, ...prev]);
-        setAlerts(prev => [newAlert, ...prev]);
-
-        if (Notification.permission === 'granted') {
-            new Notification('התראת אבטחה!', {
-                body: `מוצר לא שולם יצא מהחנות: ${randomProduct.name}`,
-                icon: '/favicon.ico',
-                tag: 'theft-alert',
-            });
-        }
-    };
-
-    const simulatePaidExit = () => {
-        const products = [
-            { name: 'שעון יד', price: 299.90 },
-            { name: 'תיק גב', price: 149.90 },
-        ];
-
-        const randomProduct = products[Math.floor(Math.random() * products.length)];
-        const newEpc = `E2${Math.random().toString(16).substring(2, 18).toUpperCase()}`;
-
-        const newScan: GateScan = {
-            id: crypto.randomUUID(),
-            epc: newEpc,
-            productName: randomProduct.name,
-            isPaid: true,
-            scannedAt: new Date(),
-        };
-
-        setScans(prev => [newScan, ...prev]);
-    };
-
-    const resolveAlert = (id: string) => {
-        setAlerts(prev => prev.map(a =>
-            a.id === id ? { ...a, isActive: false } : a
-        ));
-    };
-
-    const dismissAlert = (id: string) => {
-        setAlerts(prev => prev.filter(a => a.id !== id));
-    };
-
-    const activeAlerts = alerts.filter(a => a.isActive);
-    const totalScans = scans.length;
-    const paidScans = scans.filter(s => s.isPaid).length;
-    const unpaidScans = scans.filter(s => !s.isPaid).length;
-
+  if (!isManager) {
     return (
-        <Layout>
-            <Container>
-                <Header>
-                    <HeaderContent>
-                        <Title>מעקב שער יציאה</Title>
-                        <Subtitle>ניטור תגים בשער וזיהוי פריטים לא שולמו</Subtitle>
-                    </HeaderContent>
-                    <StatusBadge $active={isMonitoring}>
-                        <span className="material-symbols-outlined">
-                            {isMonitoring ? 'sensors' : 'sensors_off'}
-                        </span>
-                        {isMonitoring ? 'פעיל' : 'לא פעיל'}
-                    </StatusBadge>
-                </Header>
-
-                <StatsGrid>
-                    <StatCard $color={theme.colors.primary}>
-                        <StatValue $color={theme.colors.primary}>{totalScans}</StatValue>
-                        <StatLabel>סה"כ סריקות</StatLabel>
-                    </StatCard>
-                    <StatCard $color={theme.colors.success}>
-                        <StatValue $color={theme.colors.success}>{paidScans}</StatValue>
-                        <StatLabel>שולמו</StatLabel>
-                    </StatCard>
-                    <StatCard $color={theme.colors.error}>
-                        <StatValue $color={theme.colors.error}>{unpaidScans}</StatValue>
-                        <StatLabel>לא שולמו</StatLabel>
-                    </StatCard>
-                </StatsGrid>
-
-                <Grid>
-                    <Card>
-                        <CardTitle>
-                            <span className="material-symbols-outlined">warning</span>
-                            התראות פעילות ({activeAlerts.length})
-                        </CardTitle>
-
-                        <SimulateButton onClick={simulateUnpaidExit}>
-                            <span className="material-symbols-outlined">directions_run</span>
-                            סמלץ יציאה ללא תשלום
-                        </SimulateButton>
-
-                        {activeAlerts.length === 0 ? (
-                            <EmptyState>
-                                <span className="material-symbols-outlined">verified_user</span>
-                                <p>אין התראות פעילות</p>
-                                <p style={{ fontSize: theme.typography.fontSize.sm }}>המערכת מנטרת את שער היציאה</p>
-                            </EmptyState>
-                        ) : (
-                            activeAlerts.map(alert => (
-                                <AlertCard key={alert.id} $active={alert.isActive}>
-                                    <AlertHeader>
-                                        <AlertTitle>
-                                            <span className="material-symbols-outlined">error</span>
-                                            פריט לא שולם!
-                                        </AlertTitle>
-                                        <AlertTime>{alert.detectedAt.toLocaleTimeString('he-IL')}</AlertTime>
-                                    </AlertHeader>
-                                    <AlertDetails>
-                                        <AlertRow>
-                                            <AlertLabel>מוצר:</AlertLabel>
-                                            <AlertValue>{alert.productName}</AlertValue>
-                                        </AlertRow>
-                                        <AlertRow>
-                                            <AlertLabel>מחיר:</AlertLabel>
-                                            <AlertValue>{alert.productPrice.toFixed(2)} ש"ח</AlertValue>
-                                        </AlertRow>
-                                        <AlertRow>
-                                            <AlertLabel>EPC:</AlertLabel>
-                                            <AlertValue>{alert.epc}</AlertValue>
-                                        </AlertRow>
-                                    </AlertDetails>
-                                    <ActionButtons>
-                                        <DismissButton onClick={() => dismissAlert(alert.id)}>
-                                            בטל התראה
-                                        </DismissButton>
-                                        <ResolveButton onClick={() => resolveAlert(alert.id)}>
-                                            <span className="material-symbols-outlined">check</span>
-                                            טופל
-                                        </ResolveButton>
-                                    </ActionButtons>
-                                </AlertCard>
-                            ))
-                        )}
-                    </Card>
-
-                    <Card>
-                        <CardTitle>
-                            <span className="material-symbols-outlined">history</span>
-                            היסטוריית סריקות
-                        </CardTitle>
-
-                        <SimulateButton
-                            onClick={simulatePaidExit}
-                            style={{ background: `linear-gradient(135deg, ${theme.colors.success} 0%, ${theme.colors.successDark} 100%)` }}
-                        >
-                            <span className="material-symbols-outlined">check_circle</span>
-                            סמלץ יציאה עם תשלום
-                        </SimulateButton>
-
-                        <ScansList>
-                            {scans.length === 0 ? (
-                                <EmptyState>
-                                    <span className="material-symbols-outlined">sensors</span>
-                                    <p>אין סריקות עדיין</p>
-                                    <p style={{ fontSize: theme.typography.fontSize.sm }}>סריקות משער היציאה יופיעו כאן</p>
-                                </EmptyState>
-                            ) : (
-                                scans.map(scan => (
-                                    <ScanItem key={scan.id} $paid={scan.isPaid}>
-                                        <ScanInfo>
-                                            <ScanEpc>{scan.productName || scan.epc}</ScanEpc>
-                                            <ScanMeta>{scan.scannedAt.toLocaleTimeString('he-IL')}</ScanMeta>
-                                        </ScanInfo>
-                                        <ScanStatus $paid={scan.isPaid}>
-                                            {scan.isPaid ? 'שולם' : 'לא שולם'}
-                                        </ScanStatus>
-                                    </ScanItem>
-                                ))
-                            )}
-                        </ScansList>
-                    </Card>
-                </Grid>
-            </Container>
-        </Layout>
+      <Layout>
+        <Container>
+          <Card>
+            <CardTitle>אין גישה</CardTitle>
+            <p>עמוד זה זמין רק למנהלים</p>
+          </Card>
+        </Container>
+      </Layout>
     );
+  }
+
+  const simulateUnpaidExit = () => {
+    const products = [
+      { name: 'חולצת טי כחולה', price: 89.90 },
+      { name: 'מכנסי ג\'ינס', price: 199.90 },
+      { name: 'נעלי ספורט', price: 349.90 },
+    ];
+
+    const randomProduct = products[Math.floor(Math.random() * products.length)];
+    const newEpc = `E2${Math.random().toString(16).substring(2, 18).toUpperCase()}`;
+
+    const newScan: GateScan = {
+      id: crypto.randomUUID(),
+      epc: newEpc,
+      productName: randomProduct.name,
+      isPaid: false,
+      scannedAt: new Date(),
+    };
+
+    const newAlert: TheftAlert = {
+      id: crypto.randomUUID(),
+      epc: newEpc,
+      productName: randomProduct.name,
+      productPrice: randomProduct.price,
+      detectedAt: new Date(),
+      isActive: true,
+      status: 'active'
+    };
+
+    setScans(prev => [newScan, ...prev]);
+    setAlerts(prev => [newAlert, ...prev]);
+
+    if (Notification.permission === 'granted') {
+      new Notification('התראת אבטחה!', {
+        body: `מוצר לא שולם יצא מהחנות: ${randomProduct.name}`,
+        icon: '/favicon.ico',
+        tag: 'theft-alert',
+      });
+    }
+  };
+
+  const simulatePaidExit = () => {
+    const products = [
+      { name: 'שעון יד', price: 299.90 },
+      { name: 'תיק גב', price: 149.90 },
+    ];
+
+    const randomProduct = products[Math.floor(Math.random() * products.length)];
+    const newEpc = `E2${Math.random().toString(16).substring(2, 18).toUpperCase()}`;
+
+    const newScan: GateScan = {
+      id: crypto.randomUUID(),
+      epc: newEpc,
+      productName: randomProduct.name,
+      isPaid: true,
+      scannedAt: new Date(),
+    };
+
+    setScans(prev => [newScan, ...prev]);
+  };
+
+  const resolveAlert = (id: string) => {
+    setAlerts(prev => prev.map(a =>
+      a.id === id ? { ...a, isActive: false, status: 'resolved' } : a
+    ));
+  };
+
+  const dismissAlert = (id: string) => {
+    setAlerts(prev => prev.map(a =>
+      a.id === id ? { ...a, isActive: false, status: 'dismissed' } : a
+    ));
+  };
+
+  const restoreAlert = (id: string) => {
+    setAlerts(prev => prev.map(a =>
+      a.id === id ? { ...a, isActive: true, status: 'active' } : a
+    ));
+  };
+
+  const activeAlerts = alerts.filter(a => a.isActive);
+  const inactiveAlerts = alerts.filter(a => !a.isActive);
+  const totalScans = scans.length;
+  const paidScans = scans.filter(s => s.isPaid).length;
+  const unpaidScans = scans.filter(s => !s.isPaid).length;
+
+  return (
+    <Layout>
+      <Container>
+        <Header>
+          <HeaderContent>
+            <Title>מעקב שער יציאה</Title>
+            <Subtitle>ניטור תגים בשער וזיהוי פריטים לא שולמו</Subtitle>
+          </HeaderContent>
+          <StatusBadge $active={isMonitoring}>
+            <span className="material-symbols-outlined">
+              {isMonitoring ? 'sensors' : 'sensors_off'}
+            </span>
+            {isMonitoring ? 'פעיל' : 'לא פעיל'}
+          </StatusBadge>
+        </Header>
+
+        <StatsGrid>
+          <StatCard $color={theme.colors.primary}>
+            <StatValue $color={theme.colors.primary}>{totalScans}</StatValue>
+            <StatLabel>סה"כ סריקות</StatLabel>
+          </StatCard>
+          <StatCard $color={theme.colors.success}>
+            <StatValue $color={theme.colors.success}>{paidScans}</StatValue>
+            <StatLabel>שולמו</StatLabel>
+          </StatCard>
+          <StatCard $color={theme.colors.error}>
+            <StatValue $color={theme.colors.error}>{unpaidScans}</StatValue>
+            <StatLabel>לא שולמו</StatLabel>
+          </StatCard>
+        </StatsGrid>
+
+        <Grid>
+          <Card>
+            <CardTitle>
+              <span className="material-symbols-outlined">warning</span>
+              התראות פעילות ({activeAlerts.length})
+            </CardTitle>
+
+            <SimulateButton onClick={simulateUnpaidExit}>
+              <span className="material-symbols-outlined">directions_run</span>
+              סמלץ יציאה ללא תשלום
+            </SimulateButton>
+
+            {activeAlerts.length === 0 ? (
+              <EmptyState>
+                <span className="material-symbols-outlined">verified_user</span>
+                <p>אין התראות פעילות</p>
+                <p style={{ fontSize: theme.typography.fontSize.sm }}>המערכת מנטרת את שער היציאה</p>
+              </EmptyState>
+            ) : (
+              activeAlerts.map(alert => (
+                <AlertCard key={alert.id} $active={alert.isActive}>
+                  <AlertHeader>
+                    <AlertTitle>
+                      <span className="material-symbols-outlined">error</span>
+                      פריט לא שולם!
+                    </AlertTitle>
+                    <AlertTime>{alert.detectedAt.toLocaleTimeString('he-IL')}</AlertTime>
+                  </AlertHeader>
+                  <AlertDetails>
+                    <AlertRow>
+                      <AlertLabel>מוצר:</AlertLabel>
+                      <AlertValue>{alert.productName}</AlertValue>
+                    </AlertRow>
+                    <AlertRow>
+                      <AlertLabel>מחיר:</AlertLabel>
+                      <AlertValue>{alert.productPrice.toFixed(2)} ש"ח</AlertValue>
+                    </AlertRow>
+                    <AlertRow>
+                      <AlertLabel>EPC:</AlertLabel>
+                      <AlertValue>{alert.epc}</AlertValue>
+                    </AlertRow>
+                  </AlertDetails>
+                  <ActionButtons>
+                    <DismissButton onClick={() => dismissAlert(alert.id)}>
+                      בטל התראה
+                    </DismissButton>
+                    <ResolveButton onClick={() => resolveAlert(alert.id)}>
+                      <span className="material-symbols-outlined">check</span>
+                      טופל
+                    </ResolveButton>
+                  </ActionButtons>
+                </AlertCard>
+              ))
+            )}
+
+            {/* History Section */}
+            {inactiveAlerts.length > 0 && (
+              <div style={{ marginTop: theme.spacing.xl, borderTop: `1px solid ${theme.colors.border}`, paddingTop: theme.spacing.lg }}>
+                <CardTitle
+                  style={{ fontSize: theme.typography.fontSize.lg, cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+                  onClick={() => setShowHistory(!showHistory)}
+                >
+                  <span>
+                    <span className="material-symbols-outlined" style={{ fontSize: '24px', color: theme.colors.textMuted, verticalAlign: 'middle', marginLeft: '8px' }}>history</span>
+                    היסטוריית התראות ({inactiveAlerts.length})
+                  </span>
+                  <span className="material-symbols-outlined" style={{ fontSize: '24px', color: theme.colors.text }}>
+                    {showHistory ? 'expand_less' : 'expand_more'}
+                  </span>
+                </CardTitle>
+
+                {showHistory && (
+                  <div style={{ marginTop: theme.spacing.md }}>
+                    {inactiveAlerts.map(alert => (
+                      <AlertCard key={alert.id} style={{ opacity: 0.7, borderColor: theme.colors.border }}>
+                        <AlertHeader>
+                          <AlertTitle style={{ color: theme.colors.text }}>
+                            <span className="material-symbols-outlined" style={{ color: alert.status === 'resolved' ? theme.colors.success : theme.colors.textMuted }}>
+                              {alert.status === 'resolved' ? 'check_circle' : 'cancel'}
+                            </span>
+                            {alert.status === 'resolved' ? 'טופל - ' : 'בוטל - '}
+                            {alert.productName}
+                          </AlertTitle>
+                          <AlertTime>{alert.detectedAt.toLocaleTimeString('he-IL')}</AlertTime>
+                        </AlertHeader>
+                        <ActionButtons style={{ marginTop: theme.spacing.sm }}>
+                          <DismissButton onClick={() => restoreAlert(alert.id)} style={{ width: '100%' }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: '18px', verticalAlign: 'middle', marginLeft: '5px' }}>undo</span>
+                            החזר לרשימה
+                          </DismissButton>
+                        </ActionButtons>
+                      </AlertCard>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </Card>
+
+          <Card>
+            <CardTitle>
+              <span className="material-symbols-outlined">history</span>
+              היסטוריית סריקות
+            </CardTitle>
+
+            <SimulateButton
+              onClick={simulatePaidExit}
+              style={{ background: `linear-gradient(135deg, ${theme.colors.success} 0%, ${theme.colors.successDark} 100%)` }}
+            >
+              <span className="material-symbols-outlined">check_circle</span>
+              סמלץ יציאה עם תשלום
+            </SimulateButton>
+
+            <ScansList>
+              {scans.length === 0 ? (
+                <EmptyState>
+                  <span className="material-symbols-outlined">sensors</span>
+                  <p>אין סריקות עדיין</p>
+                  <p style={{ fontSize: theme.typography.fontSize.sm }}>סריקות משער היציאה יופיעו כאן</p>
+                </EmptyState>
+              ) : (
+                scans.map(scan => (
+                  <ScanItem key={scan.id} $paid={scan.isPaid}>
+                    <ScanInfo>
+                      <ScanEpc>{scan.productName || scan.epc}</ScanEpc>
+                      <ScanMeta>{scan.scannedAt.toLocaleTimeString('he-IL')}</ScanMeta>
+                    </ScanInfo>
+                    <ScanStatus $paid={scan.isPaid}>
+                      {scan.isPaid ? 'שולם' : 'לא שולם'}
+                    </ScanStatus>
+                  </ScanItem>
+                ))
+              )}
+            </ScansList>
+          </Card>
+        </Grid>
+      </Container>
+    </Layout>
+  );
 }

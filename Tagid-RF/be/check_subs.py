@@ -1,13 +1,16 @@
 import asyncio
-from app.services.database import SessionLocal
-from prisma import Prisma
+from app.db.prisma import prisma_client
+from prisma.models import PushSubscription
 
-async def main():
-    prisma = Prisma()
-    await prisma.connect()
-    count = await prisma.pushsubscription.count()
-    print(f"Subscription count: {count}")
-    await prisma.disconnect()
+async def check():
+    try:
+        await prisma_client.connect()
+        count = await PushSubscription.prisma().count()
+        print(f"SUBSCRIPTION_COUNT: {count}")
+    except Exception as e:
+        print(f"ERROR: {e}")
+    finally:
+        await prisma_client.disconnect()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(check())

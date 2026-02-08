@@ -24,18 +24,25 @@ class PushNotificationService:
         try:
             # Initialize Firebase if not already initialized
             if not firebase_admin._apps:
-                cred = credentials.Certificate(
-                    {
-                        "type": "service_account",
-                        "project_id": settings.FCM_PROJECT_ID,
-                        "private_key": settings.FCM_SERVER_KEY,
-                        # Add other required fields from your Firebase service account
-                    }
-                )
-                firebase_admin.initialize_app(cred)
-                logger.info("Firebase Admin SDK initialized")
+                if settings.FCM_PROJECT_ID and settings.FCM_SERVER_KEY:
+                     # Check if key looks like a real key (starts with -----BEGIN PRIVATE KEY-----)
+                    if "-----BEGIN PRIVATE KEY-----" in settings.FCM_SERVER_KEY:
+                        cred = credentials.Certificate(
+                            {
+                                "type": "service_account",
+                                "project_id": settings.FCM_PROJECT_ID,
+                                "private_key": settings.FCM_SERVER_KEY,
+                            }
+                        )
+                        firebase_admin.initialize_app(cred)
+                        logger.info("Firebase Admin SDK initialized")
+                    else:
+                         logger.warning("FCM_SERVER_KEY does not look like a valid private key. Skipping Firebase init.")
+                else:
+                    logger.warning("FCM settings missing. Skipping Firebase init.")
+
         except Exception as e:
-            logger.error(f"Error initializing Firebase: {str(e)}")
+            logger.warning(f"Warning initializing Firebase (Push Notifications will be disabled): {str(e)}")
 
     async def send_notification(
         self, user_id: str, title: str, body: str, data: Optional[Dict[str, Any]] = None

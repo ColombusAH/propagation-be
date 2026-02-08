@@ -44,4 +44,47 @@ class PushService:
             logger.error(f"Unexpected error sending push: {e}")
             raise e
 
+    async def send_to_user(self, user_id: str, title: str, body: str, data: Dict[str, Any] = None) -> int:
+        """
+        Send notification to all subscriptions for a specific user.
+        Returns number of successful sends.
+        """
+        from prisma.models import PushSubscription
+        from app.db.prisma import prisma_client
+
+        if data is None:
+            data = {}
+
+        payload = {
+            "title": title,
+            "body": body,
+            "icon": "/vite.svg", # Default icon
+            "data": data
+        }
+
+        subscriptions = await PushSubscription.prisma().find_many(
+            where={"userId": user_id}
+        )
+
+        sent_count = 0
+        for sub in subscriptions:
+            sub_info = {
+                "endpoint": sub.endpoint,
+                "keys": {
+                    "p256dh": sub.p256dh,
+                    "auth": sub.auth
+                }
+            }
+            try:
+                success = self.send_notification(sub_info, payload)
+                if success:
+                    sent_count += 1
+                else:
+                    # Invalid subscription, remove it
+                    await PushSubscription.prisma().delete(where={"id": sub.id})
+            except Exception as e:
+                logger.error(f"Failed to send push to user {user_id} sub {sub.id}: {e}")
+        
+        return sent_count
+
 push_service = PushService()

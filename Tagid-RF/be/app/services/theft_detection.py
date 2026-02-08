@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from app.db.prisma import prisma_client
-from app.services.push_notifications import PushNotificationService
+from app.services.push_service import push_service
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class TheftDetectionService:
 
     def __init__(self):
         """Initialize theft detection service."""
-        self.push_service = PushNotificationService()
+        # push_service is imported as singleton
         logger.info("Theft detection service initialized")
 
     async def check_tag_payment_status(self, epc: str, location: Optional[str] = None) -> bool:
@@ -142,7 +142,9 @@ class TheftDetectionService:
 
                 # Send push notification
                 message = self._create_alert_message(tag)
-                success = await self.push_service.send_notification(
+                
+                # Use Web Push service
+                success_count = await push_service.send_to_user(
                     user_id=user.id,
                     title="🚨 התראת גניבה - Theft Alert",
                     body=message,
@@ -152,6 +154,8 @@ class TheftDetectionService:
                         "type": "theft_alert",
                     },
                 )
+                
+                success = success_count > 0
 
                 # Update delivery status
                 if success:
@@ -160,7 +164,7 @@ class TheftDetectionService:
                         data={"delivered": True, "deliveredAt": datetime.now()},
                     )
 
-                logger.info(f"Notified user {user.email} about theft alert {alert.id}")
+                logger.info(f"Notified user {user.email} about theft alert {alert.id} (Sent via {success_count} subs)")
 
             except Exception as e:
                 logger.error(f"Error notifying user {user.id}: {str(e)}")
