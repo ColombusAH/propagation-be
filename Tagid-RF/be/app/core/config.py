@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30000
     JWT_ALGORITHM: str = "HS256"
-    GOOGLE_CLIENT_ID: str
+    GOOGLE_CLIENT_ID: Optional[str] = None  # Optional for deployments without Google OAuth
     GOOGLE_TOKEN_TIMEOUT: int = 300  # 5 minutes timeout for Google token verification
 
     # Security Headers
