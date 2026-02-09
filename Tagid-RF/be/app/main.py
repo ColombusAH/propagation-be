@@ -1,4 +1,5 @@
 # Server reload trigger - debugging prisma connection
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -90,7 +91,6 @@ async def lifespan(app: FastAPI):
 
     # Auto-connect to RFID reader on startup (Non-blocking)
     # We use a background task so we don't block the server startup / health check
-    import asyncio
     async def connect_rfid_background():
         try:
             # Short initial delay to let server start
