@@ -34,5 +34,5 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 # Expose port (Railway will set PORT env variable)
 EXPOSE 80
 
-# Start Nginx with PORT substitution
-CMD sh -c "envsubst '\$PORT' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+# Start Nginx with PORT and BACKEND_URL substitution
+CMD sh -c "envsubst '\$PORT \$BACKEND_URL' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
