@@ -30,7 +30,7 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy custom nginx configuration template
 # Cache bust to ensure latest nginx.conf is used
-ARG CACHEBUST=1
+ARG CACHEBUST=2
 COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 
 # Expose port (Railway will set PORT env variable)
