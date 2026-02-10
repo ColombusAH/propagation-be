@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { theme } from '@/styles/theme';
 import { slideInUp, fadeIn } from '@/styles/animations';
 import { UserRole } from '@/contexts/AuthContext';
+import { apiUrl } from '@/config/api';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -190,7 +191,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const handleLogin = async () => {
     if (selectedRole) {
       try {
-        const response = await fetch('/api/v1/auth/dev-login', {
+        const response = await fetch(apiUrl('/api/v1/auth/dev-login'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
