@@ -31,6 +31,7 @@ This guide details how to deploy the **Tagid-RF** project to Railway and establi
 2.  **Settings > General > Root Directory**: Set to `Tagid-RF/web`.
 3.  **Variables**:
     *   `VITE_API_URL`: The URL of your Backend service (e.g., `https://be-production.up.railway.app`).
+    *   `BACKEND_URL`: Same as `VITE_API_URL` — used at runtime by Nginx to proxy `/api` requests to the backend.
 4.  **Networking**: Generate a public domain.
 
 ### 4. Deploy
