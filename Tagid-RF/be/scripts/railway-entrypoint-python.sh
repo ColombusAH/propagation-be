@@ -32,10 +32,15 @@ else
   python -m prisma generate || echo "Prisma generation failed"
 fi
 
-# Skip blocking DB checks for now to verify app startup
-# if [ -n "$DATABASE_URL" ]; then...
+# Deploy pending migrations (safe for production - only applies pending migrations)
+echo "Deploying database migrations..."
+if [ -n "$DATABASE_URL" ]; then
+  python -m prisma migrate deploy || echo "WARNING: Migration deployment failed - DB may not be ready yet"
+else
+  echo "WARNING: DATABASE_URL not set, skipping migrations"
+fi
 
-echo "Starting application immediately for debugging..."
+echo "Starting application..."
 
 # Start the application
 echo "Starting application on port $PORT..."
