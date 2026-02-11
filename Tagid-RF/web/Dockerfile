@@ -37,4 +37,4 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 EXPOSE 80
 
 # Start Nginx with PORT, BACKEND_URL, and BACKEND_HOST substitution
-CMD sh -c "export BACKEND_HOST=$(echo $BACKEND_URL | sed 's|https\?://||' | sed 's|/.*||') && envsubst '\$PORT \$BACKEND_URL \$BACKEND_HOST' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+CMD sh -c "BACKEND_HOST=$(echo $BACKEND_URL | awk -F/ '{print $3}') && export BACKEND_HOST && envsubst '\$PORT \$BACKEND_URL \$BACKEND_HOST' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && cat /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
