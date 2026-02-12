@@ -30,7 +30,7 @@ async def simulate_theft():
             user = await prisma_client.client.user.create(
                 data={
                     "email": email,
-                    "hashedPassword": get_password_hash("password"),
+                    "password": get_password_hash("password"),
                     "name": "Demo Admin",
                     "phone": "1234567890",
                     "address": "123 Test St",
@@ -102,8 +102,6 @@ async def simulate_theft():
              tag = await prisma_client.client.rfidtag.create(
                  data={
                      "epc": test_epc,
-                     "name": "Stolen Item Test",
-                     "businessId": biz.id,
                      "productDescription": "Premium Leather Jacket",
                      "isPaid": False
                  }
