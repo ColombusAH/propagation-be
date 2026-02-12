@@ -27,7 +27,7 @@ class NotificationSchema(BaseModel):
 async def get_vapid_public_key():
     if not settings.VAPID_PUBLIC_KEY:
         raise HTTPException(status_code=500, detail="VAPID_PUBLIC_KEY not configured")
-    return {"publicKey": settings.VAPID_PUBLIC_KEY}
+    return {"publicKey": settings.VAPID_PUBLIC_KEY.strip()}
 
 @router.post("/subscribe", status_code=201)
 async def subscribe(subscription: SubscriptionSchema):
