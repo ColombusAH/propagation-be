@@ -3,6 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { LiveTagsWidget } from '@/components/Dashboard/LiveTagsWidget';
+import { PushNotificationButton } from '@/components/PushNotificationButton';
 import { useAuth } from '@/contexts/AuthContext';
 
 // Professional color palette
@@ -493,9 +494,19 @@ export function DashboardPage() {
         <Header>
           <HeaderLeft>
             <Title>לוח בקרה</Title>
-            <Subtitle style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Subtitle style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               סקירת מערכת • {new Date().toLocaleDateString('he-IL')}
-              <RoleBadge style={{ background: '#e2e8f0', color: '#64748b', fontSize: '0.65rem', padding: '0.1rem 0.4rem', border: '1px solid #cbd5e1' }}>v1.0.4</RoleBadge>
+              <RoleBadge style={{
+                background: '#e2e8f0',
+                color: '#64748b',
+                fontSize: '0.65rem',
+                padding: '0.1rem 0.4rem',
+                border: '1px solid #cbd5e1',
+                borderRadius: '4px',
+                height: 'auto',
+                width: 'auto',
+                lineHeight: '1.2'
+              }}>v1.0.5</RoleBadge>
             </Subtitle>
           </HeaderLeft>
           <HeaderRight>
@@ -625,6 +636,8 @@ export function DashboardPage() {
             <LiveTagsWidget />
           </div>
         )}
+
+        <PushNotificationButton />
       </Container>
     </Layout>
   );
