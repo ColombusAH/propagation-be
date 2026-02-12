@@ -27,7 +27,7 @@ export const pushService = {
             headers['Authorization'] = `Bearer ${token}`;
         }
         const response = await axios.get(`${API_URL}/push/vapid-public-key`, { headers });
-        return response.data.publicKey.trim();
+        return response.data.publicKey.replace(/\s/g, '');
     },
 
     async registerServiceWorker() {

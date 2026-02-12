@@ -1,3 +1,4 @@
+import re
 from functools import lru_cache
 from typing import List, Optional
 
@@ -90,7 +91,8 @@ class Settings(BaseSettings):
     @classmethod
     def trim_keys(cls, v: Optional[str]) -> Optional[str]:
         if isinstance(v, str):
-            return v.strip()
+            # Remove ALL whitespace (newlines, spaces, etc)
+            return re.sub(r"\s+", "", v)
         return v
 
     model_config = {"env_file": ".env", "case_sensitive": True, "extra": "ignore"}

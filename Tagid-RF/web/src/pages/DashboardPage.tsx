@@ -506,7 +506,7 @@ export function DashboardPage() {
                 height: 'auto',
                 width: 'auto',
                 lineHeight: '1.2'
-              }}>v1.0.5</RoleBadge>
+              }}>v1.0.6</RoleBadge>
             </Subtitle>
           </HeaderLeft>
           <HeaderRight>
