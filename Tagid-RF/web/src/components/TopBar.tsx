@@ -171,6 +171,16 @@ export function TopBar() {
       <NavContainer>
         <LeftSection>
           <PageTitle>{t('app.title')}</PageTitle>
+          <span style={{
+            background: 'rgba(31, 78, 121, 0.08)',
+            color: '#1f4e79',
+            fontSize: '0.65rem',
+            padding: '0.1rem 0.4rem',
+            border: '1px solid rgba(31, 78, 121, 0.2)',
+            borderRadius: '4px',
+            marginLeft: '0.75rem',
+            fontWeight: 600
+          }}>v1.0.7</span>
         </LeftSection>
 
         <RightSection>
