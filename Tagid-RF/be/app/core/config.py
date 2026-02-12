@@ -1,6 +1,7 @@
 from functools import lru_cache
 from typing import List, Optional
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -84,6 +85,13 @@ class Settings(BaseSettings):
         "NETWORK_MANAGER",
         "STORE_MANAGER",
     ]
+
+    @field_validator("VAPID_PRIVATE_KEY", "VAPID_PUBLIC_KEY", "FCM_SERVER_KEY", mode="before")
+    @classmethod
+    def trim_keys(cls, v: Optional[str]) -> Optional[str]:
+        if isinstance(v, str):
+            return v.strip()
+        return v
 
     model_config = {"env_file": ".env", "case_sensitive": True, "extra": "ignore"}
 
