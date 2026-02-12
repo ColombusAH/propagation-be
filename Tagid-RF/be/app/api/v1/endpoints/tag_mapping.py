@@ -86,7 +86,7 @@ async def create_mapping(
     request: CreateMappingRequest,
     encryption: TagEncryptionService = Depends(get_encryption),
     current_user: User = Depends(get_current_user),
-    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE"])),
 ):
     """
     Create a new encrypted QR code for a UHF tag EPC.
@@ -226,7 +226,7 @@ async def get_by_qr(qr_code: str):
 async def delete_mapping(
     mapping_id: str,
     current_user: User = Depends(get_current_user),
-    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE"])),
 ):
     """
     Delete a tag mapping.

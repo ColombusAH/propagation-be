@@ -57,7 +57,7 @@ class InventoryResponse(BaseModel):
 @router.get("/status", response_model=ScanStatusResponse)
 async def get_scan_status(
     current_user: User = Depends(get_current_user),
-    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE"])),
 ):
     """Get current RFID scanner status."""
     return ScanStatusResponse(
@@ -71,7 +71,7 @@ async def get_scan_status(
 @router.get("/available")
 async def get_available_tags(
     current_user: User = Depends(get_current_user),
-    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE"])),
 ):
     """
     Get recent tags that are NOT linked to any product (productId is NULL).
@@ -122,7 +122,7 @@ async def get_available_tags(
 @router.post("/connect")
 async def connect_reader(
     current_user: User = Depends(get_current_user),
-    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE"])),
 ):
     """Connect to the RFID reader."""
     if rfid_reader_service.is_connected:
@@ -141,7 +141,7 @@ async def connect_reader(
 @router.post("/disconnect")
 async def disconnect_reader(
     current_user: User = Depends(get_current_user),
-    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE"])),
 ):
     """Disconnect from the RFID reader."""
     await rfid_reader_service.disconnect()
@@ -151,7 +151,7 @@ async def disconnect_reader(
 @router.post("/start")
 async def start_scanning(
     current_user: User = Depends(get_current_user),
-    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE"])),
 ):
     """Start continuous RFID scanning."""
     # Check if passive listener is already running (preferred mode)
@@ -190,7 +190,7 @@ async def start_scanning(
 @router.post("/stop")
 async def stop_scanning(
     current_user: User = Depends(get_current_user),
-    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE"])),
 ):
     """Stop continuous RFID scanning."""
     # Try stopping passive listener command too
@@ -211,7 +211,7 @@ async def stop_scanning(
 @router.post("/inventory", response_model=InventoryResponse)
 async def perform_inventory(
     current_user: User = Depends(get_current_user),
-    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE"])),
 ):
     """
     Perform a single inventory scan and return all tags in range.
@@ -315,7 +315,7 @@ async def set_power(
 async def read_tag_memory(
     request: MemoryReadRequest,
     current_user: User = Depends(get_current_user),
-    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE"])),
 ):
     """Read tag memory bank (TID, User, etc)."""
     data = await rfid_reader_service.read_tag_memory(
@@ -446,7 +446,7 @@ async def control_relay(
     relay_num: int,
     request: RelayRequest,
     current_user: User = Depends(get_current_user),
-    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE"])),
 ):
     """Control relay 1 or 2."""
     if relay_num not in [1, 2]:
@@ -472,7 +472,7 @@ class GateConfigRequest(BaseModel):
 @router.get("/gate/status")
 async def get_gate_status(
     current_user: User = Depends(get_current_user),
-    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE"])),
 ):
     """Get gate detection status."""
     status = await rfid_reader_service.get_gate_status()
@@ -528,7 +528,7 @@ async def set_query_params(
 async def select_tag(
     request: SelectTagRequest,
     current_user: User = Depends(get_current_user),
-    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    _: None = Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE"])),
 ):
     """Select specific tag for subsequent operations."""
     success = await rfid_reader_service.select_tag(request.epc_mask)

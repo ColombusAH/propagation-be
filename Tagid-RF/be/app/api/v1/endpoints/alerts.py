@@ -47,7 +47,7 @@ async def list_theft_alerts(
     resolved: Optional[bool] = Query(None, description="Filter by resolved status"),
     limit: int = Query(50, le=100),
     offset: int = Query(0),
-    current_user=Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    current_user=Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE"])),
 ):
     """
     List theft alerts (STORE_MANAGER+ only).
@@ -138,7 +138,7 @@ async def get_my_alerts(
 @router.get("/{alert_id}", response_model=TheftAlertResponse)
 async def get_alert_details(
     alert_id: str,
-    current_user=Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    current_user=Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE"])),
 ):
     """
     Get theft alert details (STORE_MANAGER+ only).
@@ -177,7 +177,7 @@ async def get_alert_details(
 async def resolve_alert(
     alert_id: str,
     request: ResolveAlertRequest,
-    current_user=Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    current_user=Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE"])),
 ):
     """
     Mark theft alert as resolved (STORE_MANAGER+ only).

@@ -394,8 +394,10 @@ export function DashboardPage() {
   const getRoleName = (role: string) => {
     switch (role) {
       case 'SUPER_ADMIN': return 'מנהל על';
+      case 'NETWORK_MANAGER':
       case 'NETWORK_ADMIN': return 'מנהל רשת';
       case 'STORE_MANAGER': return 'מנהל חנות';
+      case 'EMPLOYEE':
       case 'SELLER': return 'מוכר';
       case 'CUSTOMER': return 'לקוח';
       default: return 'משתמש';
@@ -403,6 +405,9 @@ export function DashboardPage() {
   };
 
   useEffect(() => {
+    // Only fetch status for staff roles
+    if (userRole === 'CUSTOMER') return;
+
     const fetchStatus = async () => {
       try {
         const headers: Record<string, string> = {};
@@ -425,7 +430,7 @@ export function DashboardPage() {
     fetchStatus();
     const interval = setInterval(fetchStatus, 5000);
     return () => clearInterval(interval);
-  }, [token]);
+  }, [token, userRole]);
 
   const handleStartScan = async () => {
     try {
@@ -560,45 +565,47 @@ export function DashboardPage() {
             </TransactionList>
           </Card>
 
-          {/* Reader Status */}
-          <ReaderCard>
-            <ReaderHeader>
-              <ReaderTitle>
-                <span className="material-symbols-outlined" style={{ fontSize: 20, marginLeft: 8 }}>sensors</span>
-                קורא RFID
-              </ReaderTitle>
-              <StatusIndicator $active={readerStatus.is_connected}>
-                <StatusDot $active={readerStatus.is_connected} />
-                {readerStatus.is_connected ? 'מחובר' : 'לא מחובר'}
-              </StatusIndicator>
-            </ReaderHeader>
+          {/* Reader Status - Hide for Customers */}
+          {userRole !== 'CUSTOMER' && (
+            <ReaderCard>
+              <ReaderHeader>
+                <ReaderTitle>
+                  <span className="material-symbols-outlined" style={{ fontSize: 20, marginLeft: 8 }}>sensors</span>
+                  קורא RFID
+                </ReaderTitle>
+                <StatusIndicator $active={readerStatus.is_connected}>
+                  <StatusDot $active={readerStatus.is_connected} />
+                  {readerStatus.is_connected ? 'מחובר' : 'לא מחובר'}
+                </StatusIndicator>
+              </ReaderHeader>
 
-            <ReaderInfo>
-              <InfoItem>
-                <InfoLabel>כתובת IP</InfoLabel>
-                <InfoValue>{readerStatus.reader_ip}</InfoValue>
-              </InfoItem>
-              <InfoItem>
-                <InfoLabel>פורט</InfoLabel>
-                <InfoValue>{readerStatus.reader_port}</InfoValue>
-              </InfoItem>
-            </ReaderInfo>
+              <ReaderInfo>
+                <InfoItem>
+                  <InfoLabel>כתובת IP</InfoLabel>
+                  <InfoValue>{readerStatus.reader_ip}</InfoValue>
+                </InfoItem>
+                <InfoItem>
+                  <InfoLabel>פורט</InfoLabel>
+                  <InfoValue>{readerStatus.reader_port}</InfoValue>
+                </InfoItem>
+              </ReaderInfo>
 
-            <ReaderButton $variant="primary" onClick={handleStartScan}>
-              <span className="material-symbols-outlined" style={{ fontSize: 18, marginLeft: 8, verticalAlign: 'middle' }}>
+              <ReaderButton $variant="primary" onClick={handleStartScan}>
+                <span className="material-symbols-outlined" style={{ fontSize: 18, marginLeft: 8, verticalAlign: 'middle' }}>
+                  {readerStatus.is_connected
+                    ? (readerStatus.is_scanning ? 'stop' : 'play_arrow')
+                    : 'power'}
+                </span>
                 {readerStatus.is_connected
-                  ? (readerStatus.is_scanning ? 'stop' : 'play_arrow')
-                  : 'power'}
-              </span>
-              {readerStatus.is_connected
-                ? (readerStatus.is_scanning ? 'עצור סריקה' : 'התחל סריקה')
-                : 'התחבר לקורא'}
-            </ReaderButton>
-            <ReaderButton onClick={() => navigate('/reader-settings')}>
-              <span className="material-symbols-outlined" style={{ fontSize: 18, marginLeft: 8, verticalAlign: 'middle' }}>settings</span>
-              הגדרות מתקדמות
-            </ReaderButton>
-          </ReaderCard>
+                  ? (readerStatus.is_scanning ? 'עצור סריקה' : 'התחל סריקה')
+                  : 'התחבר לקורא'}
+              </ReaderButton>
+              <ReaderButton onClick={() => navigate('/reader-settings')}>
+                <span className="material-symbols-outlined" style={{ fontSize: 18, marginLeft: 8, verticalAlign: 'middle' }}>settings</span>
+                הגדרות מתקדמות
+              </ReaderButton>
+            </ReaderCard>
+          )}
         </ContentGrid>
 
         {/* Live Tags Widget */}

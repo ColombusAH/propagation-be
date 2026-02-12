@@ -227,7 +227,7 @@ async def confirm_payment(request: PaymentConfirmRequest, current_user=Depends(g
 @router.post("/cash", response_model=PaymentIntentResponse)
 async def create_cash_payment(
     request: CashPaymentRequest,
-    current_user=Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    current_user=Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE"])),
 ):
     """
     Record a cash payment (STORE_MANAGER+ only).
@@ -281,7 +281,7 @@ async def create_cash_payment(
 @router.post("/refund", response_model=RefundResponse)
 async def refund_payment(
     request: RefundRequest,
-    current_user=Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER"])),
+    current_user=Depends(requires_any_role(["SUPER_ADMIN", "NETWORK_MANAGER", "STORE_MANAGER", "EMPLOYEE"])),
 ):
     """
     Refund a payment (STORE_MANAGER+ only).
