@@ -60,10 +60,10 @@ export const PushNotificationButton: React.FC = () => {
             }
         };
 
-        if (userId && userRole !== 'CUSTOMER') { // Only sync if we have a user and it's not a customer
+        if (userId) { // Sync for all logged in users
             syncSubscription();
         }
-    }, [userId, userRole]); // Re-run if userId or role changes
+    }, [userId]); // Re-run if userId changes
 
     const handleSubscribe = async () => {
         setLoading(true);
