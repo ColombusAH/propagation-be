@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { theme } from '@/styles/theme';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { slideInUp } from '@/styles/animations';
+import { useAuth } from '@/contexts/AuthContext';
 
 const WidgetContainer = styled.div`
   background: ${theme.colors.surface};
@@ -154,102 +155,108 @@ const Time = styled.span`
 `;
 
 interface TagEvent {
-    epc: string;
-    rssi?: number;
-    timestamp: string;
-    reader_ip?: string;
+  epc: string;
+  rssi?: number;
+  timestamp: string;
+  reader_ip?: string;
 }
 
 export function LiveTagsWidget() {
-    const [tags, setTags] = useState<TagEvent[]>([]);
-    const [stats, setStats] = useState({ total: 0, unique: 0 });
-    const uniqueEpcs = useRef(new Set<string>());
+  const { token } = useAuth();
+  const [tags, setTags] = useState<TagEvent[]>([]);
+  const [stats, setStats] = useState({ total: 0, unique: 0 });
+  const uniqueEpcs = useRef(new Set<string>());
 
-    // WebSocket Connection
-    const { status } = useWebSocket({
-        url: '/ws/rfid', // Assuming proxy forwards /ws to backend
-        onMessage: (message) => {
-            if (message.type === 'tag_scanned') {
-                handleNewTag(message.data);
-            }
-        },
+  // WebSocket Connection
+  const { status } = useWebSocket({
+    url: '/ws/rfid', // Assuming proxy forwards /ws to backend
+    onMessage: (message) => {
+      if (message.type === 'tag_scanned') {
+        handleNewTag(message.data);
+      }
+    },
+  });
+
+  // Handle new tag
+  const handleNewTag = (tag: TagEvent) => {
+    setTags(prev => {
+      const newTags = [tag, ...prev].slice(0, 50); // Keep last 50
+      return newTags;
     });
 
-    // Handle new tag
-    const handleNewTag = (tag: TagEvent) => {
-        setTags(prev => {
-            const newTags = [tag, ...prev].slice(0, 50); // Keep last 50
-            return newTags;
-        });
+    uniqueEpcs.current.add(tag.epc);
+    setStats(prev => ({
+      total: prev.total + 1,
+      unique: uniqueEpcs.current.size
+    }));
+  };
 
-        uniqueEpcs.current.add(tag.epc);
-        setStats(prev => ({
-            total: prev.total + 1,
-            unique: uniqueEpcs.current.size
-        }));
-    };
+  // Initial fetch of recent tags
+  useEffect(() => {
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
 
-    // Initial fetch of recent tags
-    useEffect(() => {
-        fetch('/api/v1/tags/live/recent?count=10')
-            .then(res => res.json())
-            .then(data => {
-                if (data.tags) {
-                    setTags(data.tags);
-                    // Update unique set
-                    data.tags.forEach((t: TagEvent) => uniqueEpcs.current.add(t.epc));
-                }
-                if (data.stats) {
-                    setStats({
-                        total: data.stats.total_scans,
-                        unique: data.stats.unique_epcs
-                    });
-                }
-            })
-            .catch(err => console.error('Failed to fetch recent tags:', err));
-    }, []);
+    fetch('/api/v1/tags/live/recent?count=10', { headers })
+      .then(res => res.json())
+      .then(data => {
+        if (data.tags) {
+          setTags(data.tags);
+          // Update unique set
+          data.tags.forEach((t: TagEvent) => uniqueEpcs.current.add(t.epc));
+        }
+        if (data.stats) {
+          setStats({
+            total: data.stats.total_scans,
+            unique: data.stats.unique_epcs
+          });
+        }
+      })
+      .catch(err => console.error('Failed to fetch recent tags:', err));
+  }, []);
 
-    return (
-        <WidgetContainer>
-            <Header>
-                <Title>סריקות בזמן אמת</Title>
-                <StatusBadge $status={status}>
-                    {status === 'connected' ? 'מחובר לקורא' : 'מנותק'}
-                </StatusBadge>
-            </Header>
+  return (
+    <WidgetContainer>
+      <Header>
+        <Title>סריקות בזמן אמת</Title>
+        <StatusBadge $status={status}>
+          {status === 'connected' ? 'מחובר לקורא' : 'מנותק'}
+        </StatusBadge>
+      </Header>
 
-            <StatsRow>
-                <StatItem>
-                    <StatValue>{stats.total}</StatValue>
-                    <StatLabel>סה"כ סריקות</StatLabel>
-                </StatItem>
-                <StatItem>
-                    <StatValue>{stats.unique}</StatValue>
-                    <StatLabel>תגים ייחודיים</StatLabel>
-                </StatItem>
-                <StatItem>
-                    <StatValue>{tags.length}</StatValue>
-                    <StatLabel>מוצגים כעת</StatLabel>
-                </StatItem>
-            </StatsRow>
+      <StatsRow>
+        <StatItem>
+          <StatValue>{stats.total}</StatValue>
+          <StatLabel>סה"כ סריקות</StatLabel>
+        </StatItem>
+        <StatItem>
+          <StatValue>{stats.unique}</StatValue>
+          <StatLabel>תגים ייחודיים</StatLabel>
+        </StatItem>
+        <StatItem>
+          <StatValue>{tags.length}</StatValue>
+          <StatLabel>מוצגים כעת</StatLabel>
+        </StatItem>
+      </StatsRow>
 
-            <TagList>
-                {tags.length > 0 ? (
-                    tags.map((tag, index) => (
-                        <TagItem key={`${tag.epc}-${index}`}>
-                            <TagEPC>{tag.epc}</TagEPC>
-                            <TagMeta>
-                                {tag.rssi && <RSSI>{tag.rssi} dBm</RSSI>}
-                                <Time>{new Date(tag.timestamp).toLocaleTimeString()}</Time>
-                            </TagMeta>
-                        </TagItem>
-                    ))
-                ) : (
-                    <div style={{ textAlign: 'center', padding: '20px', color: theme.colors.textSecondary }}>
-                        ממתין לסריקות...
-                    </div>
-                )}
-            </TagList>
-        </WidgetContainer>
-    );
+      <TagList>
+        {tags.length > 0 ? (
+          tags.map((tag, index) => (
+            <TagItem key={`${tag.epc}-${index}`}>
+              <TagEPC>{tag.epc}</TagEPC>
+              <TagMeta>
+                {tag.rssi && <RSSI>{tag.rssi} dBm</RSSI>}
+                <Time>{new Date(tag.timestamp).toLocaleTimeString()}</Time>
+              </TagMeta>
+            </TagItem>
+          ))
+        ) : (
+          <div style={{ textAlign: 'center', padding: '20px', color: theme.colors.textSecondary }}>
+            ממתין לסריקות...
+          </div>
+        )}
+      </TagList>
+    </WidgetContainer>
+  );
 }

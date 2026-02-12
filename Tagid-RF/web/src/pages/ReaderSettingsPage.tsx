@@ -267,13 +267,13 @@ export default function ReaderSettingsPage() {
         'Authorization': `Bearer ${token}`,
     };
 
-    useEffect(() => {
-        fetchStatus();
-    }, []);
-
     const fetchStatus = async () => {
         try {
-            const response = await fetch('/api/v1/rfid-scan/status');
+            const response = await fetch('/api/v1/rfid-scan/status', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             if (response.ok) {
                 const data = await response.json();
                 setStatus(data);
@@ -282,6 +282,10 @@ export default function ReaderSettingsPage() {
             console.error('Failed to fetch status:', error);
         }
     };
+
+    useEffect(() => {
+        fetchStatus();
+    }, [token]);
 
     const showMessage = (type: 'success' | 'error', text: string) => {
         setMessage({ type, text });

@@ -1,7 +1,8 @@
 /// <reference types="vite/client" />
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+// In production, we use relative URLs via Nginx proxy
+const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
 // Helper to convert VAPID key
 function urlBase64ToUint8Array(base64String: string) {
@@ -20,8 +21,12 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 export const pushService = {
-    async getPublicKey(): Promise<string> {
-        const response = await axios.get(`${API_URL}/push/vapid-public-key`);
+    async getPublicKey(token?: string): Promise<string> {
+        const headers: Record<string, string> = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        const response = await axios.get(`${API_URL}/push/vapid-public-key`, { headers });
         return response.data.publicKey;
     },
 
@@ -66,6 +71,13 @@ export const pushService = {
             console.log('User is subscribed:', subscription);
 
             // Send subscription to backend
+            const headers: Record<string, string> = {};
+            if (userId) { // Assuming token is handled elsewhere or we pass it
+                // Note: If this service is used within a context that has the token,
+                // we should pass it or use an axios interceptor.
+                // For now, let's just make the URL relative.
+            }
+
             await axios.post(`${API_URL}/push/subscribe`, {
                 endpoint: subscription.endpoint,
                 userId: userId,

@@ -405,20 +405,27 @@ export function DashboardPage() {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const response = await fetch('/api/v1/rfid-scan/status');
+        const headers: Record<string, string> = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch('/api/v1/rfid-scan/status', {
+          headers
+        });
         if (response.ok) {
           const data = await response.json();
           setReaderStatus(data);
         }
-      } catch (e) {
-        // Silent fail
+      } catch (error) {
+        console.error('Failed to fetch status', error);
       }
     };
 
     fetchStatus();
     const interval = setInterval(fetchStatus, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [token]);
 
   const handleStartScan = async () => {
     try {
