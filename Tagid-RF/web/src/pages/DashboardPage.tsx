@@ -493,9 +493,9 @@ export function DashboardPage() {
         <Header>
           <HeaderLeft>
             <Title>לוח בקרה</Title>
-            <Subtitle>
+            <Subtitle style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               סקירת מערכת • {new Date().toLocaleDateString('he-IL')}
-              <span style={{ opacity: 0.5, marginRight: '1rem', fontSize: '0.7rem' }}>v1.0.3</span>
+              <RoleBadge style={{ background: '#e2e8f0', color: '#64748b', fontSize: '0.65rem', padding: '0.1rem 0.4rem', border: '1px solid #cbd5e1' }}>v1.0.4</RoleBadge>
             </Subtitle>
           </HeaderLeft>
           <HeaderRight>

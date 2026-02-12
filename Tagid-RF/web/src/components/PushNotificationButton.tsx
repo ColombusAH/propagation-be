@@ -85,7 +85,7 @@ export const PushNotificationButton: React.FC = () => {
         }
     };
 
-    if (isSubscribed || userRole === 'CUSTOMER') return null; // Hide if already subscribed or user is customer
+    if (isSubscribed) return null; // Hide if already subscribed
 
     return (
         <NotificationButton onClick={handleSubscribe} $isSubscribed={isSubscribed} disabled={loading}>
