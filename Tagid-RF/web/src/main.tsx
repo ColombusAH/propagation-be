@@ -6,6 +6,8 @@ import { registerServiceWorker } from './lib/pwa/registerSW';
 // Register service worker for PWA features
 registerServiceWorker();
 
+console.log('--- App Version: 1.0.1 (Auth & URL Fixes) ---');
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
