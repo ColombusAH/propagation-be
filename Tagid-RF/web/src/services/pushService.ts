@@ -8,7 +8,7 @@ const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 function urlBase64ToUint8Array(base64String: string) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding)
-        .replace(/\-/g, '+')
+        .replace(/-/g, '+')
         .replace(/_/g, '/');
 
     const rawData = window.atob(base64);
@@ -49,6 +49,9 @@ export const pushService = {
     async subscribeUser(registration: ServiceWorkerRegistration, userId?: string) {
         try {
             const publicKey = await this.getPublicKey();
+            if (!publicKey || typeof publicKey !== 'string' || publicKey.length < 20) {
+                throw new Error('Invalid or missing VAPID public key from server');
+            }
             const convertedVapidKey = urlBase64ToUint8Array(publicKey);
 
             // Check if subscription exists first
@@ -71,13 +74,6 @@ export const pushService = {
             console.log('User is subscribed:', subscription);
 
             // Send subscription to backend
-            const headers: Record<string, string> = {};
-            if (userId) { // Assuming token is handled elsewhere or we pass it
-                // Note: If this service is used within a context that has the token,
-                // we should pass it or use an axios interceptor.
-                // For now, let's just make the URL relative.
-            }
-
             await axios.post(`${API_URL}/push/subscribe`, {
                 endpoint: subscription.endpoint,
                 userId: userId,

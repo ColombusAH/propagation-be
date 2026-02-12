@@ -405,25 +405,25 @@ export function DashboardPage() {
   };
 
   useEffect(() => {
-    // Only fetch status for staff roles
-    if (userRole === 'CUSTOMER') return;
+    // Strictly block fetch for customers or if no role/token
+    if (!userRole || !token || userRole === 'CUSTOMER') {
+      return;
+    }
 
     const fetchStatus = async () => {
       try {
-        const headers: Record<string, string> = {};
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
-
         const response = await fetch('/api/v1/rfid-scan/status', {
-          headers
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         });
+
         if (response.ok) {
           const data = await response.json();
           setReaderStatus(data);
         }
-      } catch (error) {
-        console.error('Failed to fetch status', error);
+      } catch {
+        // Silently fail to avoid console clutter in dashboard
       }
     };
 
@@ -442,7 +442,7 @@ export function DashboardPage() {
         },
       });
       setReaderStatus(prev => ({ ...prev, is_scanning: true }));
-    } catch (e) {
+    } catch {
       console.error('Failed to start scan');
     }
   };
@@ -453,30 +453,38 @@ export function DashboardPage() {
       label: 'סריקת תגים',
       desc: 'סנכרון QR ↔ UHF',
       color: colors.primary,
-      onClick: () => navigate('/tag-mapping')
+      onClick: () => navigate('/tag-mapping'),
+      roles: ['SUPER_ADMIN', 'NETWORK_MANAGER', 'NETWORK_ADMIN', 'STORE_MANAGER', 'EMPLOYEE', 'SELLER']
     },
     {
       icon: 'sensors',
       label: 'הגדרות קורא',
       desc: 'עוצמה, רשת, ממסרים',
       color: colors.secondary,
-      onClick: () => navigate('/reader-settings')
+      onClick: () => navigate('/reader-settings'),
+      roles: ['SUPER_ADMIN', 'NETWORK_MANAGER', 'NETWORK_ADMIN']
     },
     {
       icon: 'analytics',
       label: 'דוחות עסקאות',
       desc: 'צפייה ויצוא',
       color: colors.accent,
-      onClick: () => navigate('/transactions')
+      onClick: () => navigate('/transactions'),
+      roles: ['SUPER_ADMIN', 'NETWORK_MANAGER', 'NETWORK_ADMIN', 'STORE_MANAGER']
     },
     {
       icon: 'group',
       label: 'ניהול משתמשים',
       desc: 'הרשאות ותפקידים',
       color: colors.warning,
-      onClick: () => navigate('/users')
+      onClick: () => navigate('/users'),
+      roles: ['SUPER_ADMIN', 'NETWORK_MANAGER', 'NETWORK_ADMIN']
     },
   ];
+
+  const filteredActions = quickActions.filter(action =>
+    !action.roles || action.roles.includes(userRole || '')
+  );
 
   return (
     <Layout>
@@ -495,7 +503,7 @@ export function DashboardPage() {
 
         {/* Quick Actions */}
         <QuickActionsGrid>
-          {quickActions.map((action, index) => (
+          {filteredActions.map((action, index) => (
             <QuickActionCard
               key={index}
               $color={action.color}
@@ -608,10 +616,12 @@ export function DashboardPage() {
           )}
         </ContentGrid>
 
-        {/* Live Tags Widget */}
-        <div style={{ marginTop: '1.5rem' }}>
-          <LiveTagsWidget />
-        </div>
+        {/* Live Tags Widget - Staff Only */}
+        {userRole !== 'CUSTOMER' && (
+          <div style={{ marginTop: '1.5rem' }}>
+            <LiveTagsWidget />
+          </div>
+        )}
       </Container>
     </Layout>
   );
