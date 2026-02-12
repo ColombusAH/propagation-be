@@ -493,7 +493,10 @@ export function DashboardPage() {
         <Header>
           <HeaderLeft>
             <Title>לוח בקרה</Title>
-            <Subtitle>סקירת מערכת • {new Date().toLocaleDateString('he-IL')}</Subtitle>
+            <Subtitle>
+              סקירת מערכת • {new Date().toLocaleDateString('he-IL')}
+              <span style={{ opacity: 0.5, marginRight: '1rem', fontSize: '0.7rem' }}>v1.0.3</span>
+            </Subtitle>
           </HeaderLeft>
           <HeaderRight>
             <RoleBadge>{getRoleName(userRole || '')}</RoleBadge>

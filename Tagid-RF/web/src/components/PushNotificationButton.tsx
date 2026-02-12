@@ -24,10 +24,10 @@ const NotificationButton = styled.button<{ $isSubscribed: boolean }>`
 `;
 
 export const PushNotificationButton: React.FC = () => {
+    const { userId, userRole } = useAuth();
     const [isSubscribed, setIsSubscribed] = useState(false);
     const [loading, setLoading] = useState(false);
     const toast = useToast();
-    const { userId } = useAuth();
 
     useEffect(() => {
         // Sync subscription state on mount
@@ -60,10 +60,10 @@ export const PushNotificationButton: React.FC = () => {
             }
         };
 
-        if (userId) { // Only sync if we have a user
+        if (userId && userRole !== 'CUSTOMER') { // Only sync if we have a user and it's not a customer
             syncSubscription();
         }
-    }, [userId]); // Re-run if userId changes (login)
+    }, [userId, userRole]); // Re-run if userId or role changes
 
     const handleSubscribe = async () => {
         setLoading(true);
@@ -85,7 +85,7 @@ export const PushNotificationButton: React.FC = () => {
         }
     };
 
-    if (isSubscribed) return null; // Hide if already subscribed
+    if (isSubscribed || userRole === 'CUSTOMER') return null; // Hide if already subscribed or user is customer
 
     return (
         <NotificationButton onClick={handleSubscribe} $isSubscribed={isSubscribed} disabled={loading}>
